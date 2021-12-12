@@ -1,0 +1,42 @@
+Thu Dec  9 12:34:05 UTC 2021
+***** Running training *****
+  Num examples = 1000
+  Num Epochs = 10
+  Instantaneous batch size per device = 128
+  Total train batch size (w. parallel, distributed & accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 80
+Loading Dataset !
+Loading Lattice SigHan Dataset ...
+Found 15585 out of 16765 words in the pre-training embedding.
+Save cache to cache/sighan_lattice_test.
+loading vocabulary file /remote-home/xtzhang/.fastNLP/embedding/bert-chinese-wwm/vocab.txt
+Load pre-trained BERT parameters from file /remote-home/xtzhang/.fastNLP/embedding/bert-chinese-wwm/chinese_wwm_pytorch.bin.
+Bert Model will return 1 layers (layer-0 is embedding result): [-1]
+  0%|          | 0/80 [00:00<?, ?it/s]/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/trainer.py:1317: FutureWarning: Non-finite norm encountered in torch.nn.utils.clip_grad_norm_; continuing anyway. Note that the default behavior will change in a future release to error out if a non-finite total norm is encountered. At that point, setting error_if_nonfinite=false will be required to retain the old behavior.
+  nn.utils.clip_grad_norm_(
+  1%|▏         | 1/80 [00:01<02:14,  1.70s/it]Traceback (most recent call last):
+  File "bert_Flat.py", line 429, in <module>
+    run()
+  File "bert_Flat.py", line 361, in run
+    train_result = trainer.train()
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/trainer.py", line 1289, in train
+    tr_loss += self.training_step(model, inputs)
+  File "bert_Flat.py", line 140, in training_step
+    loss, _ = self.compute_loss(model, inputs)
+  File "bert_Flat.py", line 173, in compute_loss
+    loss, logits = model(**inputs)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bert/modeling_flat_v1.py", line 492, in forward
+    encoded = self.encoder(embedding,seq_len,lex_num=lex_num,pos_s=pos_s,pos_e=pos_e)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bert/V1_modules.py", line 1315, in forward
+    rel_pos_embedding = self.four_pos_fusion_embedding(pos_s,pos_e)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bert/V1_modules.py", line 146, in forward
+    pe_2 = torch.cat([pe_ss,pe_ee],dim=-1)
+RuntimeError: CUDA out of memory. Tried to allocate 9.77 GiB (GPU 0; 23.70 GiB total capacity; 20.47 GiB already allocated; 1.11 GiB free; 21.12 GiB reserved in total by PyTorch)
+  1%|▏         | 1/80 [00:02<03:34,  2.71s/it]

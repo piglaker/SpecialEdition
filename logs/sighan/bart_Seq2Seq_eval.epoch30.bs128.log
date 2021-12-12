@@ -1,0 +1,54 @@
+Mon Nov 15 10:57:13 UTC 2021
+Loading Dataset !
+Loading SigHan Dataset ...
+  0%|          | 0/284196 [00:00<?, ?it/s]  2%|▏         | 6803/284196 [00:00<00:04, 65586.01it/s]  5%|▍         | 13362/284196 [00:00<00:04, 65105.18it/s] 10%|▉         | 27802/284196 [00:00<00:02, 99696.24it/s] 15%|█▍        | 42502/284196 [00:00<00:02, 116598.82it/s] 19%|█▉        | 54150/284196 [00:02<00:14, 16427.84it/s]  24%|██▍       | 68010/284196 [00:02<00:08, 24563.01it/s] 28%|██▊       | 80673/284196 [00:02<00:06, 33428.63it/s] 33%|███▎      | 93355/284196 [00:02<00:04, 43737.76it/s] 37%|███▋      | 105844/284196 [00:02<00:03, 54791.45it/s] 41%|████▏     | 117850/284196 [00:02<00:02, 65422.55it/s] 46%|████▌     | 129646/284196 [00:02<00:02, 72130.43it/s] 50%|████▉     | 140754/284196 [00:02<00:01, 77636.36it/s] 53%|█████▎    | 151406/284196 [00:06<00:12, 10699.06it/s] 58%|█████▊    | 164146/284196 [00:06<00:07, 15213.36it/s] 62%|██████▏   | 176549/284196 [00:06<00:05, 20910.68it/s] 67%|██████▋   | 189049/284196 [00:06<00:03, 28155.10it/s] 71%|███████   | 202118/284196 [00:06<00:02, 37427.60it/s] 75%|███████▌  | 213612/284196 [00:06<00:01, 46163.35it/s] 79%|███████▉  | 225670/284196 [00:06<00:01, 56591.47it/s] 84%|████████▎ | 237803/284196 [00:06<00:00, 67388.95it/s] 88%|████████▊ | 250315/284196 [00:06<00:00, 78496.60it/s] 92%|█████████▏| 262302/284196 [00:07<00:00, 83931.98it/s] 96%|█████████▋| 273708/284196 [00:10<00:00, 11920.63it/s]100%|██████████| 284196/284196 [00:10<00:00, 27906.48it/s]
+  0%|          | 0/600 [00:00<?, ?it/s]100%|██████████| 600/600 [00:00<00:00, 24790.98it/s]
+  0%|          | 0/1100 [00:00<?, ?it/s]100%|██████████| 1100/1100 [00:00<00:00, 60304.74it/s]Mon Nov 15 10:58:06 UTC 2021
+
+Using amp fp16 backend
+***** Running training *****
+  Num examples = 284196
+  Num Epochs = 30
+  Instantaneous batch size per device = 128
+  Total train batch size (w. parallel, distributed & accumulation) = 256
+  Gradient Accumulation steps = 1
+  Total optimization steps = 33330
+Loading Succeed !
+  0%|          | 0/33330 [00:00<?, ?it/s]/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/_functions.py:68: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
+  warnings.warn('Was asked to gather along dimension 0, but all '
+  0%|          | 1/33330 [00:06<60:33:23,  6.54s/it]Traceback (most recent call last):
+  File "bart_seq2seq.py", line 156, in <module>
+    run()
+  File "bart_seq2seq.py", line 89, in run
+    train_result = trainer.train()
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/trainer.py", line 1289, in train
+    tr_loss += self.training_step(model, inputs)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/trainer.py", line 1780, in training_step
+    loss = self.compute_loss(model, inputs)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/trainer.py", line 1814, in compute_loss
+    outputs = model(**inputs)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/data_parallel.py", line 169, in forward
+    return self.gather(outputs, self.output_device)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/data_parallel.py", line 181, in gather
+    return gather(outputs, output_device, dim=self.dim)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 78, in gather
+    res = gather_map(outputs)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 69, in gather_map
+    return type(out)(((k, gather_map([d[k] for d in outputs]))
+  File "<string>", line 12, in __init__
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/file_utils.py", line 1861, in __post_init__
+    for element in iterator:
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 69, in <genexpr>
+    return type(out)(((k, gather_map([d[k] for d in outputs]))
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 73, in gather_map
+    return type(out)(map(gather_map, zip(*outputs)))
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 63, in gather_map
+    return Gather.apply(target_device, dim, *outputs)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/_functions.py", line 75, in forward
+    return comm.gather(inputs, ctx.dim, ctx.target_device)
+  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/comm.py", line 235, in gather
+    return torch._C._gather(tensors, dim, destination)
+RuntimeError: CUDA out of memory. Tried to allocate 96.00 MiB (GPU 0; 23.70 GiB total capacity; 21.98 GiB already allocated; 92.31 MiB free; 22.13 GiB reserved in total by PyTorch)
+  0%|          | 1/33330 [00:09<83:59:52,  9.07s/it]

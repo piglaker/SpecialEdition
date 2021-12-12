@@ -1,0 +1,14 @@
+Sat Dec 11 06:03:08 UTC 2021
+***** Running training *****
+  Num examples = 284196
+  Num Epochs = 1
+  Instantaneous batch size per device = 16
+  Total train batch size (w. parallel, distributed & accumulation) = 32
+  Gradient Accumulation steps = 1
+  Total optimization steps = 8882
+Loading Dataset !
+Read cache from cache/sighan_lattice_test.
+loading vocabulary file /remote-home/xtzhang/.fastNLP/embedding/bert-chinese-wwm/vocab.txt
+Load pre-trained BERT parameters from file /remote-home/xtzhang/.fastNLP/embedding/bert-chinese-wwm/chinese_wwm_pytorch.bin.
+Bert Model will return 1 layers (layer-0 is embedding result): [-1]
+  0%|          | 0/8882 [00:00<?, ?it/s]

@@ -1,0 +1,64 @@
+Sat Oct 16 23:52:58 UTC 2021
+Loading Dataset !
+Loading SigHan Dataset ...
+  0%|          | 0/284196 [00:00<?, ?it/s]  4%|▍         | 11410/284196 [00:00<00:02, 114088.14it/s]  9%|▊         | 24668/284196 [00:00<00:02, 124958.12it/s] 13%|█▎        | 38000/284196 [00:00<00:01, 128769.73it/s] 18%|█▊        | 51186/284196 [00:00<00:01, 129983.10it/s] 23%|██▎       | 64185/284196 [00:00<00:01, 129386.53it/s] 27%|██▋       | 77125/284196 [00:00<00:01, 129231.67it/s] 32%|███▏      | 90049/284196 [00:02<00:08, 23764.66it/s]  36%|███▌      | 102881/284196 [00:02<00:05, 32000.82it/s] 41%|████      | 115939/284196 [00:02<00:04, 41961.84it/s] 45%|████▌     | 129246/284196 [00:02<00:02, 53468.19it/s] 50%|█████     | 142519/284196 [00:02<00:02, 65582.02it/s] 55%|█████▍    | 155591/284196 [00:02<00:01, 77254.85it/s] 59%|█████▉    | 168937/284196 [00:02<00:01, 88709.23it/s] 64%|██████▍   | 182307/284196 [00:02<00:01, 98852.86it/s] 69%|██████▊   | 195239/284196 [00:04<00:03, 22842.68it/s] 73%|███████▎  | 208279/284196 [00:04<00:02, 30329.49it/s] 78%|███████▊  | 221704/284196 [00:04<00:01, 39725.35it/s] 83%|████████▎ | 235094/284196 [00:04<00:00, 50492.79it/s] 87%|████████▋ | 248627/284196 [00:04<00:00, 62408.89it/s] 92%|█████████▏| 262599/284196 [00:04<00:00, 75328.48it/s] 97%|█████████▋| 275479/284196 [00:04<00:00, 85395.07it/s]100%|██████████| 284196/284196 [00:05<00:00, 56458.71it/s]
+  0%|          | 0/1100 [00:00<?, ?it/s]100%|██████████| 1100/1100 [00:00<00:00, 60361.54it/s]Sat Oct 16 23:53:48 UTC 2021
+
+Some weights of the model checkpoint at hfl/chinese-roberta-wwm-ext were not used when initializing BertForMaskedLM: ['cls.seq_relationship.bias', 'cls.seq_relationship.weight']
+- This IS expected if you are initializing BertForMaskedLM from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertForMaskedLM from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Using amp fp16 backend
+***** Running training *****
+  Num examples = 284196
+  Num Epochs = 1
+  Instantaneous batch size per device = 16
+  Total train batch size (w. parallel, distributed & accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 2221
+Loading Succeed !
+  0%|          | 0/2221 [00:00<?, ?it/s]torch.Size([16, 128, 21128]) torch.Size([16, 123])
+torch.Size([16, 128, 21128]) torch.Size([16, 123])
+torch.Size([16, 128, 21128]) torch.Size([16, 123])
+torch.Size([16, 128, 21128]) torch.Size([16, 123])
+torch.Size([16, 128, 21128]) torch.Size([16, 123])
+torch.Size([16, 128, 21128]) torch.Size([16, 123])
+torch.Size([16, 128, 21128]) torch.Size([16, 123])
+torch.Size([16, 128, 21128]) torch.Size([16, 123])
+Traceback (most recent call last):
+  File "bert_seq2seq.py", line 287, in <module>
+    run()
+  File "bert_seq2seq.py", line 230, in run
+    train_result = trainer.train()
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/trainer.py", line 1289, in train
+    tr_loss += self.training_step(model, inputs)
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/trainer.py", line 1780, in training_step
+    loss = self.compute_loss(model, inputs)
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/trainer.py", line 1814, in compute_loss
+    outputs = model(**inputs)
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/data_parallel.py", line 168, in forward
+    outputs = self.parallel_apply(replicas, inputs, kwargs)
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/data_parallel.py", line 178, in parallel_apply
+    return parallel_apply(replicas, inputs, kwargs, self.device_ids[:len(replicas)])
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/parallel_apply.py", line 86, in parallel_apply
+    output.reraise()
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/_utils.py", line 425, in reraise
+    raise self.exc_type(msg)
+ValueError: Caught ValueError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/parallel_apply.py", line 61, in _worker
+    output = module(*input, **kwargs)
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/models/bert/modeling_bert.py", line 1358, in forward
+    masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/modules/loss.py", line 1120, in forward
+    return F.cross_entropy(input, target, weight=self.weight,
+  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/functional.py", line 2824, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(input, target, weight, _Reduction.get_enum(reduction), ignore_index)
+ValueError: Expected input batch_size (2048) to match target batch_size (1968).
+
+  0%|          | 0/2221 [00:25<?, ?it/s]
