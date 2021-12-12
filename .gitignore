@@ -1,0 +1,15 @@
+/__pycache__
+/cache
+/data
+/logs
+/milestone
+/notebooks
+/predict
+/tmp
+**/__pycache__
+**/cache
+/rm_me
+*.txt
+*.pickle
+*.pkl
+*/cache

@@ -1,0 +1,1 @@
+python predict.py --predict_with_generate --output_dir ./predict
