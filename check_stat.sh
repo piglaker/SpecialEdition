@@ -1,1 +1,1 @@
-cat logs/sighan/bert_Flat_std_test_bert.epoch10.bs16.log & gpustat
+cat logs/sighan/bert_Flat_std_char.epoch10.bs16.log & gpustat

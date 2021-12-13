@@ -2,6 +2,7 @@
 import re
 import json
 from typing import Dict, List
+import itertools
 
 from tqdm import tqdm
 from transformers import (
@@ -212,7 +213,7 @@ def split_lattice_and_source_plus(source):
     return res, lattice, sub_length
 
 
-def load_raw_lattice(raw_lattice_path="./data/rawdata/sighan/lattice/", path_head=""):
+def load_raw_lattice(raw_lattice_path="/data/rawdata/sighan/lattice/", path_head="."):
     """
     for flat
     dont care about para: 'path_head', only use for debugging
@@ -244,7 +245,7 @@ def load_raw_lattice(raw_lattice_path="./data/rawdata/sighan/lattice/", path_hea
     return (train_source, train_lattice, train_target), (valid_source, valid_lattice, valid_target), (test_source, test_lattice, test_target)
 
 
-def trans2dataset(source_and_lattice_and_target, max_length=1000000):
+def trans2dataset(source_and_lattice_and_target, max_length=100024):
     """
     for flat
     source: ["sentence", "sentence"]
@@ -256,51 +257,36 @@ def trans2dataset(source_and_lattice_and_target, max_length=1000000):
     source, lattice, target = source_and_lattice_and_target
 
     #r = "[A-Za-z0-9_.!+-=——,$%^，。？、~@#￥%……&*《》<>「」{}【】()/]"
-    r = ""
-
-    def f(sentences):
-        """
-        input: [sentence, sentence]
-        return: [ [s,e,n,t,e,n,c,e], ... ]
-        """
-        import jieba
-        #return  list(map(lambda x:[x[j:j+2] for j in range(len(x) -1)][:max_length], sentences)) 
-        return list(map(lambda x:list(jieba.cut(x)), sentences))
-        #return list(map(lambda x:[i for i in re.sub(r, "", x)[:max_length]], sentences))
 
     finals, atten_masks, lex_nums,  pos_s, pos_e, target_host = [], [], [], [], [], []
-
-    unmatch_washed_count = 0
 
     for i in range(len(source)):
 
         tmp_source  = [i for i in source[i]]
 
-        #tmp_source = [ source[j:j+2] for j in range(len(source[i]) -1) ]
-
-        #tmp_source = list(jieba.cut(source[i]))
-
         tmp_target = [i for i in target[i]]
 
-        #tmp_target = list(jieba.cut(target[i]))
-
-        #tmp_target = []
-        #pointer = 0
-        #for sub in tmp_source:
-        #    tmp_target.append(target[i][pointer:pointer+len(sub)])
-        #    pointer += len(sub)
-
-        #if len(tmp_source) != len(tmp_target):
-        #    print(tmp_source)
-        #    print(tmp_target)
-        #    unmatch_washed_count += 1
-        #    continue
-
-        #print(tmp_source)
-        #print(tmp_target)
         tmp_lattice, tmp_pos =  lattice[i].split(",")#"s s s,a a a" -> "s s s", "a a a"
 
-        concated = (tmp_source + tmp_lattice.split())[:max_length]
+        tmp_pos_s, tmp_pos_e = list(range(len(tmp_source))) + list(itertools.chain(*list(map(lambda x: [int(i) for i in x.split('$')], tmp_pos.split())))), \
+                    list(range(len(tmp_source))) + list(itertools.chain(*list(map(lambda x: [int(i) for i in x.split('$')], tmp_pos.split()))))
+
+        tmp_lattice = [u for u in "".join(tmp_lattice.split())]
+
+        new_tmp_lattice, new_tmp_pos_s, new_tmp_pos_e = [], list(range(len(tmp_source))), list(range(len(tmp_source)))
+        
+        #here we mask the word left only char since we think char is a better road to answer
+        for j in range(len(tmp_lattice)):
+            _seq_len_ = len(tmp_source)
+            index = tmp_pos_s[j + _seq_len_]
+
+            if tmp_lattice[j] != tmp_source[index]:
+                new_tmp_lattice.append(tmp_lattice[j])
+                new_tmp_pos_s.append(index)
+                new_tmp_pos_e.append(index)
+
+        concated = (tmp_source + new_tmp_lattice)[:max_length]
+        tmp_pos_s, tmp_pos_e = new_tmp_pos_s[:max_length], new_tmp_pos_e[:max_length]
 
         finals.append(concated)
 
@@ -310,18 +296,12 @@ def trans2dataset(source_and_lattice_and_target, max_length=1000000):
 
         atten_masks.append( atten_mask[:max_length] )
 
-        tmp_pos_s, tmp_pos_e = list(range(len(tmp_source))) + list(map(lambda x: int(x.split('$')[0]), tmp_pos.split())), \
-                    list(range(len(tmp_source))) + list(map(lambda x: int(x.split('$')[-1]), tmp_pos.split()))
-
         pos_s.append(tmp_pos_s[:max_length])
 
         pos_e.append(tmp_pos_e[:max_length])
 
         target_host.append(tmp_target[:max_length])
 
-    #print("unmatch_washed_count: ", unmatch_washed_count)
-
-    #exit()
 
     return DataSet({ "lattice":finals, "lex_nums":lex_nums, "attention_mask":atten_masks, "target": target_host, "pos_s":pos_s, "pos_e":pos_e})#bigram just a repalced name for char
 
@@ -404,6 +384,43 @@ def load_lattice_sighan(dataset=None, path_head=""):
 
     return datasets, vocabs, lattice_embedding
 
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_abs_pos_test', _refresh=True)
+def load_abs_pos_sighan(dataset=None, path_head=""):
+    """
+    Temporary deprecation ！
+    for abs pos bert
+    """
+
+    print("Loading Abs_Pos Bert SigHan Dataset ...")
+
+    train_pkg, valid_pkg, test_pkg = load_raw_lattice(path_head=path_head) 
+
+    train_dataset, valid_dataset, test_dataset = trans2dataset(train_pkg), trans2dataset(valid_pkg), trans2dataset(test_pkg)
+
+    tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
+
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
+
+    train_source_tok = tokenizer.batch_encode_plus(train_dataset[0], return_token_type_ids=False)#seems transformers max_length not work
+    train_target_tok = tokenizer.batch_encode_plus(train_dataset[-1], return_token_type_ids=False)#remove padding=True, max_length=512
+    valid_source_tok = tokenizer.batch_encode_plus(valid_dataset[0], return_token_type_ids=False)
+    valid_target_tok = tokenizer.batch_encode_plus(valid_dataset[-1], return_token_type_ids=False)
+    test_source_tok = tokenizer.batch_encode_plus(test_dataset[0], return_token_type_ids=False)
+    test_target_tok = tokenizer.batch_encode_plus(test_dataset[-1], return_token_type_ids=False)
+
+    train_source_tok["labels"] = train_target_tok["input_ids"]
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+    test_source_tok["labels"] = test_target_tok["input_ids"]
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            #ugly fix for encoder model (the same length
+            features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+
+    return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
 class myBatchEncoding():
     def __init__(self, data:Dict, encodings:List[Dict]):

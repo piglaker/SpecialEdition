@@ -328,12 +328,12 @@ def run():
                                            word_dropout=0.01)
 
     #model = BertForFlat(config=config, word_embedding=embedding)
-    model = BERT_SeqLabel(bert_embedding,len(vocabs['label']),vocabs,after_bert="mlp")
-    """
+    #model = BERT_SeqLabel(bert_embedding,len(vocabs['label']),vocabs,after_bert="mlp")
+    
     model = Lattice_Transformer_SeqLabel(
                                         lattice_embed=embeddings, bigram_embed=None, hidden_size=160,
                                         label_size=len(vocabs['label']),
-                                        num_heads=8, num_layers=3, use_abs_pos=False, use_rel_pos=True,
+                                        num_heads=8, num_layers=1, use_abs_pos=False, use_rel_pos=True,
                                         learnable_position=False, add_position=False,
                                         layer_preprocess_sequence='', layer_postprocess_sequence='an', ff_size=540, scaled=False, dropout=dropout, use_bigram=False,
                                         mode=mode, dvc=device, vocabs=vocabs,
@@ -354,7 +354,7 @@ def run():
                                         four_pos_fusion_shared=True,
                                         bert_embedding=bert_embedding
                                         ) 
-    """
+    
 
     # Metrics
     compute_metrics = get_lattice_metrics()#tokenizer)

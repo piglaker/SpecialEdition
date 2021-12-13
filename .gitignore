@@ -1,9 +1,10 @@
 /__pycache__
 /cache
-/data
-/logs
+/data/cn_corpus
+/data/embed_corpus
+/data/others
+/data/rawdata
 /milestone
-/notebooks
 /predict
 /tmp
 **/__pycache__

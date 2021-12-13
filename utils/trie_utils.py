@@ -37,6 +37,7 @@ class Trie:
         self.result = None
         self.confusion_map = []
         self.debug =False
+        self.max_mutated = 1
     
     def insert(self,w):
 
@@ -82,7 +83,8 @@ class Trie:
             return node.is_w
 
     def assign(self, sentence):
-        self.sentence = re.sub("\W*", "", sentence)
+        #self.sentence = re.sub("\W*", "", sentence)
+        self.sentence = sentence
         self.length = len(self.sentence)
         self.result = []
 
@@ -106,7 +108,7 @@ class Trie:
             return 
         elif pointer >= self.length:
             return
-        elif is_mutated >= 2:
+        elif is_mutated > self.max_mutated:
             return
 
         if main_key == pointer:
@@ -120,7 +122,7 @@ class Trie:
 
         current = node.children.get(self.sentence[pointer])
 
-        if self.is_w(current) and pointer != main_key and is_mutated >= 1:
+        if self.is_w(current) and pointer != main_key and is_mutated >= self.max_mutated:
             if self.debug:print("Word")
             self.collect(main_key=main_key, pointer=pointer, pair=pair)
 
@@ -128,7 +130,7 @@ class Trie:
             if self.debug:print("Deeper")
             self.mysearch(node=current, pointer=pointer+1, is_mutated=is_mutated, main_key=main_key, pair=pair)
 
-        if is_mutated < 2 and ( pointer != main_key ) :
+        if is_mutated < self.max_mutated and ( pointer != main_key ) :
             if self.debug:print("Mutate", main_key, pointer, self.sentence[pointer])
             if self.sentence[pointer] not in self.confusion:
                 if self.debug:print("Fail !")
@@ -157,7 +159,6 @@ class Pair:
     def __init__(self, k, v):
         self.key = k
         self.value = v
-
 
 def list2confusion_trie(word_list, confusion_dict):
     word_trie = Trie(confusion_dict)

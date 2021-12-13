@@ -305,7 +305,7 @@ class MultiHead_Attention_Lattice_rel_save_gpumm(nn.Module):
 
         mask = seq_len_to_mask(seq_len+lex_num).bool().unsqueeze(1).unsqueeze(1)
         #mask = seq_len_to_mask(torch.tensor([max(seq_len) for i in seq_len]) + lex_num).bool().unsqueeze(1).unsqueeze(1)
-        attn_score_raw_masked = attn_score_raw.masked_fill(~mask, -3e4)
+        attn_score_raw_masked = attn_score_raw.masked_fill(~mask, -1e15)#-3e4)
 
         attn_score = F.softmax(attn_score_raw_masked,dim=-1)
 
@@ -534,7 +534,7 @@ class MultiHead_Attention_Lattice_rel(nn.Module):
 
         mask = seq_len_to_mask(seq_len+lex_num).bool().unsqueeze(1).unsqueeze(1)
         #mask = seq_len_to_mask(torch.tensor([max(seq_len) for i in seq_len]) + lex_num).bool().unsqueeze(1).unsqueeze(1)
-        attn_score_raw_masked = attn_score_raw.masked_fill(~mask, -3e4)
+        attn_score_raw_masked = attn_score_raw.masked_fill(~mask, -1e15)#-3e4)
         if self.mode['debug']:
             print('attn_score_raw_masked:{}'.format(attn_score_raw_masked))
             print('seq_len:{}'.format(seq_len))
@@ -701,7 +701,7 @@ class MultiHead_Attention_rel(nn.Module):
             attn_score_raw  = attn_score_raw / math.sqrt(self.per_head_size)
 
         mask = seq_len_to_mask(seq_len).bool().unsqueeze(1).unsqueeze(1)
-        attn_score_raw_masked = attn_score_raw.masked_fill(~mask, -3e4)
+        attn_score_raw_masked = attn_score_raw.masked_fill(~mask, -1e15)#-3e4)
         if self.mode['debug']:
             print('attn_score_raw_masked:{}'.format(attn_score_raw_masked))
             print('seq_len:{}'.format(seq_len))
@@ -793,7 +793,7 @@ class MultiHead_Attention(nn.Module):
             attention_raw = attention_raw / math.sqrt(self.per_head_size)
 
         mask = seq_len_to_mask(seq_len + lex_num).bool().unsqueeze(1).unsqueeze(1)
-        attention_raw_masked = attention_raw.masked_fill(~mask, -3e4)
+        attention_raw_masked = attention_raw.masked_fill(~mask, -1e15)#-3e4)
 
         attn_score = F.softmax(attention_raw_masked, dim=-1)
         attn_score = self.dropout(attn_score)

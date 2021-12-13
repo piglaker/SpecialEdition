@@ -552,13 +552,19 @@ class BERT_SeqLabel(nn.Module):
         self.dropout = MyDropout(0.5)
 
     def forward(self, input_ids, seq_len, lex_nums, pos_s, pos_e,
-                target, chars_target=None):
+                target):
+        
+        #print(input_ids.shape)
+        #print(target.shape)
+        seq_len = seq_len - lex_nums
         lattice = input_ids
         batch_size = lattice.size(0)
         max_seq_len_and_lex_num = lattice.size(1)
         max_seq_len = max(seq_len)#bigrams.size(1)
-
+        #print(max_seq_len)
+        #print(seq_len)
         words = lattice[:,:max_seq_len]
+        #print(words.shape)
         mask = seq_len_to_mask(seq_len).bool()
         words.masked_fill_((~mask),self.vocabs['lattice'].padding_idx)
         encoded = self.bert_embedding(words)
