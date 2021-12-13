@@ -77,18 +77,21 @@ super_get("法国驻巴蓦斯坦")
 
 test_sentence = "法薪社记者报导,大使杰拉德,以及巴国官员在巴基斯坦西北部的托克哈姆边界关卡迎接十月九日与两名巴蓦斯坦同业一起遭塔莉班逮捕的裴哈。" 
 
-patience = super_get("法薪社记者报导,大使杰拉德,以及巴国官员在巴基斯坦西北部的托克哈姆边界关卡迎接十月九日与两名巴蓦斯坦同业一起遭塔莉班逮捕的裴哈。")
+#patience = super_get("法薪社记者报导,大使杰拉德,以及巴国官员在巴计斯坦西北部的托克哈姆边界关卡迎接十月九日与两名巴蓦斯坦同业一起遭塔莉班逮捕的裴哈。")
 
+patience = super_get("法新社记者报导,法国驻巴机斯坦大使杰拉德")
 
-print(sum(list(map(lambda x:len(x[2]), patience))))
+print(patience)
+
+#print(sum(list(map(lambda x:len(x[2]), patience))))
 
 #-----------------------------
-import pickle
-pair_dict = pickle.load(open("pair_dict.pickle", 'rb'))
-single_dict = pickle.load(open("single_dict.pickle", 'rb'))
+#import pickle
+#pair_dict = pickle.load(open("pair_dict.pickle", 'rb'))
+#single_dict = pickle.load(open("single_dict.pickle", 'rb'))
 
 #print(pair_dict[('法', '法')])
-
+"""
 from tqdm import tqdm
 #tencent_embedding = read_csv("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/embed_corpus/Tencent_AILab_ChineseEmbedding.txt")
 #word_dict = {}
@@ -150,4 +153,6 @@ for key in keys:
 	print(scores[key], key)
 
 print(len(scores.keys()))
+
+"""
 

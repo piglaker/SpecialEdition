@@ -133,7 +133,9 @@ def main():
         new = []
         for i in tqdm(range(len(train_source))):
             #tmp = train_source[i] + "\n" + " ".join(result[i][0]) + "," + " ".join(result[i][1])
-            lexions = [ lexion for lexion in super_get(re.sub("[a-zA-Z0-9\W*]", "", train_source[i])) if lexion[-1] in word_dict]
+            #print(train_source[i].split(""))
+            #lexions = [ lexion for lexion in super_get(re.sub("[a-zA-Z0-9\W*]", "", train_source[i])) if lexion[-1] in word_dict]
+            lexions = [ lexion for lexion in super_get(train_source[i]) if lexion[-1] in word_dict] 
             tmp = train_source[i] + "\n" + \
                 " ".join([ lexion[-1] for lexion in lexions]) + "," + \
                     " ".join( [ "$".join(list(map(str, list(range(lexion[0], lexion[1]+1))))) for lexion in lexions] )
