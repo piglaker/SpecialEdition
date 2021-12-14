@@ -373,7 +373,7 @@ class MyBertEmbeddings(nn.Module):
             try:
                 embeddings += position_embeddings
             except:
-                logger.error("Input Seq Lenght > max_length==512 ")
+                logger.error("Input Seq Length > max_length==512 ")
                 raise
 
         #print("inner my embedding")

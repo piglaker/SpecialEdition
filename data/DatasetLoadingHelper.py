@@ -228,7 +228,7 @@ def load_raw_lattice(raw_lattice_path="/data/rawdata/sighan/lattice/", path_head
     def wash_n(data):
         import re
         return [re.sub("\n", "", i) for i in data ]
-
+    
     train_source = wash_n(read_csv(train_source_path))#[:2000]
     train_target = wash_n(read_csv(train_target_path))#[:1000]#
     
@@ -384,6 +384,65 @@ def load_lattice_sighan(dataset=None, path_head=""):
 
     return datasets, vocabs, lattice_embedding
 
+def get_lattice_and_pos(source_and_lattice_and_target, tokenizer, max_length=512):
+    """
+    for abs pos bert
+    source: ["sentence", "sentence"]
+    """    
+
+    source, lattice, target = source_and_lattice_and_target
+
+    finals, abs_pos, attention_masks, labels = [], [], [], []
+
+    for i in range(len(source)):
+        #print("".join(source[i]))
+        tmp_source = tokenizer.convert_tokens_to_ids([i for i in source[i]])#["input_ids"]
+        if len(tmp_source) != len(source[i]):
+            print(source[i])
+            exit()
+        #tmp_source  = [i for i in source[i]]
+
+        tmp_lattice, tmp_pos =  lattice[i].split(",")#"s s s,a a a" -> "s s s", "a a a"
+
+        #print(tmp_source)
+
+        tmp_pos_s  = list(range(len(tmp_source))) + list(itertools.chain(*list(map(lambda x: [int(i) for i in x.split('$')], tmp_pos.split()))))
+        #print(tmp_pos_s) 
+        #tmp_lattice = [u for u in "".join(tmp_lattice.split())]
+        #print(len(tmp_lattice))
+        tmp_lattice = tokenizer.convert_tokens_to_ids([ i for i in "".join(tmp_lattice.split())])#["input_ids"]
+
+        #tmp_lattice = [i for i in tmp_lattice if i not in [102, 101]]
+
+        new_tmp_lattice, new_tmp_pos = [], list(range(len(tmp_source)))
+
+        #print(len(tmp_source), len(tmp_pos_s), len(tmp_lattice))
+
+        #here we mask the word left only char since we think char is a better road to answer
+        for j in range(len(tmp_lattice)):
+            _seq_len_ = len(tmp_source)
+            #print(j, _seq_len_)
+            index = tmp_pos_s[j + _seq_len_]
+
+            if tmp_lattice[j] != tmp_source[index]:
+                new_tmp_lattice.append(tmp_lattice[j])
+                new_tmp_pos.append(index)#for <SOS>
+
+        #new_tmp_pos.insert(0, 0)
+        #new_tmp_pos.insert(len(new_tmp_pos), len(new_tmp_pos))
+        #print(tmp_source, new_tmp_lattice)
+        concated = tmp_source + new_tmp_lattice[:max_length]
+        tmp_pos_s= new_tmp_pos[:max_length]
+
+        tmp_label = tokenizer.convert_tokens_to_ids([ i for i in target[i]]) 
+
+        finals.append(concated)
+        abs_pos.append(tmp_pos_s)
+        attention_masks.append([1] * len(concated))
+        labels.append(tmp_label)
+
+    return {"input_ids":finals, "lattice":abs_pos, "attention_mask":attention_masks, "labels":labels}
+
 from fastNLP import cache_results
 @cache_results(_cache_fp='cache/sighan_abs_pos_test', _refresh=True)
 def load_abs_pos_sighan(dataset=None, path_head=""):
@@ -394,33 +453,22 @@ def load_abs_pos_sighan(dataset=None, path_head=""):
 
     print("Loading Abs_Pos Bert SigHan Dataset ...")
 
-    train_pkg, valid_pkg, test_pkg = load_raw_lattice(path_head=path_head) 
-
-    train_dataset, valid_dataset, test_dataset = trans2dataset(train_pkg), trans2dataset(valid_pkg), trans2dataset(test_pkg)
+    train_pkg, valid_pkg, test_pkg = load_raw_lattice(path_head=".") 
 
     tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
 
-    train_source_tok = tokenizer.batch_encode_plus(train_dataset[0], return_token_type_ids=False)#seems transformers max_length not work
-    train_target_tok = tokenizer.batch_encode_plus(train_dataset[-1], return_token_type_ids=False)#remove padding=True, max_length=512
-    valid_source_tok = tokenizer.batch_encode_plus(valid_dataset[0], return_token_type_ids=False)
-    valid_target_tok = tokenizer.batch_encode_plus(valid_dataset[-1], return_token_type_ids=False)
-    test_source_tok = tokenizer.batch_encode_plus(test_dataset[0], return_token_type_ids=False)
-    test_target_tok = tokenizer.batch_encode_plus(test_dataset[-1], return_token_type_ids=False)
-
-    train_source_tok["labels"] = train_target_tok["input_ids"]
-    valid_source_tok["labels"] = valid_target_tok["input_ids"]
-    test_source_tok["labels"] = test_target_tok["input_ids"]
+    train_dataset, valid_dataset, test_dataset = get_lattice_and_pos(train_pkg, tokenizer), get_lattice_and_pos(valid_pkg, tokenizer), get_lattice_and_pos(test_pkg, tokenizer)
 
     def transpose(inputs):
         features = []
         for i in tqdm(range(len(inputs["input_ids"]))):
             #ugly fix for encoder model (the same length
-            features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
+            features.append({key:inputs[key][i][:512] for key in inputs.keys()}) #we fix here (truncation 
         return features 
 
-    return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
+    return transpose(train_dataset), transpose(valid_dataset), transpose(test_dataset)
 
 class myBatchEncoding():
     def __init__(self, data:Dict, encodings:List[Dict]):
@@ -442,8 +490,14 @@ class myBatchEncoding():
 
 if __name__ == "__main__":
     #load_sighan()
-    a, b, c = load_lattice_sighan()
+    #a, b, c = load_lattice_sighan()
+    a,b,c = load_abs_pos_sighan()
     print(a[0])
-    for i in b:
-        print(i)
-    print("Seems working well !")
+    for i in a:
+        if len(i["input_ids"]) != len(i["lattice"]):
+            print(len(i['input_ids']))
+            print(len(i['lattice']))
+            print(i['input_ids'])
+            print("something goes wrong!")
+    else:
+        print("Seems working well !")

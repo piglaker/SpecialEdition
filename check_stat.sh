@@ -1,1 +1,1 @@
-cat logs/sighan/bert_Flat_std_char.epoch10.bs16.log & gpustat
+cat logs/sighan/bert_MaskedLM_v2_std.epoch10.bs32.log & gpustat

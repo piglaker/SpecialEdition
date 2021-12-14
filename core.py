@@ -30,7 +30,7 @@ from transformers.file_utils import PaddingStrategy
 from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokenizerBase
 
-from data.DatasetLoadingHelper import load_ctc2021, load_sighan, load_lattice_sighan
+from data.DatasetLoadingHelper import load_ctc2021, load_sighan, load_lattice_sighan, load_abs_pos_sighan
 
 
 class mydataset(Dataset):
@@ -85,7 +85,7 @@ def get_dataset(dataset, path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
-def get_lattice_dataset(dataset="sighan", path_head=""):
+def get_lattice_dataset(dataset="sighan", path_head="."):
     """
     """
     print("Loading Dataset !")
@@ -108,7 +108,7 @@ def get_magic_dataset(dataset="sighan", path_head=""):
     os.system("date")
 
     if dataset == "sighan":
-        train_data, eval_data, test_data = load_magic_sighan(path_head=path_head)
+        train_data, eval_data, test_data = load_abs_pos_sighan(path_head=path_head)
     else:
         exit()
 

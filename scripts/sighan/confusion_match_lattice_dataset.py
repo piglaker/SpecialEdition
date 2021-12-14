@@ -28,10 +28,10 @@ def strQ2B(ustring):
 #
 def preprocess(sentence):
     s = strQ2B(sentence)
-    back_num = re.findall('\d+', s)
-    back_eng = re.findall(r'[a-zA-Z]+', s)
-    s = re.sub(r'[a-zA-Z]+', 'e', s)
-    s = re.sub('\d+', 'n', s)
+    #back_num = re.findall('\d+', s)
+    #back_eng = re.findall(r'[a-zA-Z]+', s)
+    #s = re.sub(r'[a-zA-Z]+', 'e', s)
+    #s = re.sub('\d+', 'n', s)
     return s
 
 def get_sighan_from_json():

@@ -60,7 +60,7 @@ class MyDataCollatorForSeq2Seq:
     def __call__(self, features):
         """
         replace "labels" with "target"
-        """ 
+         
         #labels = [feature["labels"] for feature in features] if "labels" in features[0].keys() else None
         shared_max_length = max([ max(len(i) for i in [ feature["labels"] for feature in features ]), max(len(i) for i in [ feature["input_ids"] for feature in features ]) ]) 
         
@@ -82,25 +82,18 @@ class MyDataCollatorForSeq2Seq:
                     label_pad_token_id = 0
                 elif key == "lattice":
                     for feature in features:
-
                         pos_ids = feature["lattice"] + [ i for i in range(len(feature["lattice"]), max_length)]
-
                         feature[key] = pos_ids
-
                     return features
-
                 elif key == "input_ids":
                     label_pad_token_id = 0
                 else:
                     label_pad_token_id = self.label_pad_token_id 
-
                 for feature in features:
-                    
                     remainder = [label_pad_token_id] * (max_length - len(feature[key]))
                     feature[key] = (
                         feature[key] + remainder if padding_side == "right" else remainder + feature[key]
                     )
-
             return features
 
         for key in ['input_ids', 'attention_mask', 'labels', "lattice"]:
@@ -118,9 +111,60 @@ class MyDataCollatorForSeq2Seq:
         for key in new.keys():
             new[key] = torch.tensor(new[key]) 
 
-        #print(new["lattice"][0])
+        return new
+        """
+        from copy import deepcopy
 
-        #exit()
+        f_copy = deepcopy(features)
+
+        shared_max_length = max([ len(i['input_ids']) for i in f_copy])
+
+        def simple_pad(f_copy, key):
+            f_key = [ f[key] for f in f_copy ]
+            if f_key is not None:
+                max_length = max(len(l) for l in f_key)
+
+                padding_side = "right"
+
+                if key == "attention_mask":
+                    label_pad_token_id = 0
+                elif key in ["input_ids", "lattice"]:
+                    label_pad_token_id = 0
+                elif key == "labels":
+                    max_length = shared_max_length
+                    label_pad_token_id= -100
+                else:
+                    label_pad_token_id = self.label_pad_token_id 
+
+                for f in f_copy: 
+                    remainder = [label_pad_token_id] * (max_length - len(f[key]))
+                    f[key] = (
+                        f[key] + remainder if padding_side == "right" else remainder + f[key]
+                    )
+            
+            return f_copy
+
+        for key in ["input_ids", "lattice", "labels", "attention_mask"]:
+            f_copy = simple_pad(f_copy, key)
+
+        new = {}
+
+        black_list = []
+
+        for key in f_copy[0].keys():
+            if key not in black_list:    
+                new[key] = []
+        
+        for feature in f_copy:
+            for key in feature.keys():
+                if key not in black_list:
+                    new[key].append(feature[key])
+
+        for key in new.keys():
+            if key not in  black_list:
+                #print(key)
+            #    new[key] = new[key]
+                new[key] = torch.tensor(new[key]) 
 
         return new
 
