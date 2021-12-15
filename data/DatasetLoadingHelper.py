@@ -384,6 +384,7 @@ def load_lattice_sighan(dataset=None, path_head=""):
 
     return datasets, vocabs, lattice_embedding
 
+
 def get_lattice_and_pos(source_and_lattice_and_target, tokenizer, max_length=512):
     """
     for abs pos bert
@@ -393,6 +394,8 @@ def get_lattice_and_pos(source_and_lattice_and_target, tokenizer, max_length=512
     source, lattice, target = source_and_lattice_and_target
 
     finals, abs_pos, attention_masks, labels = [], [], [], []
+
+    seq_len = []
 
     for i in range(len(source)):
         #print("".join(source[i]))
@@ -431,6 +434,7 @@ def get_lattice_and_pos(source_and_lattice_and_target, tokenizer, max_length=512
         #new_tmp_pos.insert(0, 0)
         #new_tmp_pos.insert(len(new_tmp_pos), len(new_tmp_pos))
         #print(tmp_source, new_tmp_lattice)
+        seq_len.append(len(tmp_source))
         concated = tmp_source + new_tmp_lattice[:max_length]
         tmp_pos_s= new_tmp_pos[:max_length]
 
@@ -441,7 +445,7 @@ def get_lattice_and_pos(source_and_lattice_and_target, tokenizer, max_length=512
         attention_masks.append([1] * len(concated))
         labels.append(tmp_label)
 
-    return {"input_ids":finals, "lattice":abs_pos, "attention_mask":attention_masks, "labels":labels}
+    return {"input_ids":finals, "lattice":abs_pos, "attention_mask":attention_masks, "labels":labels, "sub_length":seq_len}
 
 from fastNLP import cache_results
 @cache_results(_cache_fp='cache/sighan_abs_pos_test', _refresh=True)
@@ -465,7 +469,7 @@ def load_abs_pos_sighan(dataset=None, path_head=""):
         features = []
         for i in tqdm(range(len(inputs["input_ids"]))):
             #ugly fix for encoder model (the same length
-            features.append({key:inputs[key][i][:512] for key in inputs.keys()}) #we fix here (truncation 
+            features.append({key:inputs[key][i] for key in inputs.keys()}) #we fix here (truncation 
         return features 
 
     return transpose(train_dataset), transpose(valid_dataset), transpose(test_dataset)

@@ -119,6 +119,13 @@ class MyDataCollatorForSeq2Seq:
 
         shared_max_length = max([ len(i['input_ids']) for i in f_copy])
 
+
+        for i in range(len(f_copy)):
+            f_copy[i]["raw_length"] = []
+
+        for i in range(len(f_copy)):
+            f_copy[i]["raw_length"].append(len(f_copy[i]["input_ids"]))
+
         def simple_pad(f_copy, key):
             f_key = [ f[key] for f in f_copy ]
             if f_key is not None:
@@ -165,6 +172,22 @@ class MyDataCollatorForSeq2Seq:
                 #print(key)
             #    new[key] = new[key]
                 new[key] = torch.tensor(new[key]) 
+
+        #lets random mask
+        for i in range(len(new["input_ids"])):
+            #print(new["sub_length"][i], len(new["input_ids"][i]), new["sub_length"][i], len( new["raw_length"][0] ))
+
+            left = torch.ones(new["sub_length"][i])
+
+            right = torch.where( torch.randn( new["raw_length"][i] - new["sub_length"][i] ) > 0.6 , 1, 0)
+
+            pad = torch.zeros( len(new["input_ids"][i]) - left.shape[0] - right.shape[0] )
+
+            mask = torch.cat( (left, right, pad) , dim=0)
+            
+            new["input_ids"][i] = new["input_ids"][i] * mask
+
+        new.pop("raw_length")
 
         return new
 
