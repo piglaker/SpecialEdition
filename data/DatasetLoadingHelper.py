@@ -82,12 +82,12 @@ def load_sighan(path_head=""):
 
     print("Loading SigHan Dataset ...")
 
-    train_source_path = path_head + "./data/rawdata/sighan/std/train.src"
-    train_target_path = path_head + "./data/rawdata/sighan/std/train.tgt"
-    valid_source_path = path_head + "./data/rawdata/sighan/std/valid.src"
-    valid_target_path = path_head + "./data/rawdata/sighan/std/valid.tgt"
-    test_source_path = path_head + "./data/rawdata/sighan/std/test.src"
-    test_target_path = path_head + "./data/rawdata/sighan/std/test.tgt"
+    train_source_path = path_head + "./data/rawdata/sighan/raw/train.src"
+    train_target_path = path_head + "./data/rawdata/sighan/raw/train.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/raw/test.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/raw/test.tgt"
+    test_source_path = path_head + "./data/rawdata/sighan/raw/test.src"
+    test_target_path = path_head + "./data/rawdata/sighan/raw/test.tgt"
 
     train_source = read_csv(train_source_path)
     train_target = read_csv(train_target_path)
@@ -126,8 +126,8 @@ def load_sighan(path_head=""):
 def load_sighan14_test():
     print("Loading SigHan14 Test Dataset ...")
 
-    valid_source_path = "./data/rawdata/sighan/std/valid14.src"
-    valid_target_path = "./data/rawdata/sighan/std/valid14.tgt"
+    valid_source_path = "./data/rawdata/sighan/raw/valid14.src"
+    valid_target_path = "./data/rawdata/sighan/raw/valid14.tgt"
 
     valid_source = read_csv(valid_source_path)
     valid_target = read_csv(valid_target_path)
@@ -318,7 +318,7 @@ def load_lattice_sighan(dataset=None, path_head=""):
     print("Loading Lattice SigHan Dataset ...")
 
     pretrain_embedding_path = "/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/others/yangjie_word_char_mix.txt"
-
+    
     train_pkg, valid_pkg, test_pkg = load_raw_lattice(path_head=path_head) 
 
     train_dataset, valid_dataset, test_dataset = trans2dataset(train_pkg), trans2dataset(valid_pkg), trans2dataset(test_pkg)
@@ -457,7 +457,7 @@ def load_abs_pos_sighan(dataset=None, path_head=""):
 
     print("Loading Abs_Pos Bert SigHan Dataset ...")
 
-    train_pkg, valid_pkg, test_pkg = load_raw_lattice(path_head=".") 
+    train_pkg, valid_pkg, test_pkg = load_raw_lattice(path_head=path_head) 
 
     tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
 

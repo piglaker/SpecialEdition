@@ -2,11 +2,11 @@ dataset="sighan"
 epoch=10
 batch_size=128
 
-name="bert_MaskedLM_base_std.epoch$epoch.bs$batch_size"
+name="bert_MaskedLM_base_raw_v2.epoch$epoch.bs$batch_size"
 
 echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 
-CUDA_VISIBLE_DEVICES=6,7 nohup python bert_MaskedLM.py \
+CUDA_VISIBLE_DEVICES=2 nohup python bert_MaskedLM.py \
     --do_train \
     --do_eval \
     --do_predict \
