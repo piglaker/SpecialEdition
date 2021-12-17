@@ -1370,9 +1370,27 @@ class BertForMaskedLM_v2(BertPreTrainedModel):
         #if labels is not None:
         #    print("labels:", labels.shape)
 
+        import torch
+        import torch.nn as nn
+        import torch.nn.functional as F
+
+        class FocalLoss(nn.modules.loss._WeightedLoss):
+            def __init__(self, weight=None, gamma=2,reduction='mean'):
+                super(FocalLoss, self).__init__(weight,reduction=reduction)
+                self.gamma = gamma
+                self.weight = weight #weight parameter will act as the alpha parameter to balance class weights
+
+            def forward(self, input, target):
+                ce_loss = F.cross_entropy(input, target,reduction=self.reduction,weight=self.weight)
+                pt = torch.exp(-ce_loss)
+                focal_loss = ((1 - pt) ** self.gamma * ce_loss).mean()
+                return focal_loss
+
         masked_lm_loss = None
         if labels is not None:
-            loss_fct = CrossEntropyLoss()  # -100 index = padding token
+            #loss_fct = CrossEntropyLoss()  # -100 index = padding token
+            #masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
+            loss_fct = FocalLoss()
             masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
 
         if not return_dict:

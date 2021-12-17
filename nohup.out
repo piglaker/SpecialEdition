@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "bert_MaskedLM.py", line 16, in <module>
+    from transformers import (
+  File "<frozen importlib._bootstrap>", line 1039, in _handle_fromlist
+  File "/remote-home/xtzhang/anaconda3/envs/115/lib/python3.8/site-packages/transformers/file_utils.py", line 1985, in __getattr__
+    value = getattr(module, name)
+  File "/remote-home/xtzhang/anaconda3/envs/115/lib/python3.8/site-packages/transformers/file_utils.py", line 1984, in __getattr__
+    module = self._get_module(self._class_to_module[name])
+  File "/remote-home/xtzhang/anaconda3/envs/115/lib/python3.8/site-packages/transformers/file_utils.py", line 1993, in _get_module
+    return importlib.import_module("." + module_name, self.__name__)
+  File "/remote-home/xtzhang/anaconda3/envs/115/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "/remote-home/xtzhang/anaconda3/envs/115/lib/python3.8/site-packages/transformers/models/auto/configuration_auto.py", line 41, in <module>
+    from ..deberta_v2.configuration_deberta_v2 import DEBERTA_V2_PRETRAINED_CONFIG_ARCHIVE_MAP, DebertaV2Config
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 971, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 914, in _find_spec
+  File "<frozen importlib._bootstrap_external>", line 1407, in find_spec
+  File "<frozen importlib._bootstrap_external>", line 1379, in _get_spec
+  File "<frozen importlib._bootstrap_external>", line 1539, in find_spec
+  File "<frozen importlib._bootstrap_external>", line 156, in _path_isfile
+  File "<frozen importlib._bootstrap_external>", line 151, in _path_is_mode_type
+KeyboardInterrupt

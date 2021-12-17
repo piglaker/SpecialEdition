@@ -32,7 +32,7 @@ from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokenizerBase
 from transformers.training_args import TrainingArguments
 
-from core import get_magic_dataset, get_metrics, argument_init
+from core import get_super_magic_dataset, get_magic_dataset, get_metrics, argument_init
 from lib import subTrainer  
 from models.bert.modeling_bert_v3 import BertForMaskedLM_v2 
 #from transformers import BertForMaskedLM
@@ -59,59 +59,6 @@ class MyDataCollatorForSeq2Seq:
 
     def __call__(self, features):
         """
-        replace "labels" with "target"
-         
-        #labels = [feature["labels"] for feature in features] if "labels" in features[0].keys() else None
-        shared_max_length = max([ max(len(i) for i in [ feature["labels"] for feature in features ]), max(len(i) for i in [ feature["input_ids"] for feature in features ]) ]) 
-        
-        def simple_pad(features, key): 
-            labels = [ feature[key] for feature in features ]
-
-            if labels is not None:
-                max_length = max(len(l) for l in labels)
-
-                if key in ["labels", "input_ids", "atten_mask"]:
-                    max_length = shared_max_length
-
-                if max_length is not None and self.pad_to_multiple_of is not None and (max_length % self.pad_to_multiple_of != 0):
-                    max_length = ((max_length // self.pad_to_multiple_of) + 1) * self.pad_to_multiple_of
-
-                padding_side = "right"
-
-                if key == "attention_mask":
-                    label_pad_token_id = 0
-                elif key == "lattice":
-                    for feature in features:
-                        pos_ids = feature["lattice"] + [ i for i in range(len(feature["lattice"]), max_length)]
-                        feature[key] = pos_ids
-                    return features
-                elif key == "input_ids":
-                    label_pad_token_id = 0
-                else:
-                    label_pad_token_id = self.label_pad_token_id 
-                for feature in features:
-                    remainder = [label_pad_token_id] * (max_length - len(feature[key]))
-                    feature[key] = (
-                        feature[key] + remainder if padding_side == "right" else remainder + feature[key]
-                    )
-            return features
-
-        for key in ['input_ids', 'attention_mask', 'labels', "lattice"]:
-            features = simple_pad(features, key)
-
-        new = {}
-
-        for key in features[0].keys():
-            new[key] = []
-    
-        for feature in features:
-            for key in feature.keys():
-                new[key].append(feature[key])
-
-        for key in new.keys():
-            new[key] = torch.tensor(new[key]) 
-
-        return new
         """
         from copy import deepcopy
 
@@ -262,12 +209,16 @@ def run():
     )
 
     # Dataset
-    train_dataset, eval_dataset, test_dataset = get_magic_dataset(training_args.dataset) 
+    train_dataset, eval_dataset, test_dataset = get_magic_dataset(training_args.dataset, ".")  
+    #train_dataset, eval_dataset, test_dataset, tokenizer = get_super_magic_dataset(training_args.dataset, ".") #balanced within target and special token <RAW>
 
     # Model
     model = BertForMaskedLM_v2.from_pretrained(
         "bert-base-chinese"#"hfl/chinese-roberta-wwm-ext"
+        #"./tmp/sighan/bert_MaksedLM_base_raw_v2.epoch10.bs128"
     ) #base
+
+    #model.resize_token_embeddings(len(tokenizer))
 
     # Metrics
     compute_metrics = get_metrics()
