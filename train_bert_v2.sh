@@ -2,11 +2,11 @@ dataset="sighan"
 epoch=10
 batch_size=32
 
-name="bert_MaskedLM_v2_std_mask_focalloss.epoch$epoch.bs$batch_size"
+name="bert_MaskedLM_v2_std_mask_dropout_test.epoch$epoch.bs$batch_size"
 
 echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 
-CUDA_VISIBLE_DEVICES=3 nohup python bert_MaskedLM_v2.py \
+CUDA_VISIBLE_DEVICES=2 nohup python bert_MaskedLM_v2.py \
     --do_train \
     --do_eval \
     --do_predict \

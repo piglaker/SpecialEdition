@@ -309,7 +309,7 @@ class MyBertEmbeddings(nn.Module):
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
         # any TensorFlow checkpoint file
         self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.dropout = nn.Dropout(0.3)#config.hidden_dropout_prob)#0.1
         # position_ids (1, len position emb) is contiguous in memory and exported when serialized
         self.position_embedding_type = getattr(config, "position_embedding_type", "absolute")
         self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
@@ -1370,28 +1370,28 @@ class BertForMaskedLM_v2(BertPreTrainedModel):
         #if labels is not None:
         #    print("labels:", labels.shape)
 
-        import torch
-        import torch.nn as nn
-        import torch.nn.functional as F
-
-        class FocalLoss(nn.modules.loss._WeightedLoss):
-            def __init__(self, weight=None, gamma=2,reduction='mean'):
-                super(FocalLoss, self).__init__(weight,reduction=reduction)
-                self.gamma = gamma
-                self.weight = weight #weight parameter will act as the alpha parameter to balance class weights
-
-            def forward(self, input, target):
-                ce_loss = F.cross_entropy(input, target,reduction=self.reduction,weight=self.weight)
-                pt = torch.exp(-ce_loss)
-                focal_loss = ((1 - pt) ** self.gamma * ce_loss).mean()
-                return focal_loss
+        #import torch
+        #import torch.nn as nn
+        #import torch.nn.functional as F
+        #class FocalLoss(nn.modules.loss._WeightedLoss):
+        #    def __init__(self, weight=None, gamma=2, alpha=1, reduction='mean'):
+        #        super(FocalLoss, self).__init__(weight,reduction=reduction)
+        #        self.gamma = gamma
+        #        self.alpha = alpha
+        #        self.weight = weight #weight parameter will act as the alpha parameter to balance class weights
+        #
+        #    def forward(self, input, target):
+        #        ce_loss = F.cross_entropy(input, target,reduction=self.reduction,weight=self.weight)
+        #        pt = torch.exp(-ce_loss)
+        #        focal_loss = self.alpha * ((1 - pt) ** self.gamma * ce_loss)#.mean()
+        #        return focal_loss
 
         masked_lm_loss = None
         if labels is not None:
-            #loss_fct = CrossEntropyLoss()  # -100 index = padding token
-            #masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
-            loss_fct = FocalLoss()
+            loss_fct = CrossEntropyLoss()  # -100 index = padding token
             masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
+            #loss_fct = FocalLoss(gamma=0.5, alpha=10)
+            #masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
 
         if not return_dict:
             output = (prediction_scores,) + outputs[2:]

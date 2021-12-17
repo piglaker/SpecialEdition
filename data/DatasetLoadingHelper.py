@@ -229,8 +229,8 @@ def load_raw_lattice(raw_lattice_path="/data/rawdata/sighan/lattice/", path_head
         import re
         return [re.sub("\n", "", i) for i in data ]
     
-    train_source = wash_n(read_csv(train_source_path))[:2000]
-    train_target = wash_n(read_csv(train_target_path))[:1000]#
+    train_source = wash_n(read_csv(train_source_path))#[:2000]
+    train_target = wash_n(read_csv(train_target_path))#[:1000]#
     
     valid_source = wash_n(read_csv(valid_source_path))
     valid_target = wash_n(read_csv(valid_target_path))
