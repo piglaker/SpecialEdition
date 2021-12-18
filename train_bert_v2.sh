@@ -2,7 +2,7 @@ dataset="sighan"
 epoch=10
 batch_size=32
 
-name="bert_MaskedLM_v2_std_mask_dropout_test.epoch$epoch.bs$batch_size"
+name="bert_MaskedLM_v2_std_mask_expand_d3.epoch$epoch.bs$batch_size"
 
 echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 
