@@ -64,7 +64,7 @@ def run():
     ) #base
 
     # Metrics
-    compute_metrics = get_metrics(tokenizer)
+    compute_metrics = get_metrics()
 
     # Data Collator
     data_collator = DataCollatorForSeq2Seq(

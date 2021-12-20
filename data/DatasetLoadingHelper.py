@@ -84,8 +84,8 @@ def load_sighan(path_head=""):
 
     train_source_path = path_head + "./data/rawdata/sighan/raw/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/raw/train.tgt"
-    valid_source_path = path_head + "./data/rawdata/sighan/raw/test.src"
-    valid_target_path = path_head + "./data/rawdata/sighan/raw/test.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/raw/valid.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/raw/valid.tgt"#valid should be same to test ( sighan 15
     test_source_path = path_head + "./data/rawdata/sighan/raw/test.src"
     test_target_path = path_head + "./data/rawdata/sighan/raw/test.tgt"
 
@@ -97,6 +97,11 @@ def load_sighan(path_head=""):
 
     test_source = read_csv(test_source_path)
     test_target = read_csv(test_target_path)
+
+    #valid_source = train_source[:1100]#for valid overfit problem
+    #valid_target = train_target[:1100]
+    #train_source = train_source[1100:]
+    #train_target = train_target[1100:]
 
     tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
 
@@ -405,17 +410,11 @@ def get_lattice_and_pos(source_and_lattice_and_target, tokenizer, max_length=512
     for i in range(len(source)):
         tmp_source = tokenizer.convert_tokens_to_ids([i for i in source[i]])#["input_ids"]
 
-        #tmp_source  = [i for i in source[i]]
-
         tmp_lattice, tmp_pos =  lattice[i].split(",")#"s s s,a a a" -> "s s s", "a a a"
 
         tmp_pos_s  = list(range(len(tmp_source))) + list(itertools.chain(*list(map(lambda x: [int(i) for i in x.split('$')], tmp_pos.split()))))
 
-        #tmp_lattice = [u for u in "".join(tmp_lattice.split())]
-        
         tmp_lattice = tokenizer.convert_tokens_to_ids([ i for i in "".join(tmp_lattice.split())])#["input_ids"]
-
-        #tmp_lattice = [i for i in tmp_lattice if i not in [102, 101]]
 
         new_tmp_lattice, new_tmp_pos = [], list(range(len(tmp_source)))
 

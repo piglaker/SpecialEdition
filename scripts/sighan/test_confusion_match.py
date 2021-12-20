@@ -35,7 +35,7 @@ all_word_list = wash_n(all_word_list)
 
 print(all_word_list[:2])
 
-trie = list2confusion_trie(all_word_list, confusion_dict)
+trie = list2confusion_trie(all_word_list, confusion_dict, max_mutated=2)
 
 t = trie.confusion["基"]
 print(t)
@@ -55,17 +55,20 @@ trie.mysearch(node=trie.root, pointer=0, is_mutated=False, main_key=0)
 print(trie.result)
 print(time.time() - time_)
 
-def super_get(sentence):
-	print("{")
-	print("sentence: ", sentence)
+def super_get(sentence, _out_=True):
+	if _out_:
+		print("{")
+		print("sentence: ", sentence)
 	time_ = time.time()
 	trie.assign(sentence)#记者法新社")
 	#trie.my_search(node=trie.root, pointer=0, is_mutated=False, main_key=0)
 	trie.my_get_lexion()
-	print(trie.result)
-	#print(trie.confusion_map)
-	print("time:", time.time() - time_)
-	print("}")
+	if _out_:
+		print(trie.result)
+		print("get: ", len(trie.result))
+		#print(trie.confusion_map)
+		print("time:", time.time() - time_)
+		print("}")
 	return trie.result
 print(trie.confusion["利"], trie.confusion["国"])
 
@@ -82,6 +85,22 @@ test_sentence = "法薪社记者报导,大使杰拉德,以及巴国官员在巴�
 patience = super_get("法新社记者报导,法国驻巴机斯坦大使杰拉德")
 
 print(patience)
+
+
+valid_source = read_csv("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/raw/train.src")
+
+sum_length = 0
+
+from tqdm import tqdm
+
+for i in tqdm(valid_source):
+	result =super_get(i, _out_=False)
+	sum_length += len(result)
+	#print(i)
+	#break
+
+print(sum_length / len(valid_source))
+
 
 #print(sum(list(map(lambda x:len(x[2]), patience))))
 

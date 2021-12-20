@@ -1,12 +1,12 @@
 dataset="sighan"
-epoch=30
+epoch=20
 batch_size=96
 
 name="bart_Seq2Seq_metric.epoch$epoch.bs$batch_size"
 
 echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 
-CUDA_VISIBLE_DEVICES=4,5 nohup python bart_Seq2Seq.py \
+CUDA_VISIBLE_DEVICES=7 nohup python bart_Seq2Seq.py \
     --do_train \
     --do_eval \
     --do_predict \

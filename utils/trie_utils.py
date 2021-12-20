@@ -10,7 +10,7 @@ class TrieNode:
         self.is_w = False
 
 class Trie:
-    def __init__(self, confusion=None):
+    def __init__(self, confusion=None, max_mutated=1):
         self.root = TrieNode()
         #bidirect graph
 
@@ -37,7 +37,7 @@ class Trie:
         self.result = None
         self.confusion_map = []
         self.debug =False
-        self.max_mutated = 1
+        self.max_mutated = max_mutated
     
     def insert(self,w):
 
@@ -160,8 +160,8 @@ class Pair:
         self.key = k
         self.value = v
 
-def list2confusion_trie(word_list, confusion_dict):
-    word_trie = Trie(confusion_dict)
+def list2confusion_trie(word_list, confusion_dict, max_mutated=1):
+    word_trie = Trie(confusion_dict, max_mutated=max_mutated)
     for word in word_list:
         word_trie.insert(word)
 

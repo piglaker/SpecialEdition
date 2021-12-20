@@ -6,7 +6,7 @@ name="bert_MaskedLM_v2_std_mask_se.epoch$epoch.bs$batch_size"
 
 echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 #default lr 5e-5
-CUDA_VISIBLE_DEVICES=1 nohup python bert_MaskedLM_v2.py \
+CUDA_VISIBLE_DEVICES=6 nohup python bert_MaskedLM_v2.py \
     --do_train \
     --do_eval \
     --do_predict \

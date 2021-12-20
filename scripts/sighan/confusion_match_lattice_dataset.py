@@ -153,7 +153,7 @@ def main():
     #train_magic_target = app(train_target)
 
     write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/train.src", "\n".join(train_magic_source ))#+ train_magic_target))
-    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/train.tgt", "\n".join(train_target + train_target))
+    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/train.tgt", "\n".join(train_target))
 
     write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/valid14.src", "\n".join(valid14_magic_source))
     write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/valid14.tgt", "\n".join(valid14_target))
