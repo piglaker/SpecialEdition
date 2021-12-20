@@ -150,19 +150,19 @@ def main():
     train_magic_source, valid14_magic_source, valid_magic_source = app(train_source), app(valid14_source), app(valid_source)   
 
     #for balance (add for train
-    train_magic_target = app(train_target)
+    #train_magic_target = app(train_target)
 
-    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice_balanced/train.src", "\n".join(train_magic_source + train_magic_target))
-    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice_balanced/train.tgt", "\n".join(train_target + train_target))
+    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/train.src", "\n".join(train_magic_source ))#+ train_magic_target))
+    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/train.tgt", "\n".join(train_target + train_target))
 
-    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice_balanced/valid14.src", "\n".join(valid14_magic_source))
-    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice_balanced/valid14.tgt", "\n".join(valid14_target))
+    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/valid14.src", "\n".join(valid14_magic_source))
+    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/valid14.tgt", "\n".join(valid14_target))
 
-    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice_balanced/test.src", "\n".join(valid_magic_source))
-    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice_balanced/test.tgt", "\n".join(valid_target))
+    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/test.src", "\n".join(valid_magic_source))
+    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/test.tgt", "\n".join(valid_target))
 
-    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice_balanced/valid.src", "\n".join(valid_magic_source))
-    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice_balanced/valid.tgt", "\n".join(valid_target))
+    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/valid.src", "\n".join(valid_magic_source))
+    write_to("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/rawdata/sighan/lattice/valid.tgt", "\n".join(valid_target))
 
 
     return 

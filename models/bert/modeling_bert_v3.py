@@ -177,7 +177,7 @@ class BertEmbeddings(nn.Module):
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
         # any TensorFlow checkpoint file
         self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
-        self.dropout = nn.Dropout(0.3)#config.hidden_dropout_prob)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
         # position_ids (1, len position emb) is contiguous in memory and exported when serialized
         self.position_embedding_type = getattr(config, "position_embedding_type", "absolute")
         self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
@@ -593,7 +593,7 @@ class BertOutput(nn.Module):
         super().__init__()
         self.dense = nn.Linear(config.intermediate_size, config.hidden_size)
         self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
-        self.dropout = nn.Dropout(0.3)#config.hidden_dropout_prob)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, hidden_states, input_tensor):
         hidden_states = self.dense(hidden_states)
@@ -1021,6 +1021,7 @@ class BertModel(BertPreTrainedModel):
         self.embeddings = MyBertEmbeddings(config)
         self.encoder = BertEncoder(config)
 
+        self.dropout = nn.Dropout(0.3)
         self.pooler = BertPooler(config) if add_pooling_layer else None
 
         self.init_weights()
@@ -1165,6 +1166,8 @@ class BertModel(BertPreTrainedModel):
         sequence_output = encoder_outputs[0]
         pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
 
+        #hidden dropout from jituo
+        #sequence_output = self.dropout(sequence_output)
         if not return_dict:
             return (sequence_output, pooled_output) + encoder_outputs[1:]
 
