@@ -77,7 +77,8 @@ def load_ctc2021():
 
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
-
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_raw', _refresh=False)
 def load_sighan(path_head=""):
 
     print("Loading SigHan Dataset ...")
@@ -89,8 +90,8 @@ def load_sighan(path_head=""):
     test_source_path = path_head + "./data/rawdata/sighan/raw/test.src"
     test_target_path = path_head + "./data/rawdata/sighan/raw/test.tgt"
 
-    train_source = read_csv(train_source_path)#[274144:]#for only sighan
-    train_target = read_csv(train_target_path)#[274144:]
+    train_source = read_csv(train_source_path)#[:2000]#[274144:]#for only sighan
+    train_target = read_csv(train_target_path)#[:2000]#[274144:]
     
     valid_source = read_csv(valid_source_path)
     valid_target = read_csv(valid_target_path)

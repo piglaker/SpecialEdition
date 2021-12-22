@@ -219,7 +219,7 @@ def run():
 
     # Model
     model = BertForMaskedLM.from_pretrained(
-        "bert-base-chinese"#"hfl/chinese-roberta-wwm-ext"
+        "hfl/chinese-roberta-wwm-ext"#"bert-base-chinese"
     ) #base
 
     # Metrics

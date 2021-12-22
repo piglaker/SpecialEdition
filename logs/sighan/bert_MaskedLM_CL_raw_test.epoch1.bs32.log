@@ -1,0 +1,72 @@
+Tue Dec 21 08:31:29 UTC 2021
+Loading Dataset !
+Loading SigHan Dataset ...
+  0%|          | 0/2000 [00:00<?, ?it/s]100%|██████████| 2000/2000 [00:00<00:00, 97565.78it/s]
+  0%|          | 0/1100 [00:00<?, ?it/s]100%|██████████| 1100/1100 [00:00<00:00, 165854.28it/s]
+  0%|          | 0/1100 [00:00<?, ?it/s] 36%|███▌      | 396/1100 [00:00<00:00, 3088.27it/s]100%|██████████| 1100/1100 [00:00<00:00, 8310.97it/s]Tue Dec 21 08:31:39 UTC 2021
+
+Some weights of the model checkpoint at hfl/chinese-roberta-wwm-ext were not used when initializing BertForMaskedLM_CL: ['cls.seq_relationship.weight', 'cls.seq_relationship.bias']
+- This IS expected if you are initializing BertForMaskedLM_CL from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertForMaskedLM_CL from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Using amp fp16 backend
+***** Running training *****
+  Num examples = 2000
+  Num Epochs = 1
+  Instantaneous batch size per device = 32
+  Total train batch size (w. parallel, distributed & accumulation) = 32
+  Gradient Accumulation steps = 1
+  Total optimization steps = 63
+Loading Succeed !
+  0%|          | 0/63 [00:00<?, ?it/s]  2%|▏         | 1/63 [00:00<00:14,  4.13it/s]  3%|▎         | 2/63 [00:00<00:10,  5.81it/s]  5%|▍         | 3/63 [00:00<00:08,  6.85it/s]  6%|▋         | 4/63 [00:00<00:07,  7.47it/s]  8%|▊         | 5/63 [00:00<00:07,  7.89it/s] 10%|▉         | 6/63 [00:00<00:06,  8.33it/s] 11%|█         | 7/63 [00:00<00:06,  8.63it/s] 13%|█▎        | 8/63 [00:01<00:06,  8.76it/s] 14%|█▍        | 9/63 [00:01<00:06,  8.94it/s] 16%|█▌        | 10/63 [00:01<00:05,  9.11it/s] 17%|█▋        | 11/63 [00:01<00:05,  9.25it/s] 19%|█▉        | 12/63 [00:01<00:05,  8.56it/s] 21%|██        | 13/63 [00:01<00:06,  8.29it/s] 22%|██▏       | 14/63 [00:01<00:05,  8.32it/s] 24%|██▍       | 15/63 [00:01<00:05,  8.38it/s] 25%|██▌       | 16/63 [00:01<00:05,  8.21it/s] 27%|██▋       | 17/63 [00:02<00:05,  8.29it/s] 29%|██▊       | 18/63 [00:02<00:05,  8.39it/s] 30%|███       | 19/63 [00:02<00:05,  8.44it/s] 32%|███▏      | 20/63 [00:02<00:04,  8.67it/s] 33%|███▎      | 21/63 [00:02<00:04,  8.59it/s] 35%|███▍      | 22/63 [00:02<00:04,  8.34it/s] 37%|███▋      | 23/63 [00:02<00:04,  8.40it/s] 38%|███▊      | 24/63 [00:02<00:04,  8.28it/s] 40%|███▉      | 25/63 [00:03<00:04,  8.29it/s] 41%|████▏     | 26/63 [00:03<00:04,  8.36it/s] 43%|████▎     | 27/63 [00:03<00:04,  8.16it/s] 44%|████▍     | 28/63 [00:03<00:04,  8.10it/s] 46%|████▌     | 29/63 [00:03<00:04,  8.15it/s] 48%|████▊     | 30/63 [00:03<00:04,  8.03it/s] 49%|████▉     | 31/63 [00:03<00:04,  7.96it/s] 51%|█████     | 32/63 [00:03<00:03,  7.85it/s] 52%|█████▏    | 33/63 [00:04<00:03,  7.86it/s] 54%|█████▍    | 34/63 [00:04<00:03,  8.07it/s] 56%|█████▌    | 35/63 [00:04<00:03,  8.10it/s] 57%|█████▋    | 36/63 [00:04<00:03,  7.96it/s] 59%|█████▊    | 37/63 [00:04<00:03,  7.92it/s] 60%|██████    | 38/63 [00:04<00:03,  8.00it/s] 62%|██████▏   | 39/63 [00:04<00:02,  8.15it/s] 63%|██████▎   | 40/63 [00:04<00:02,  8.22it/s] 65%|██████▌   | 41/63 [00:05<00:02,  8.09it/s] 67%|██████▋   | 42/63 [00:05<00:02,  8.17it/s] 68%|██████▊   | 43/63 [00:05<00:02,  8.04it/s] 70%|██████▉   | 44/63 [00:05<00:02,  8.06it/s] 71%|███████▏  | 45/63 [00:05<00:02,  7.94it/s] 73%|███████▎  | 46/63 [00:05<00:02,  7.79it/s] 75%|███████▍  | 47/63 [00:05<00:02,  7.80it/s] 76%|███████▌  | 48/63 [00:05<00:01,  7.82it/s] 78%|███████▊  | 49/63 [00:06<00:01,  7.93it/s] 79%|███████▉  | 50/63 [00:06<00:01,  8.06it/s] 81%|████████  | 51/63 [00:06<00:01,  7.97it/s] 83%|████████▎ | 52/63 [00:06<00:01,  7.94it/s] 84%|████████▍ | 53/63 [00:06<00:01,  8.00it/s] 86%|████████▌ | 54/63 [00:06<00:01,  8.11it/s] 87%|████████▋ | 55/63 [00:06<00:00,  8.12it/s] 89%|████████▉ | 56/63 [00:06<00:00,  7.94it/s] 90%|█████████ | 57/63 [00:07<00:00,  7.93it/s] 92%|█████████▏| 58/63 [00:07<00:00,  7.90it/s] 94%|█████████▎| 59/63 [00:07<00:00,  7.95it/s] 95%|█████████▌| 60/63 [00:07<00:00,  8.01it/s] 97%|█████████▋| 61/63 [00:07<00:00,  8.06it/s] 98%|█████████▊| 62/63 [00:07<00:00,  8.15it/s]
+  0%|          | 0/35 [00:00<?, ?it/s][A
+ 14%|█▍        | 5/35 [00:00<00:00, 41.55it/s][A
+ 29%|██▊       | 10/35 [00:00<00:00, 36.91it/s][A
+ 40%|████      | 14/35 [00:00<00:00, 35.46it/s][A
+ 51%|█████▏    | 18/35 [00:00<00:00, 26.43it/s][A
+ 60%|██████    | 21/35 [00:00<00:00, 24.74it/s][A
+ 69%|██████▊   | 24/35 [00:00<00:00, 25.06it/s][A
+ 80%|████████  | 28/35 [00:01<00:00, 25.74it/s][A
+ 89%|████████▊ | 31/35 [00:01<00:00, 24.34it/s][A
+ 97%|█████████▋| 34/35 [00:01<00:00, 23.40it/s][A                                               
+                                               [A100%|██████████| 63/63 [00:09<00:00,  8.15it/s]
+100%|██████████| 35/35 [00:01<00:00, 23.40it/s][A
+                                               [ASaving model checkpoint to ./tmp/sighan/bert_MaskedLM_CL_raw_test.epoch1.bs32/checkpoint-63
+Configuration saved in ./tmp/sighan/bert_MaskedLM_CL_raw_test.epoch1.bs32/checkpoint-63/config.json
+Model weights saved in ./tmp/sighan/bert_MaskedLM_CL_raw_test.epoch1.bs32/checkpoint-63/pytorch_model.bin
+tokenizer config file saved in ./tmp/sighan/bert_MaskedLM_CL_raw_test.epoch1.bs32/checkpoint-63/tokenizer_config.json
+Special tokens file saved in ./tmp/sighan/bert_MaskedLM_CL_raw_test.epoch1.bs32/checkpoint-63/special_tokens_map.json
+
+
+Training completed. Do not forget to share your model on huggingface.co/models =)
+
+
+Loading best model from ./tmp/sighan/bert_MaskedLM_CL_raw_test.epoch1.bs32/checkpoint-63 (score: 0.0).
+                                               100%|██████████| 63/63 [00:14<00:00,  8.15it/s]100%|██████████| 63/63 [00:14<00:00,  4.38it/s]
+Saving model checkpoint to ./tmp/sighan/bert_MaskedLM_CL_raw_test.epoch1.bs32
+Configuration saved in ./tmp/sighan/bert_MaskedLM_CL_raw_test.epoch1.bs32/config.json
+Model weights saved in ./tmp/sighan/bert_MaskedLM_CL_raw_test.epoch1.bs32/pytorch_model.bin
+tokenizer config file saved in ./tmp/sighan/bert_MaskedLM_CL_raw_test.epoch1.bs32/tokenizer_config.json
+Special tokens file saved in ./tmp/sighan/bert_MaskedLM_CL_raw_test.epoch1.bs32/special_tokens_map.json
+{'eval_loss': -3820.964599609375, 'eval_F1_score': 0.0, 'eval_Precision': 0.0, 'eval_Recall': 0.0, 'eval_Metric_time': 0.0333094596862793, 'eval_runtime': 1.3834, 'eval_samples_per_second': 795.171, 'eval_steps_per_second': 25.301, 'epoch': 1.0}
+{'train_runtime': 14.3922, 'train_samples_per_second': 138.964, 'train_steps_per_second': 4.377, 'train_loss': -3249.2445436507937, 'epoch': 1.0}
+***** train metrics *****
+  epoch                    =        1.0
+  train_loss               = -3249.2445
+  train_runtime            = 0:00:14.39
+  train_samples            =       2000
+  train_samples_per_second =    138.964
+  train_steps_per_second   =      4.377
+  0%|          | 0/35 [00:00<?, ?it/s] 14%|█▍        | 5/35 [00:00<00:00, 39.37it/s] 26%|██▌       | 9/35 [00:00<00:00, 35.67it/s] 37%|███▋      | 13/35 [00:00<00:00, 34.67it/s] 49%|████▊     | 17/35 [00:00<00:00, 26.96it/s] 57%|█████▋    | 20/35 [00:00<00:00, 24.97it/s] 66%|██████▌   | 23/35 [00:00<00:00, 25.12it/s] 74%|███████▍  | 26/35 [00:00<00:00, 25.39it/s] 83%|████████▎ | 29/35 [00:01<00:00, 24.07it/s] 91%|█████████▏| 32/35 [00:01<00:00, 23.19it/s]100%|██████████| 35/35 [00:01<00:00, 24.55it/s]100%|██████████| 35/35 [00:01<00:00, 25.72it/s]
+***** eval metrics *****
+  epoch                   =        1.0
+  eval_F1_score           =        0.0
+  eval_Metric_time        =     0.0285
+  eval_Precision          =        0.0
+  eval_Recall             =        0.0
+  eval_loss               = -3820.9646
+  eval_runtime            = 0:00:01.39
+  eval_samples            =       1100
+  eval_samples_per_second =    786.639
+  eval_steps_per_second   =     25.029
+  0%|          | 0/35 [00:00<?, ?it/s] 14%|█▍        | 5/35 [00:00<00:00, 43.12it/s] 29%|██▊       | 10/35 [00:00<00:00, 37.29it/s] 40%|████      | 14/35 [00:00<00:00, 35.65it/s] 51%|█████▏    | 18/35 [00:00<00:00, 26.68it/s] 60%|██████    | 21/35 [00:00<00:00, 25.03it/s] 69%|██████▊   | 24/35 [00:00<00:00, 25.40it/s] 80%|████████  | 28/35 [00:00<00:00, 26.15it/s] 89%|████████▊ | 31/35 [00:01<00:00, 24.67it/s] 97%|█████████▋| 34/35 [00:01<00:00, 23.76it/s]100%|██████████| 35/35 [00:01<00:00, 25.37it/s]
+**********over**********
