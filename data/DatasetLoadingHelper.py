@@ -128,9 +128,13 @@ def load_sighan(path_head=""):
 
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
+def load_sighan13_test():
+    """
+    UnFinished ...
+    """
+    print("Loading SigHan13 Test Dataset ...")
 
-def load_sighan14_test():
-    print("Loading SigHan14 Test Dataset ...")
+    exit()
 
     valid_source_path = "./data/rawdata/sighan/raw/valid14.src"
     valid_target_path = "./data/rawdata/sighan/raw/valid14.tgt"
@@ -156,7 +160,34 @@ def load_sighan14_test():
     return transpose(valid_source_tok)
 
 
-def load_sighan15_test():
+def load_sighan14_test(path_head="./"):
+    print("Loading SigHan14 Test Dataset ...")
+
+    valid_source_path = path_head + "data/rawdata/sighan/raw/valid14.src"
+    valid_target_path = path_head + "data/rawdata/sighan/raw/valid14.tgt"
+
+    valid_source = read_csv(valid_source_path)
+    valid_target = read_csv(valid_target_path)
+
+    tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
+
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
+
+    valid_source_tok = tokenizer.batch_encode_plus(valid_source, return_token_type_ids=False)
+    valid_target_tok = tokenizer.batch_encode_plus(valid_target, return_token_type_ids=False)
+
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+
+    return transpose(valid_source_tok)
+
+
+def load_sighan15_test(path_head="./"):
     print("Loading SigHan15 Test Dataset ...")
 
     valid_source_path = "./data/rawdata/sighan/std/test.src"
@@ -603,7 +634,7 @@ def get_lattice_and_pos_plus(source_and_lattice_and_target, tokenizer, max_lengt
     seq_len = []
 
     for i in range(len(source)):
-        tmp_source = tokenizer.convert_tokens_to_ids([i for i in source[i]])#["input_ids"]
+        tmp_source = tokenizer.convert_tokens_to_ids( ["[CLS]"] + [o for o in source[i]] + ["[SEP]"] )#["input_ids"]
 
         tmp_lattice, tmp_pos =  lattice[i].split(",")#"s s s,a a a" -> "s s s", "a a a"
 
@@ -620,18 +651,18 @@ def get_lattice_and_pos_plus(source_and_lattice_and_target, tokenizer, max_lengt
 
             if tmp_lattice[j] != tmp_source[index]:
                 new_tmp_lattice.append(tmp_lattice[j])
-                new_tmp_pos.append(index)#for <SOS>
+                new_tmp_pos.append(index+1)#for <SOS>
 
-        seq_len.append(len(tmp_source))
-        concated = tmp_source + new_tmp_lattice[:max_length]
-        tmp_pos_s= new_tmp_pos[:max_length]
+        seq_len.append(len(tmp_source[:max_length]))
+        concated = (tmp_source + new_tmp_lattice)
+        tmp_pos_s= new_tmp_pos
 
-        tmp_label = tokenizer.convert_tokens_to_ids([ i for i in target[i]]) 
+        tmp_label = tokenizer.convert_tokens_to_ids( ["[CLS]"] + [ i for i in target[i]] + ["[SEP]"] )  
 
-        finals.append(concated)
-        abs_pos.append(tmp_pos_s)
-        attention_masks.append([1] * len(concated))
-        labels.append(tmp_label)
+        finals.append(concated[:max_length])
+        abs_pos.append(tmp_pos_s[:max_length])
+        attention_masks.append( ([1] * len(concated) )[:max_length] )
+        labels.append(tmp_label[:max_length])
 
         #expand
         #finals.append(tmp_source)

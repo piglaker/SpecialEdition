@@ -32,8 +32,13 @@ from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokenizerBase
 from transformers.training_args import TrainingArguments
 
-from core import get_dataset, get_metrics, argument_init
-from lib import subTrainer  
+from core import (
+    get_dataset, 
+    get_metrics, 
+    argument_init,
+    get_ReaLiSe_dataset,
+)
+from lib import subTrainer, FoolDataCollatorForSeq2Seq 
 from data.DatasetLoadingHelper import load_ctc2021, load_sighan
 from models.bert.modeling_bert_v4 import BertForMaskedLM_CL
 #from transformers import BertForMaskedLM
@@ -215,7 +220,8 @@ def run():
     )
 
     # Dataset
-    train_dataset, eval_dataset, test_dataset = get_dataset(training_args.dataset) 
+    #train_dataset, eval_dataset, test_dataset = get_dataset(training_args.dataset) 
+    train_dataset, eval_dataset, test_dataset = get_ReaLiSe_dataset() 
 
     # Model
     model = BertForMaskedLM_CL.from_pretrained(
@@ -227,7 +233,7 @@ def run():
 
     # Data Collator
 
-    data_collator = MyDataCollatorForSeq2Seq(
+    data_collator = FoolDataCollatorForSeq2Seq(
         tokenizer=tokenizer,
         model=model,
         label_pad_token_id=-100,

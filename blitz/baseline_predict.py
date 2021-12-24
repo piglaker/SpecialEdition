@@ -73,6 +73,10 @@ bs = 2
 
 result = []
 
+print(tokenizer.convert_tokens_to_ids(["[CLS]", "[SEP]", "[EOS]"] ) )
+
+exit()
+
 for i in tqdm(range(0, len(test_dataset) // bs + 1)):
     batch = test_dataset[ i*32 : (i+1) *32]
 

@@ -32,7 +32,7 @@ from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokenizerBase
 from transformers.training_args import TrainingArguments
 
-from core import get_super_magic_dataset, get_magic_expand_dataset, get_magic_lang8_dataset, get_magic_dataset, get_metrics, argument_init
+from core import get_super_magic_dataset, get_magic_expand_dataset, get_magic_plus_dataset, get_magic_lang8_dataset, get_magic_dataset, get_metrics, argument_init
 from lib import subTrainer  
 from models.bert.modeling_bert_v3 import BertForMaskedLM_v2 
 #from transformers import BertForMaskedLM
@@ -209,7 +209,8 @@ def run():
     )
 
     # Dataset
-    train_dataset, eval_dataset, test_dataset = get_magic_dataset(training_args.dataset, ".")  
+    #train_dataset, eval_dataset, test_dataset = get_magic_dataset(training_args.dataset, ".")  
+    train_dataset, eval_dataset, test_dataset = get_magic_plus_dataset(training_args.dataset, ".")
     #train_dataset, eval_dataset, test_dataset, tokenizer = get_super_magic_dataset(training_args.dataset, ".") #balanced within target and special token <RAW>
     
     # Model

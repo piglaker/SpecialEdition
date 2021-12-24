@@ -30,7 +30,18 @@ from transformers.file_utils import PaddingStrategy
 from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokenizerBase
 
-from data.DatasetLoadingHelper import load_ctc2021, load_sighan, load_lattice_sighan, load_abs_pos_sighan, load_abs_pos_sighan_lang8, load_abs_pos_sighan_plus, load_abs_pos_and_spe_token_sighan
+from data.DatasetLoadingHelper import (
+    load_ctc2021, 
+    load_sighan, 
+    load_lattice_sighan, 
+    load_abs_pos_sighan, 
+    load_abs_pos_sighan_lang8, 
+    load_abs_pos_sighan_plus, 
+    load_abs_pos_and_spe_token_sighan,
+    load_sighan13_test,
+    load_sighan14_test,
+    load_sighan15_test,
+)
 
 class mydataset(Dataset):
     def __init__(self, data):
@@ -44,9 +55,7 @@ class mydataset(Dataset):
 
 
 def argument_init(trainingarguments=Seq2SeqTrainingArguments):
-
-    """
-    
+    """ 
     """
     parser = HfArgumentParser(trainingarguments)
 
@@ -84,6 +93,61 @@ def get_dataset(dataset, path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
+def get_ReaLiSe_dataset():
+    """
+    For its 
+    """
+    print("Loading Dataset !")
+    print("Hint: The Data You loading now is the preprocessed sighan from ReaLise, ")
+    os.system("date")
+
+    path = "../SE_tmp_back/milestone/ReaLiSe/data/"
+    import pickle
+    train_dataset = pickle.load(open(path + "trainall.times2.pkl", "rb"))
+    eval_dataset = pickle.load(open(path + "test.sighan15.pkl", "rb"))
+    test_dataset = pickle.load(open(path + "test.sighan15.pkl", "rb"))
+
+    def trans2mydataset(features):
+        new = []
+        for feature in features:
+            tmp = {}
+            tmp["input_ids"] = feature["src_idx"][:128]
+            tmp["labels"] = feature["tgt_idx"][:128]
+            tmp["attention_mask"] = ([1] * len(tmp["input_ids"]))[:128]#feature["lengths"])[:128]
+            new.append(tmp)
+        
+        return mydataset(new)
+
+    print("Loading Succeed !")
+    os.system("date")
+
+    return trans2mydataset(train_dataset), trans2mydataset(eval_dataset), trans2mydataset(test_dataset)
+
+
+def get_sighan_test(which, path_head=""):
+    """
+    """
+    print("Loading Dataset !")
+    os.system("date")
+    if which == "13":
+        test_data = load_sighan13_test(path_head)
+    elif which == "14":
+        test_data = load_sighan14_test(path_head)
+    elif which == "15":
+        test_data = load_sighan15_test(path_head)
+    else:
+        print("Error: No such dataset ")
+        print(which)
+        exit(0)
+
+    test_dataset = mydataset(test_data)
+
+    print("Loading Succeed !")
+    os.system("date")
+
+    return test_dataset
+
+
 def get_lattice_dataset(dataset="sighan", path_head="."):
     """
     """
@@ -99,6 +163,24 @@ def get_lattice_dataset(dataset="sighan", path_head="."):
 
     return datasets, vocabs, embeddings
 
+def get_magic_plus_dataset(dataset="sighan", path_head=""):
+    """
+    """
+    print("Loading Dataset !")
+    os.system("date")
+
+    if dataset == "sighan":
+        train_data, eval_data, test_data = load_abs_pos_sighan_plus(path_head=path_head)
+    else:
+        exit()
+
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    print("Loading Succeed !")
+
+    os.system("date")
+
+    return train_dataset, eval_dataset, test_dataset
 
 def get_magic_dataset(dataset="sighan", path_head=""):
     """
@@ -194,25 +276,37 @@ def get_metrics():
         Achilles = time.time()
 
         sources, preds, labels = eval_preds# (num, length) np.array
-
  
         tp, fp, fn = 0, 0, 0
 
         sent_p, sent_n = 0, 0
 
         for i in range(len(sources)):
-            #print(sources[i])
-            #print(preds[i])
-            #print(labels[i])
+            source, pred, label = sources[i], preds[i], labels[i]
+            # print(source)
+            # print(pred)
+            # print(label)
 
-            source, pred, label = sources[i][sources[i] != 102], preds[i][ preds[i] != 102 ], labels[i][ labels[i] != 102]
-            source, pred, label = source[source != 101], pred[pred != 101], label[label != 101]
-            source, pred, label = source[source != 0], pred[pred != 0], label[label != 0]
-            source, pred, label = source[source != -100], pred[pred != -100], label[label != -100] 
+            source, label = source[ source != -100], label[label != -100]
+            #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100]# pad idx for labels
+            # print(source)
+            # print(pred)
+            # print(label)
+            source, pred, label = source[source != 102], pred[ pred != 102 ], label[ label != 102]
+            source, pred, label = source[source != 101], pred[pred != 101], label[label != 101]# 
+            source, label = source[source != 0],  label[label != 0]#pad idx for input_ids 
+            #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100] 
 
             source = source[:len(label)]
-            pred = pred[:len(label)]        
-
+            pred = pred[:len(label)]
+            #print(source, pred, label)    
+            #print(type(pred), type(source), pred==source)
+            # print(source)
+            # print(pred)
+            # print(label)
+            if len(pred) != len(source) or len(label) != len(source):
+                print(pred, source)
+                exit()
             if (pred != source).any():
                 sent_p += 1
                 if (pred == label).all():

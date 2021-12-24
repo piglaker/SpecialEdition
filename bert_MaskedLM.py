@@ -32,7 +32,12 @@ from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokenizerBase
 from transformers.training_args import TrainingArguments
 
-from core import get_dataset, get_metrics, argument_init
+from core import (
+    get_dataset, 
+    get_metrics, 
+    argument_init, 
+    get_ReaLiSe_dataset,
+)
 from lib import subTrainer  
 from data.DatasetLoadingHelper import load_ctc2021, load_sighan
 #from models.bart.modeling_bart_v2 import BartForConditionalGeneration
@@ -107,6 +112,8 @@ class MyDataCollatorForSeq2Seq:
                     feature["labels"] + remainder if padding_side == "right" else remainder + feature["labels"]
                 )
 
+        print(features)
+
         features = self.tokenizer.pad(
             features,
             padding=self.padding,
@@ -121,6 +128,70 @@ class MyDataCollatorForSeq2Seq:
             features["decoder_input_ids"] = decoder_input_ids
 
         return features
+
+@dataclass
+class FoolDataCollatorForSeq2Seq:
+    """
+    """
+    tokenizer: PreTrainedTokenizerBase
+    model: Optional[PreTrainedModel] = None
+    padding: Union[bool, str, PaddingStrategy] = True
+    max_length: Optional[int] = None
+    pad_to_multiple_of: Optional[int] = None
+    label_pad_token_id: int = -100
+
+    def __call__(self, features):
+        """
+        """
+        from copy import deepcopy
+
+        f_copy = deepcopy(features)
+
+        shared_max_length = max([ len(i['input_ids']) for i in f_copy])
+
+        def simple_pad(f_copy, key):
+            f_key = [ f[key] for f in f_copy ]
+            if f_key is not None:
+                max_length = max(len(l) for l in f_key)
+
+                padding_side = "right"
+
+                if key == "attention_mask":
+                    label_pad_token_id = 0
+                elif key in ["input_ids"]:
+                    label_pad_token_id = 0
+                elif key == "labels":
+                    max_length = shared_max_length
+                    label_pad_token_id= -100
+                else:
+                    label_pad_token_id = self.label_pad_token_id 
+
+                for f in f_copy: 
+                    remainder = [label_pad_token_id] * (max_length - len(f[key]))
+                    f[key] = (
+                        f[key] + remainder if padding_side == "right" else remainder + f[key]
+                    )
+            
+            return f_copy
+
+        for key in ["input_ids", "labels", "attention_mask"]:
+            f_copy = simple_pad(f_copy, key)
+
+        new = {}
+
+        black_list = []
+
+        for key in f_copy[0].keys():  
+            new[key] = []
+        
+        for feature in f_copy:
+            for key in feature.keys():
+                new[key].append(feature[key])
+
+        for key in new.keys():
+            new[key] = torch.tensor(new[key]) 
+
+        return new
 
 class MyTrainer(subTrainer):
     def prediction_step(
@@ -215,7 +286,7 @@ def run():
     )
 
     # Dataset
-    train_dataset, eval_dataset, test_dataset = get_dataset(training_args.dataset) 
+    train_dataset, eval_dataset, test_dataset = get_ReaLiSe_dataset()#get_dataset(training_args.dataset) 
 
     # Model
     model = BertForMaskedLM.from_pretrained(
@@ -227,7 +298,7 @@ def run():
 
     # Data Collator
 
-    data_collator = MyDataCollatorForSeq2Seq(
+    data_collator = FoolDataCollatorForSeq2Seq(
         tokenizer=tokenizer,
         model=model,
         label_pad_token_id=-100,
