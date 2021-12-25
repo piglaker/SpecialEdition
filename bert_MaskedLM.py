@@ -112,8 +112,6 @@ class MyDataCollatorForSeq2Seq:
                     feature["labels"] + remainder if padding_side == "right" else remainder + feature["labels"]
                 )
 
-        print(features)
-
         features = self.tokenizer.pad(
             features,
             padding=self.padding,

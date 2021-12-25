@@ -13,6 +13,7 @@ import warnings
 from logging import StreamHandler
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
+from dataclasses import dataclass, field
 
 from tqdm.auto import tqdm
 
@@ -110,7 +111,7 @@ from transformers.trainer_utils import (
 from transformers.training_args import ParallelMode, TrainingArguments
 from transformers.utils import logging
 from transformers.utils.modeling_auto_mapping import MODEL_FOR_QUESTION_ANSWERING_MAPPING_NAMES
-
+from transformers.file_utils import PaddingStrategy
 
 _is_torch_generator_available = False
 _is_native_amp_available = False
