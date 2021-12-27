@@ -5,6 +5,7 @@
 /data/others
 /data/rawdata
 /milestone
+/models/bart/bart-zh
 /predict
 /tmp
 **/__pycache__
