@@ -93,7 +93,7 @@ def get_dataset(dataset, path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
-def get_ReaLiSe_dataset():
+def get_ReaLiSe_dataset(which="15"):
     """
     For its 
     """
@@ -104,8 +104,10 @@ def get_ReaLiSe_dataset():
     path = "../SE_tmp_back/milestone/ReaLiSe/data/"
     import pickle
     train_dataset = pickle.load(open(path + "trainall.times2.pkl", "rb"))
-    eval_dataset = pickle.load(open(path + "test.sighan15.pkl", "rb"))
-    test_dataset = pickle.load(open(path + "test.sighan15.pkl", "rb"))
+    eval_dataset = pickle.load(open(path + "test.sighan" + which + ".pkl", "rb"))
+    test_dataset = pickle.load(open(path + "test.sighan" + which + ".pkl", "rb"))
+
+    print("Hint: Using SIGHAN" + which + "for eval & test !")
 
     def trans2mydataset(features):
         new = []
@@ -283,17 +285,17 @@ def get_metrics():
 
         for i in range(len(sources)):
             source, pred, label = sources[i], preds[i], labels[i]
-            # print(source)
-            # print(pred)
-            # print(label)
+            #print(source)
+            #print(pred)
+            #print(label)
 
             source, label = source[ source != -100], label[label != -100]
             #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100]# pad idx for labels
             # print(source)
             # print(pred)
             # print(label)
-            source, pred, label = source[source != 102], pred[ pred != 102 ], label[ label != 102]
-            source, pred, label = source[source != 101], pred[pred != 101], label[label != 101]# 
+            #source, pred, label = source[source != 102], pred[ pred != 102 ], label[ label != 102]
+            #source, pred, label = source[source != 101], pred[pred != 101], label[label != 101]#remove  
             source, label = source[source != 0],  label[label != 0]#pad idx for input_ids 
             #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100] 
 
@@ -301,12 +303,27 @@ def get_metrics():
             pred = pred[:len(label)]
             #print(source, pred, label)    
             #print(type(pred), type(source), pred==source)
-            # print(source)
-            # print(pred)
-            # print(label)
+
+            #we guess pretrain Masked Language Model bert lack the surpvised sighan for 101 & 102 ( [CLS] & [SEP] ) , so we just ignore
+            source, pred, label = np.where(source == 102, 101, source), np.where(pred == 102, 101, pred), np.where(label == 102, 101, label) 
+            #source, pred, label = source[1:len(source)-1], pred[1:len(pred)-1], label[1:len(label)-1]
+
+            #print(source)
+            #print(pred)
+            #print(label)
             if len(pred) != len(source) or len(label) != len(source):
-                print(pred, source)
+                print("Warning : something goes wrong when compute metrics, check codes now.")
+                print(len(source), len(pred), len(label))
+                print("source: ", source)
+                print("pred: ", pred)
+                print("label:", label)
                 exit()
+
+            try:
+                (pred != source).any()
+            except:
+                print(pred, source) 
+
             if (pred != source).any():
                 sent_p += 1
                 if (pred == label).all():
@@ -322,6 +339,97 @@ def get_metrics():
         F1_score = 2 * precision * recall / (precision + recall + 1e-10)
 
         Turtle = time.time() - Achilles
+
+        if F1_score < 0.1:
+            print("Warning : metric F1_score is too Low , maybe something goes wrong, check your codes please.")
+
+        return {"F1_score": float(F1_score), "Precision":float(precision),  "Recall":float(recall),"Metric_time":Turtle}
+
+    return compute_metrics
+
+def get_seq2seq_metrics():
+    """
+    #https://huggingface.co/metrics
+    #accuracy,bertscore, bleu, bleurt, coval, gleu, glue, meteor,
+    #rouge, sacrebleu, seqeval, squad, squad_v2, xnli
+    metric = load_metric() 
+    """
+    
+    import numpy as np
+    from datasets import load_metric
+
+    def compute_metrics(eval_preds):
+        """
+        reference: https://github.com/ACL2020SpellGCN/SpellGCN/blob/master/run_spellgcn.py
+        """
+        Achilles = time.time()
+
+        sources, preds, labels = eval_preds# (num, length) np.array
+ 
+        tp, fp, fn = 0, 0, 0
+
+        sent_p, sent_n = 0, 0
+
+        for i in range(len(sources)):
+            source, pred, label = sources[i], preds[i], labels[i]
+            #print(source)
+            #print(pred)
+            #print(label)
+
+            source, label = source[ source != -100], label[label != -100]
+            #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100]# pad idx for labels
+            # print(source)
+            # print(pred)
+            # print(label)
+            #source, pred, label = source[source != 102], pred[ pred != 102 ], label[ label != 102]
+            #source, pred, label = source[source != 101], pred[pred != 101], label[label != 101]#remove  
+            source, label = source[source != 0],  label[label != 0]#pad idx for input_ids 
+            #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100] 
+
+            source = source[:len(label)]
+            pred = pred[:len(label)]
+            #print(source, pred, label)    
+            #print(type(pred), type(source), pred==source)
+
+            #we guess pretrain Masked Language Model bert lack the surpvised sighan for 101 & 102 ( [CLS] & [SEP] ) , so we just ignore
+            source, pred, label = np.where(source == 102, 101, source), np.where(pred == 102, 101, pred), np.where(label == 102, 101, label) 
+            #source, pred, label = source[1:len(source)-1], pred[1:len(pred)-1], label[1:len(label)-1]
+
+            #print(source)
+            #print(pred)
+            #print(label)
+            # if len(pred) != len(source) or len(label) != len(source):
+                # print("Warning : something goes wrong when compute metrics, check codes now.")
+                # print(len(source), len(pred), len(label))
+                # print("source: ", source)
+                # print("pred: ", pred)
+                # print("label:", label)
+                # exit()
+
+            #print((pred != source).any())
+            #print( (pred == label).all() )
+
+            if len(pred) != len(source) :
+                sent_p += 1
+            else:
+                if (pred != source).any():
+                    sent_p += 1
+                    if (pred == label).all():
+                        tp += 1
+
+            if (label != source).any():
+                sent_n += 1
+
+        precision = tp / (sent_p + 1e-10)
+
+        recall = tp / (sent_n + 1e-10)
+
+        F1_score = 2 * precision * recall / (precision + recall + 1e-10)
+
+        Turtle = time.time() - Achilles
+
+        if F1_score < 0.1:
+            print("Warning : metric F1_score is too Low , maybe something goes wrong, check your codes please.")
 
         return {"F1_score": float(F1_score), "Precision":float(precision),  "Recall":float(recall),"Metric_time":Turtle}
 

@@ -1257,6 +1257,9 @@ class BertModel(BertPreTrainedModel):
 
 
 class BertForFlat(BertPreTrainedModel):
+    """
+    dmsong's flat
+    """
     def __init__(self, config, word_embedding):
         super(BertForFlat, self).__init__(config=config)
         self.bert = BertModel(config=config, add_pooling_layer=False, word_embedding=word_embedding)

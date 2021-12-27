@@ -6,7 +6,7 @@ name="bert_MaskedLM_CL_ReaLiSe_metric_warmup_test.epoch$epoch.bs$batch_size"
 
 echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 #default lr 5e-5
-CUDA_VISIBLE_DEVICES=3 nohup python bert_MaskedLM_CL.py \
+CUDA_VISIBLE_DEVICES=4 nohup python bert_MaskedLM_CL.py \
     --do_train \
     --do_eval \
     --do_predict \
@@ -19,11 +19,11 @@ CUDA_VISIBLE_DEVICES=3 nohup python bert_MaskedLM_CL.py \
     --per_device_eval_batch_size $batch_size \
     --eval_accumulation_steps 2 \
     --num_train_epochs $epoch \
-    --evaluation_strategy epoch \
+    --evaluation_strategy steps \
     --save_strategy epoch \
-    --load_best_model_at_end \
     --dataloader_pin_memory True \
     --metric_for_best_model F1_score \
     --dataset $dataset \
     --warmup_steps 10000 \
+    --eval_steps 1000 \
 > logs/$dataset/$name.log 2>&1 &

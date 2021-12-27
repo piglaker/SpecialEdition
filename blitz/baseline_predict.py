@@ -10,7 +10,7 @@ import numpy as np
 import datasets
 import torch
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 import transformers
@@ -56,8 +56,9 @@ def top_k_top_p_filtering(logits, top_k=0, top_p=1.0, filter_value=-float("Inf")
     if top_k > 0:
         top_k = min(max(top_k, min_tokens_to_keep), logits.size(-1))  # Safety check
         # Remove all tokens with a probability less than the last token of the top-k
+
         indices_to_remove = logits < torch.topk(logits, top_k)[0][..., -1, None]
-        print(logits, indices_to_remove)
+
         logits[indices_to_remove] = filter_value
 
     if top_p < 1.0:
@@ -116,9 +117,11 @@ tp, sent_p, sent_n = 0, 0, 0
 tp2 = 0
 
 for i in tqdm(range(0, len(test_dataset) // bs + 1)):
+    
     batch = test_dataset[ i*bs : (i+1) *bs]
-
-    logits = model(**preprocess(batch)).logits
+    
+    with torch.no_grad():
+        logits = model(**preprocess(batch)).logits
 
     #pred = torch.argmax(torch.softmax(logits, 2), -1)
     #print(logits.shape)
@@ -126,13 +129,17 @@ for i in tqdm(range(0, len(test_dataset) // bs + 1)):
 
     for i in logits:
         #topks.append( torch.softmax(i, dim=1).topk(5, dim=1)[-1].T.reshape(5, -1) )
-        topks.append(top_k_top_p_filtering(i, top_k=5))
-        print(topks)
+        #print( torch.softmax(i, dim=1).topk(2, dim=1)[0] )
+        tmp = top_k_top_p_filtering( i, top_k=5)  #top_p=0.8)
+        topks.append(tmp)
+        print(tmp.shape)
         exit()
+        #print(topks)
+        #exit()
     labels = torch.tensor([i["labels"] for i in batch])
     labels = [ i[ i != -100] for i in labels ]
     #labels = [ i[ i != -101] for i in labels ]
-    #labels = [ i[ i != -102] for i in labels ]
+    #labels = [ i[ i != -102] for i in labels ]tmp 
     labels = [ i[ i != 0] for i in labels ]
     
     cut_topks = []
@@ -149,7 +156,7 @@ for i in tqdm(range(0, len(test_dataset) // bs + 1)):
         
         #print(tmp.shape, tmp.T.reshape(-1,5) == label.view(-1, 1))
         
-        res = (tmp.T.reshape(-1, 5) == label.view(-1, 1)).sum().item()
+        res = (tmp.T == label.view(-1, 1)).sum().item()
         
         sent_p += 1
         if res == label.shape[0]:

@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """PyTorch BERT model. """
+"""For Contrastive Learning """
 
 
 import math
@@ -1349,8 +1350,8 @@ class BertForMaskedLM_CL(BertPreTrainedModel):
         )
 
         sequence_output = outputs[0]
-        prediction_scores = self.cls(sequence_output)
-        #prediction_scores = self.mlp(sequence_output)
+        #prediction_scores = self.cls(sequence_output)
+        prediction_scores = self.mlp(sequence_output)
 
         logits = prediction_scores
 
@@ -1369,11 +1370,11 @@ class BertForMaskedLM_CL(BertPreTrainedModel):
 
             prediction_scores = prediction_scores.float()
 
+            prediction_scores[:, -1] = 0
+
             labels = labels.long()
 
-            prediction_scores = torch.where(prediction_scores == torch.tensor(-100, dtype=torch.float32).cuda(), torch.tensor(0, dtype=torch.float32).cuda(), prediction_scores)
-
-            labels = torch.where( labels == torch.tensor(-100, dtype=torch.long).cuda(), torch.tensor(-1, dtype=torch.long).cuda(), labels)
+            labels = torch.where( labels == -100, torch.tensor(-1, dtype=torch.long).cuda(), labels)
 
             contrastive_learning_positive = prediction_scores.view(-1, self.config.vocab_size)[ torch.tensor(range(prediction_scores.view(-1, 21128).shape[0])), labels.view(-1) ] 
 

@@ -26,7 +26,7 @@ from transformers import Trainer, Seq2SeqTrainer
 from transformers import TrainingArguments
 from transformers import trainer_utils, training_args
 
-from core import get_dataset, get_metrics, argument_init
+from core import get_dataset, get_seq2seq_metrics, argument_init
 from lib import subTrainer 
 from data.DatasetLoadingHelper import load_ctc2021, load_sighan
 from models.bart.modeling_bart_v2 import BartForConditionalGeneration
@@ -60,11 +60,12 @@ def run():
 
     # Model
     model = BartForConditionalGeneration.from_pretrained(
-        '/remote-home/share/yfshao/bart-zh/arch12-2-new-iter8w/'
+        #'/remote-home/share/yfshao/bart-zh/arch12-2-new-iter8w/'
+        '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
     ) #base
 
     # Metrics
-    compute_metrics = get_metrics()
+    compute_metrics = get_seq2seq_metrics()
 
     # Data Collator
     data_collator = DataCollatorForSeq2Seq(

@@ -130,6 +130,7 @@ class MyDataCollatorForSeq2Seq:
 @dataclass
 class FoolDataCollatorForSeq2Seq:
     """
+    Aamazing DataCollator: seems fool but convenient and fix all the bugs !
     """
     tokenizer: PreTrainedTokenizerBase
     model: Optional[PreTrainedModel] = None
@@ -284,7 +285,7 @@ def run():
     )
 
     # Dataset
-    train_dataset, eval_dataset, test_dataset = get_ReaLiSe_dataset()#get_dataset(training_args.dataset) 
+    train_dataset, eval_dataset, test_dataset = get_ReaLiSe_dataset("14")#get_dataset(training_args.dataset) 
 
     # Model
     model = BertForMaskedLM.from_pretrained(

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """PyTorch BERT model. """
-
+""" A Mirror of Transformers BERT ( Main Difference : Abs Postion Embedding )"""
 
 import math
 import os
