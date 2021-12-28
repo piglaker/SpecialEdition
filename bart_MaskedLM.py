@@ -212,12 +212,19 @@ def run():
             num_beams=num_beams
         )
 
+        predict_results = trainer.predict(
+            test_dataset, 
+            metric_key_prefix="predict",
+        )
+
+        predictions = np.where(predict_results.predictions != -100, predict_results.predictions, tokenizer.pad_token_id)#remove the pad 
+
         metrics = predict_results.metrics
 
         metrics["predict_samples"] = len(test_dataset)
-        
+
         predictions = tokenizer.batch_decode(
-                predict_results.predictions, 
+                sequences=predictions, 
                 skip_special_tokens=True, 
                 clean_up_tokenization_spaces=True
         )
@@ -228,7 +235,7 @@ def run():
 
         with open(output_prediction_file, "w") as writer:
             writer.write("\n".join(predictions))
-
+        
     logger.info("*"*10 + "Curtain" + "*"*10)
 
     return

@@ -1,4 +1,5 @@
 dataset="sighan"
+eval_dataset="15"
 epoch=10
 batch_size=64
 
@@ -24,6 +25,7 @@ CUDA_VISIBLE_DEVICES=4 nohup python bert_MaskedLM_CL.py \
     --dataloader_pin_memory True \
     --metric_for_best_model F1_score \
     --dataset $dataset \
+    --eval_dataset $eval_dataset \
     --warmup_steps 10000 \
     --eval_steps 1000 \
 > logs/$dataset/$name.log 2>&1 &

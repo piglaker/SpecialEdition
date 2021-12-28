@@ -1,1 +1,1 @@
-cat logs/sighan/bart_MaskedLM_base_ReaLiSe_metric.epoch10.bs128.log & gpustat
+cat logs/sighan/bert_MaskedLM_CL_ReaLiSe_metric_warmup_test.epoch10.bs64.log & gpustat

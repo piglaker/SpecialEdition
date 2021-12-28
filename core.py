@@ -107,7 +107,7 @@ def get_ReaLiSe_dataset(which="15"):
     eval_dataset = pickle.load(open(path + "test.sighan" + which + ".pkl", "rb"))
     test_dataset = pickle.load(open(path + "test.sighan" + which + ".pkl", "rb"))
 
-    print("Hint: Using SIGHAN" + which + "for eval & test !")
+    print("Hint: Using **SIGHAN" + which + "** for eval & test !")
 
     def trans2mydataset(features):
         new = []

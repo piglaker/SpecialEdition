@@ -1367,24 +1367,22 @@ class BertForMaskedLM_CL(BertPreTrainedModel):
 
             # prediction_scores: [batch_size, max_length, vocab_size], labels: [batch_size, max_length]
             # get gold P
+            
+            #prediction_scores = prediction_scores.float()
 
-            prediction_scores = prediction_scores.float()
+            #labels = labels.long()
 
-            prediction_scores[:, -1] = 0
+            #labels_tmp = torch.where( labels == -100, torch.tensor(-1, dtype=torch.long).cuda(), labels)
 
-            labels = labels.long()
-
-            labels = torch.where( labels == -100, torch.tensor(-1, dtype=torch.long).cuda(), labels)
-
-            contrastive_learning_positive = prediction_scores.view(-1, self.config.vocab_size)[ torch.tensor(range(prediction_scores.view(-1, 21128).shape[0])), labels.view(-1) ] 
+            contrastive_learning_positive = prediction_scores.view(-1, self.config.vocab_size)[ torch.tensor(range(prediction_scores.view(-1, 21128).shape[0])), labels.view(-1) ].view(labels.shape[0], labels.shape[1]) * attention_mask
 
             mask = torch.ones_like(prediction_scores)
 
-            mask.view(-1, self.config.vocab_size)[ torch.tensor(range(mask.view(-1, self.config.vocab_size).shape[0])) , labels.view(-1) ] = 0
+            mask.view(-1, self.config.vocab_size)[ torch.tensor(range(mask.view(-1, self.config.vocab_size).shape[0])) , labels.view(-1) ] = 1e-10
 
-            prediction_scores = mask * prediction_scores
+            prediction_scores_tmp = mask * prediction_scores
 
-            contrastive_laerning_negative = prediction_scores.topk(5, dim=2)[0]
+            contrastive_laerning_negative = prediction_scores_tmp.topk(5, dim=2)[0]
 
             l_cpo = -1 * (contrastive_learning_positive.sum() - contrastive_laerning_negative.sum() / 5) / prediction_scores.shape[0] 
 

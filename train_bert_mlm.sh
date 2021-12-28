@@ -1,8 +1,9 @@
 dataset="sighan"
+eval_dataset="14"
 epoch=20
 batch_size=16
 
-name="bert_MaskedLM_base_ReaLiSe_metric_test14.epoch$epoch.bs$batch_size"
+name="bert_MaskedLM_base_ReaLiSe_metric.$eval_dataset.epoch$epoch.bs$batch_size"
 
 echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 
@@ -24,6 +25,7 @@ CUDA_VISIBLE_DEVICES=3 nohup python bert_MaskedLM.py \
     --dataloader_pin_memory True \
     --metric_for_best_model F1_score \
     --dataset $dataset \
+    --eval_dataset $eval_dataset \
     --learning_rate 5e-5 \
     --warmup_steps 10000 \
     --eval_steps 1000 \

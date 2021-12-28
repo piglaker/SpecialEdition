@@ -51,6 +51,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     dataset: str = field(default="sighan", metadata={"help":"dataset"})
+    eval_dataset:str = field(default="sighan", metadata={"help":"dataset for eval"})
     max_length: int = field(default=128, metadata={"help": "max length"})
     num_beams: int = field(default=4, metadata={"help": "num beams"})
 
@@ -277,19 +278,21 @@ def run():
 
     set_seed(training_args.seed)
 
+    pretrained_csc_model = None#"/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/milestone/ReaLiSe/pretrained"#None
+
     # Tokenizer    
-    tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
+    tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext" if pretrained_csc_model is None else pretrained_csc_model 
 
     tokenizer = AutoTokenizer.from_pretrained(
-        tokenizer_model_name_path
+        tokenizer_model_name_path 
     )
 
     # Dataset
-    train_dataset, eval_dataset, test_dataset = get_ReaLiSe_dataset("14")#get_dataset(training_args.dataset) 
+    train_dataset, eval_dataset, test_dataset = get_ReaLiSe_dataset(training_args.eval_dataset)#get_dataset(training_args.dataset) 
 
     # Model
     model = BertForMaskedLM.from_pretrained(
-        "hfl/chinese-roberta-wwm-ext"#"bert-base-chinese"
+        "hfl/chinese-roberta-wwm-ext" if pretrained_csc_model is None else pretrained_csc_model #"bert-base-chinese"
     ) #base
 
     # Metrics
