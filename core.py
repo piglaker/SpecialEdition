@@ -43,6 +43,14 @@ from data.DatasetLoadingHelper import (
     load_sighan15_test,
 )
 
+@dataclass
+class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
+    model_name: str=field(default="MaskedLM", metadata={"help":"which bert model "})
+    dataset: str = field(default="sighan", metadata={"help":"dataset"})
+    eval_dataset:str = field(default="sighan", metadata={"help":"dataset for eval"})
+    max_length: int = field(default=128, metadata={"help": "max length"})
+    num_beams: int = field(default=4, metadata={"help": "num beams"})
+
 class mydataset(Dataset):
     def __init__(self, data):
         self.data = data
@@ -63,6 +71,47 @@ def argument_init(trainingarguments=Seq2SeqTrainingArguments):
 
     return training_args
 
+
+def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-roberta-wwm-ext"):
+    """
+    Just get model
+    MLP:
+        bert->mlp->loss
+    Dot:
+        bert->dot product with embeddings->loss
+    MaskedLM_v2:
+        lexcions ( flat
+    CL:
+        Model with Contrastive Learning Loss
+    MaskedLM:
+        bert->lmhead->loss
+    """
+    model = None
+
+    print("Hint: Loading Model " + "*"*5 + model_name + "*"*5)
+
+    if model_name == "MLP":
+        from models.bert.modeling_bert_v3 import BertModelForCSC as ProtoModel
+    elif model_name == "Dot":
+        from models.bert.modeling_bert_v3 import BetterBertModelForCSC as ProtoModel
+    elif model_name == "MaskedLM_v2":
+        from models.bert.modeling_bert_v3 import BertForMaskedLM_v2  as ProtoModel
+    elif model_name == "CL":
+        from models.bert.modeling_bert_v4 import BertForMaskedLM_CL as ProtoModel
+    elif model_name == "CPT_NLG":
+        from models.bart.modeling_bart_v2 import BartForConditionalGeneration as ProtoModel
+    elif model_name == "CPT_NLU":
+        from models.bart.modeling_bart_v2 import BartForMaskedLM as ProtoModel
+    else:
+        print("Hint: " + model_name + ", so we load default BertMaskedLM model")
+        from transformers import BertForMaskedLM as ProtoModel 
+
+    model = ProtoModel.from_pretrained(pretrained_model_name_or_path=pretrained_model_name_or_path)
+
+    if not model:
+        print("Warning: wrong model name ! You ")
+        exit()
+    return model
 
 def get_dataset(dataset, path_head=""):
     """

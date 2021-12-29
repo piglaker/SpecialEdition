@@ -26,7 +26,13 @@ from transformers import Trainer, Seq2SeqTrainer
 from transformers import TrainingArguments
 from transformers import trainer_utils, training_args
 
-from core import get_dataset, get_seq2seq_metrics, argument_init
+from core import (
+    get_model,
+    get_dataset, 
+    get_seq2seq_metrics, 
+    argument_init,
+    MySeq2SeqTrainingArguments,
+)
 from lib import subTrainer 
 from data.DatasetLoadingHelper import load_ctc2021, load_sighan
 from models.bart.modeling_bart_v2 import BartForConditionalGeneration
@@ -35,12 +41,6 @@ from models.bart.modeling_bart_v2 import BartForConditionalGeneration
 
 logger = logging.getLogger(__name__)
 
-
-@dataclass
-class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
-    dataset: str = field(default="sighan", metadata={"help":"dataset"})
-    max_length: int = field(default=128, metadata={"help": "max length"})
-    num_beams: int = field(default=4, metadata={"help": "num beams"})
 
 def run():
     # Args
@@ -59,9 +59,10 @@ def run():
     train_dataset, eval_dataset, test_dataset = get_dataset(training_args.dataset) 
 
     # Model
-    model = BartForConditionalGeneration.from_pretrained(
+    model = get_model(
+        model_name =  "CPT_NLG" if training_args.model_name is None else training_args.model_name, 
         #'/remote-home/share/yfshao/bart-zh/arch12-2-new-iter8w/'
-        '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
+        pretrained_model_name_or_path='/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
     ) #base
 
     # Metrics

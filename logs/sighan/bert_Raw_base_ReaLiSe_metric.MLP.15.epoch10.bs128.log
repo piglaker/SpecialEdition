@@ -1,0 +1,21 @@
+Wed Dec 29 17:08:05 UTC 2021
+Wed Dec 29 17:08:12 UTC 2021
+Some weights of the model checkpoint at hfl/chinese-roberta-wwm-ext were not used when initializing BertModelForCSC: ['cls.seq_relationship.bias', 'cls.seq_relationship.weight']
+- This IS expected if you are initializing BertModelForCSC from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertModelForCSC from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some weights of BertModelForCSC were not initialized from the model checkpoint at hfl/chinese-roberta-wwm-ext and are newly initialized: ['mlp.bias', 'bias', 'mlp.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Using amp fp16 backend
+***** Running training *****
+  Num examples = 284201
+  Num Epochs = 10
+  Instantaneous batch size per device = 128
+  Total train batch size (w. parallel, distributed & accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 22210
+Loading Dataset !
+Hint: The Data You loading now is the preprocessed sighan from ReaLise, 
+Hint: Using **SIGHAN15** for eval & test !
+Loading Succeed !
+Hint: Loading Model *****MLP*****
+  0%|          | 0/22210 [00:00<?, ?it/s]  0%|          | 1/22210 [00:01<9:00:30,  1.46s/it]  0%|          | 2/22210 [00:01<4:56:46,  1.25it/s]  0%|          | 3/22210 [00:02<3:38:41,  1.69it/s]  0%|          | 4/22210 [00:02<2:54:11,  2.12it/s]  0%|          | 5/22210 [00:02<2:31:06,  2.45it/s]  0%|          | 6/22210 [00:03<2:15:12,  2.74it/s]  0%|          | 7/22210 [00:03<2:11:03,  2.82it/s]  0%|          | 8/22210 [00:03<2:15:47,  2.72it/s]  0%|          | 9/22210 [00:04<2:15:05,  2.74it/s]  0%|          | 10/22210 [00:04<2:12:06,  2.80it/s]  0%|          | 11/22210 [00:04<2:16:05,  2.72it/s]  0%|          | 12/22210 [00:05<2:18:45,  2.67it/s]  0%|          | 13/22210 [00:05<2:08:05,  2.89it/s]  0%|          | 14/22210 [00:05<2:06:28,  2.92it/s]  0%|          | 15/22210 [00:06<2:06:34,  2.92it/s]  0%|          | 16/22210 [00:06<2:10:28,  2.84it/s]  0%|          | 17/22210 [00:06<2:14:08,  2.76it/s]  0%|          | 18/22210 [00:07<2:07:43,  2.90it/s]  0%|          | 19/22210 [00:07<2:11:07,  2.82it/s]  0%|          | 20/22210 [00:07<2:10:22,  2.84it/s]  0%|          | 21/22210 [00:08<2:10:41,  2.83it/s]  0%|          | 22/22210 [00:08<2:09:56,  2.85it/s]  0%|          | 23/22210 [00:09<2:08:45,  2.87it/s]  0%|          | 24/22210 [00:09<2:09:09,  2.86it/s]  0%|          | 25/22210 [00:09<2:10:08,  2.84it/s]  0%|          | 26/22210 [00:10<2:14:50,  2.74it/s]  0%|          | 27/22210 [00:10<2:06:36,  2.92it/s]  0%|          | 28/22210 [00:10<2:08:44,  2.87it/s]  0%|          | 29/22210 [00:11<2:13:14,  2.77it/s]  0%|          | 30/22210 [00:11<2:17:36,  2.69it/s]  0%|          | 31/22210 [00:11<2:08:27,  2.88it/s]  0%|          | 32/22210 [00:12<2:06:50,  2.91it/s]  0%|          | 33/22210 [00:12<2:06:57,  2.91it/s]  0%|          | 34/22210 [00:12<2:10:22,  2.83it/s]  0%|          | 35/22210 [00:13<2:08:53,  2.87it/s]  0%|          | 36/22210 [00:13<2:13:45,  2.76it/s]  0%|          | 37/22210 [00:13<2:13:28,  2.77it/s]  0%|          | 38/22210 [00:14<2:15:09,  2.73it/s]  0%|          | 39/22210 [00:14<2:12:13,  2.79it/s]  0%|          | 40/22210 [00:15<2:15:49,  2.72it/s]  0%|          | 41/22210 [00:15<2:14:43,  2.74it/s]  0%|          | 42/22210 [00:15<2:12:07,  2.80it/s]  0%|          | 43/22210 [00:16<2:05:05,  2.95it/s]  0%|          | 44/22210 [00:16<2:07:49,  2.89it/s]  0%|          | 45/22210 [00:16<2:12:23,  2.79it/s]  0%|          | 46/22210 [00:17<2:15:55,  2.72it/s]  0%|          | 47/22210 [00:17<2:06:48,  2.91it/s]  0%|          | 48/22210 [00:17<2:10:20,  2.83it/s]  0%|          | 49/22210 [00:18<2:06:05,  2.93it/s]

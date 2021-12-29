@@ -32,8 +32,18 @@ from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokenizerBase
 from transformers.training_args import TrainingArguments
 
-from core import get_super_magic_dataset, get_magic_expand_dataset, get_magic_plus_dataset, get_magic_lang8_dataset, get_magic_dataset, get_metrics, argument_init
-from lib import subTrainer  
+from core import (
+    get_model,
+    get_super_magic_dataset, 
+    get_magic_expand_dataset, 
+    get_magic_plus_dataset, 
+    get_magic_lang8_dataset, 
+    get_magic_dataset, 
+    get_metrics, 
+    argument_init,
+    MySeq2SeqTrainingArguments
+)
+from lib import MyTrainer  
 from models.bert.modeling_bert_v3 import BertForMaskedLM_v2 
 #from transformers import BertForMaskedLM
 
@@ -41,12 +51,6 @@ from models.bert.modeling_bert_v3 import BertForMaskedLM_v2
 
 logger = logging.getLogger(__name__)
     
-
-@dataclass
-class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
-    dataset: str = field(default="sighan", metadata={"help":"dataset"})
-    max_length: int = field(default=128, metadata={"help": "max length"})
-    num_beams: int = field(default=4, metadata={"help": "num beams"})
 
 @dataclass
 class MyDataCollatorForSeq2Seq:
@@ -138,62 +142,6 @@ class MyDataCollatorForSeq2Seq:
 
         return new
 
-class MyTrainer(subTrainer):
-    def prediction_step(
-        self,
-        model: nn.Module,
-        inputs: Dict[str, Union[torch.Tensor, Any]],
-        prediction_loss_only: bool,
-        ignore_keys: Optional[List[str]] = None,
-    ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
-
-        has_labels = all(inputs.get(k) is not None for k in self.label_names)
-        inputs = self._prepare_inputs(inputs)
-        if ignore_keys is None:
-            if hasattr(self.model, "config"):
-                ignore_keys = getattr(self.model.config, "keys_to_ignore_at_inference", [])
-            else:
-                ignore_keys = []
-
-        # labels may be popped when computing the loss (label smoothing for instance) so we grab them first.
-        if has_labels:
-            labels = nested_detach(tuple(inputs.get(name) for name in self.label_names))
-            if len(labels) == 1:
-                labels = labels[0]
-        else:
-            labels = None
-
-        with torch.no_grad():
-            if has_labels:
-                loss, outputs = self.compute_loss(model, inputs, return_outputs=True)
-                loss = loss.mean().detach()
-                if isinstance(outputs, dict):
-                    logits = tuple(v for k, v in outputs.items() if k not in ignore_keys + ["loss"])
-                else:
-                    logits = outputs[1:]
-            else:
-                loss = None
-                
-                outputs = model(**inputs)
-                if isinstance(outputs, dict):
-                    logits = tuple(v for k, v in outputs.items() if k not in ignore_keys)
-                else:
-                    logits = outputs
-                # TODO: this needs to be fixed and made cleaner later.
-                if self.args.past_index >= 0:
-                    self._past = outputs[self.args.past_index - 1]
-
-        if prediction_loss_only:
-            return (loss, None, None)
-
-
-        logits = nested_detach(logits)
-        if len(logits) == 1:
-            logits = logits[0]
-
-        return (loss, torch.argmax(torch.softmax(logits, 2), -1), labels)
-        #return loss, logits, labels
-
 
 def run():
     # Args
@@ -214,9 +162,9 @@ def run():
     #train_dataset, eval_dataset, test_dataset, tokenizer = get_super_magic_dataset(training_args.dataset, ".") #balanced within target and special token <RAW>
     
     # Model
-    model = BertForMaskedLM_v2.from_pretrained(
-        "hfl/chinese-roberta-wwm-ext"#"bert-base-chinese"#
-        #"./tmp/sighan/bert_MaksedLM_base_raw_v2.epoch10.bs128"
+    model = get_model(
+        model_name=training_args.model_name, 
+        pretrained_model_name_or_path="hfl/chinese-roberta-wwm-ext" #"bert-base-chinese" 
     ) #base
 
     #model.resize_token_embeddings(len(tokenizer))

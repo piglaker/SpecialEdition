@@ -1,0 +1,21 @@
+Wed Dec 29 17:08:19 UTC 2021
+Wed Dec 29 17:08:26 UTC 2021
+Some weights of the model checkpoint at hfl/chinese-roberta-wwm-ext were not used when initializing BertForMaskedLM_CL: ['cls.seq_relationship.bias', 'cls.seq_relationship.weight']
+- This IS expected if you are initializing BertForMaskedLM_CL from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertForMaskedLM_CL from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some weights of BertForMaskedLM_CL were not initialized from the model checkpoint at hfl/chinese-roberta-wwm-ext and are newly initialized: ['bias', 'mlp.bias', 'mlp.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Using amp fp16 backend
+***** Running training *****
+  Num examples = 284201
+  Num Epochs = 10
+  Instantaneous batch size per device = 128
+  Total train batch size (w. parallel, distributed & accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 22210
+Loading Dataset !
+Hint: The Data You loading now is the preprocessed sighan from ReaLise, 
+Hint: Using **SIGHAN15** for eval & test !
+Loading Succeed !
+Hint: Loading Model *****CL*****
+  0%|          | 0/22210 [00:00<?, ?it/s]  0%|          | 1/22210 [00:01<9:34:00,  1.55s/it]  0%|          | 2/22210 [00:01<5:22:22,  1.15it/s]  0%|          | 3/22210 [00:02<4:01:46,  1.53it/s]  0%|          | 4/22210 [00:02<3:14:40,  1.90it/s]
