@@ -1378,7 +1378,7 @@ class BertForMaskedLM_CL(BertPreTrainedModel):
 
             mask = torch.ones_like(prediction_scores)
 
-            mask.view(-1, self.config.vocab_size)[ torch.tensor(range(mask.view(-1, self.config.vocab_size).shape[0])) , labels.view(-1) ] = 1e-10
+            mask.view(-1, self.config.vocab_size)[ torch.tensor(range(mask.view(-1, self.config.vocab_size).shape[0])) , labels.view(-1) ] = 0
 
             prediction_scores_tmp = mask * prediction_scores
 

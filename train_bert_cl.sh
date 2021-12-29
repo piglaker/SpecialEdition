@@ -1,9 +1,9 @@
 dataset="sighan"
-eval_dataset="15"
+eval_dataset="14"
 epoch=10
-batch_size=64
+batch_size=128
 
-name="bert_MaskedLM_CL_ReaLiSe_metric_warmup_test.epoch$epoch.bs$batch_size"
+name="bert_MaskedLM_CL_ReaLiSe_metric_warmup.$eval_dataset.epoch$epoch.bs$batch_size"
 
 echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 #default lr 5e-5
