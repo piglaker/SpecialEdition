@@ -144,6 +144,8 @@ class MyDataCollatorForSeq2Seq:
 
 
 def run():
+    print("Warning: The Version You Using Now is out-of-time.")
+
     # Args
     training_args = argument_init(MySeq2SeqTrainingArguments)
 

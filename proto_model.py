@@ -33,25 +33,25 @@ from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokeni
 from transformers.training_args import TrainingArguments
 
 from core import (
-    get_model, 
+    get_model,
     get_dataset, 
     get_metrics, 
-    argument_init,
+    argument_init, 
     get_ReaLiSe_dataset,
     MySeq2SeqTrainingArguments, 
 )
-from lib import MyTrainer, FoolDataCollatorForSeq2Seq
+from lib import MyTrainer, FoolDataCollatorForSeq2Seq 
 from data.DatasetLoadingHelper import load_ctc2021, load_sighan
-from models.bert.modeling_bert_v4 import BertForMaskedLM_CL
-#from transformers import BertForMaskedLM
+#from models.bart.modeling_bart_v2 import BartForConditionalGeneration
+from transformers import BertForMaskedLM
+from models.bert.modeling_bert_v3 import BertModelForCSC, BetterBertModelForCSC
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3"
 
 logger = logging.getLogger(__name__)
-    
-def run():
-    print("Warning: The Version You Using Now is out-of-time.")
 
+
+def run():
     # Args
     training_args = argument_init(MySeq2SeqTrainingArguments)
 
@@ -63,16 +63,16 @@ def run():
     tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext" if pretrained_csc_model is None else pretrained_csc_model 
 
     tokenizer = AutoTokenizer.from_pretrained(
-        tokenizer_model_name_path
+        tokenizer_model_name_path 
     )
 
     # Dataset
-    #train_dataset, eval_dataset, test_dataset = get_dataset(training_args.dataset) 
-    train_dataset, eval_dataset, test_dataset = get_ReaLiSe_dataset(training_args.eval_dataset) 
+    train_dataset, eval_dataset, test_dataset = get_ReaLiSe_dataset(training_args.eval_dataset)#get_dataset(training_args.dataset) 
 
     # Model
+    
     model = get_model(
-        model_name=training_args.model_name, 
+        model_name= "Dot" if training_args.model_name is None else training_args.model_name, 
         pretrained_model_name_or_path="hfl/chinese-roberta-wwm-ext" if pretrained_csc_model is None else pretrained_csc_model  #"bert-base-chinese" 
     ) #base
 
