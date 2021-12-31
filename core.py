@@ -102,11 +102,13 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         from models.bart.modeling_bart_v2 import BartForConditionalGeneration as ProtoModel
     elif model_name == "CPT_NLU":
         from models.bart.modeling_bart_v2 import BartForMaskedLM as ProtoModel
+    elif model_name == "Proto":
+        from models.bert.modeling_bert_v4 import ProtoBertForMaskedLM as ProtoModel
     elif model_name is None or model_name == "MaskedLM":
         print("Hint: Load Default BertForMaskedLM.")
         from transformers import BertForMaskedLM as ProtoModel
     else:
-        print("Hint: No such " + model_name + ", so we load default BertMaskedLM model")
+        print("Hint: No such " + model_name)
         exit(0)
     model = ProtoModel.from_pretrained(pretrained_model_name_or_path=pretrained_model_name_or_path)
 

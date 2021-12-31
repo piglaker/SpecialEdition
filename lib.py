@@ -154,7 +154,7 @@ class FoolDataCollatorForSeq2Seq:
 
         f_copy = deepcopy(features)
 
-        shared_max_length = max([ len(i['input_ids']) for i in f_copy])
+        shared_max_length = max([ len(i['input_ids']) for i in f_copy] + [len(i['labels']) for i in f_copy] )
 
         def simple_pad(f_copy, key):
             f_key = [ f[key] for f in f_copy ]
@@ -165,7 +165,7 @@ class FoolDataCollatorForSeq2Seq:
 
                 if key == "attention_mask":
                     label_pad_token_id = 0
-                elif key in ["input_ids"]:
+                elif key == "input_ids":
                     label_pad_token_id = 0
                 elif key == "labels":
                     max_length = shared_max_length

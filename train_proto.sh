@@ -1,7 +1,7 @@
 #The final version
 dataset="sighan"
-eval_dataset="14"
-model_name="MaskedLM"
+eval_dataset="15"
+model_name="Proto"
 epoch=10
 batch_size=128
 
