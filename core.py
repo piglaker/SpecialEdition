@@ -100,8 +100,10 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         from models.bert.modeling_bert_v4 import BertForMaskedLM_CL as ProtoModel
     elif model_name == "CPT_NLG":
         from models.bart.modeling_bart_v2 import BartForConditionalGeneration as ProtoModel
+        pretrained_model_name_or_path='/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
     elif model_name == "CPT_NLU":
         from models.bart.modeling_bart_v2 import BartForMaskedLM as ProtoModel
+        pretrained_model_name_or_path='/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
     elif model_name == "Proto":
         from models.bert.modeling_bert_v4 import ProtoBertForMaskedLM as ProtoModel
     elif model_name is None or model_name == "MaskedLM":
@@ -110,6 +112,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
     else:
         print("Hint: No such " + model_name)
         exit(0)
+
     model = ProtoModel.from_pretrained(pretrained_model_name_or_path=pretrained_model_name_or_path)
 
     if not model:
@@ -133,6 +136,36 @@ def get_dataset(dataset, path_head=""):
         train_data, eval_data, test_data = load_ctc2021()
     elif dataset == "sighan":
         train_data, eval_data, test_data = load_sighan(path_head)
+    else:
+        print("Error: No such dataset ")
+        print(dataset)
+        exit(0)
+
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    print("Loading Succeed !")
+    os.system("date")
+
+    return train_dataset, eval_dataset, test_dataset
+
+
+def get_dataset_plus(dataset, path_head=""):
+    """
+    preprocess wrapped in load_ctc2021
+    return : mydate
+                torch.LongTensor
+    
+        Good day!
+    """
+
+    print("Loading Dataset !")
+    os.system("date")
+
+    if dataset == "ctc2021":
+        train_data, eval_data, test_data = load_ctc2021()
+    elif dataset == "sighan":
+        #train_data, eval_data, test_data = load_sighan(path_head)
+        return get_ReaLiSe_dataset()
     else:
         print("Error: No such dataset ")
         print(dataset)
@@ -313,7 +346,16 @@ def get_super_magic_dataset(dataset="sighan", path_head=""):
 
     return train_dataset, eval_dataset, test_dataset, tokenizer
 
-def get_metrics():
+def get_metrics(dataset):
+    if dataset == "sighan":
+        return _get_metrics()
+    if dataset == "ctc2021":
+        return _get_seq2seq_metrics()
+    else:
+        print("Error when getting metrics.")
+        exit(0)
+
+def _get_metrics():
     """
     #https://huggingface.co/metrics
     #accuracy,bertscore, bleu, bleurt, coval, gleu, glue, meteor,
@@ -361,9 +403,14 @@ def get_metrics():
             source, pred, label = np.where(source == 102, 101, source), np.where(pred == 102, 101, pred), np.where(label == 102, 101, label) 
             #source, pred, label = source[1:len(source)-1], pred[1:len(pred)-1], label[1:len(label)-1]
 
-            #print(source)
-            #print(pred)
-            #print(label)
+            # print(source)
+            # print(pred)
+            # print(label)
+
+            # print( (pred != source).any() )
+            # print( (pred == label).all() )
+            # print( (label != source).any() )
+
             if len(pred) != len(source) or len(label) != len(source):
                 print("Warning : something goes wrong when compute metrics, check codes now.")
                 print(len(source), len(pred), len(label))
@@ -375,7 +422,9 @@ def get_metrics():
             try:
                 (pred != source).any()
             except:
-                print(pred, source) 
+                print(pred, source)
+                print(" Error Exit ")
+                exit(0)
 
             if (pred != source).any():
                 sent_p += 1
@@ -400,8 +449,9 @@ def get_metrics():
 
     return compute_metrics
 
-def get_seq2seq_metrics():
+def _get_seq2seq_metrics():
     """
+    Main difference from " get_metrics() " is that seq2seq output & labels doesn't match (length).
     #https://huggingface.co/metrics
     #accuracy,bertscore, bleu, bleurt, coval, gleu, glue, meteor,
     #rouge, sacrebleu, seqeval, squad, squad_v2, xnli
@@ -413,78 +463,101 @@ def get_seq2seq_metrics():
 
     def compute_metrics(eval_preds):
         """
-        reference: https://github.com/ACL2020SpellGCN/SpellGCN/blob/master/run_spellgcn.py
+        reference: https://github.com/destwang/CTC2021
+
+        >>> final_score = 0.8 * detect_f1 + 0.2 * correct_f1
         """
         Achilles = time.time()
 
         sources, preds, labels = eval_preds# (num, length) np.array
  
-        tp, fp, fn = 0, 0, 0
+        tp_detect, tp_correct = 0, 0
 
-        sent_p, sent_n = 0, 0
+        p, n = 0, 0
 
         for i in range(len(sources)):
             source, pred, label = sources[i], preds[i], labels[i]
-            #print(source)
-            #print(pred)
-            #print(label)
 
             source, label = source[ source != -100], label[label != -100]
-            #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100]# pad idx for labels
-            # print(source)
-            # print(pred)
-            # print(label)
-            #source, pred, label = source[source != 102], pred[ pred != 102 ], label[ label != 102]
-            #source, pred, label = source[source != 101], pred[pred != 101], label[label != 101]#remove  
             source, label = source[source != 0],  label[label != 0]#pad idx for input_ids 
-            #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100] 
-
-            source = source[:len(label)]
-            pred = pred[:len(label)]
-            #print(source, pred, label)    
-            #print(type(pred), type(source), pred==source)
+ 
+            # source = source[:len(label)]
+            # pred = pred[:len(label)]
+            pred = pred[ pred != 0]
 
             #we guess pretrain Masked Language Model bert lack the surpvised sighan for 101 & 102 ( [CLS] & [SEP] ) , so we just ignore
             source, pred, label = np.where(source == 102, 101, source), np.where(pred == 102, 101, pred), np.where(label == 102, 101, label) 
-            #source, pred, label = source[1:len(source)-1], pred[1:len(pred)-1], label[1:len(label)-1]
 
-            #print(source)
-            #print(pred)
-            #print(label)
-            # if len(pred) != len(source) or len(label) != len(source):
-                # print("Warning : something goes wrong when compute metrics, check codes now.")
-                # print(len(source), len(pred), len(label))
-                # print("source: ", source)
-                # print("pred: ", pred)
-                # print("label:", label)
-                # exit()
+            from utils.levenshtein import levenshtein4seq
+            
+            # print(source.shape, pred.shape, label.shape)
+            # print(source)
+            # print(pred)
+            # print(label)
 
-            #print((pred != source).any())
-            #print( (pred == label).all() )
+            pred_edits, gold_edits = levenshtein4seq(source, pred, only_edits=True), levenshtein4seq(source, label, only_edits=True)
 
-            if len(pred) != len(source) :
-                sent_p += 1
-            else:
-                if (pred != source).any():
-                    sent_p += 1
-                    if (pred == label).all():
-                        tp += 1
+            # print(pred_edits)
+            # print(gold_edits)
 
-            if (label != source).any():
-                sent_n += 1
+            # gold_pos = [ edit[1] for edit in gold_edits]
 
-        precision = tp / (sent_p + 1e-10)
+            p += len(pred_edits)
 
-        recall = tp / (sent_n + 1e-10)
+            n += len(gold_edits)
 
-        F1_score = 2 * precision * recall / (precision + recall + 1e-10)
+            ref_error_set = set(gold_edits)
+            
+            ref_det_set, ref_cor_set = set( [ (edit[0], edit[1]) for edit in gold_edits ] ), set( [ (edit[-1]) for edit in gold_edits] )
+
+            pred_error_set = set(pred_edits)
+
+            pred_det_set, pred_cor_set = set( [ (edit[0], edit[1]) for edit in pred_edits ] ), set( [(edit[-1]) for edit in pred_edits] ) 
+
+            n += len(ref_cor_set)
+            p += len(pred_cor_set)
+
+            for error in ref_error_set:
+                loc, typ, wrong, cor_text = error
+                if (loc, wrong) in pred_det_set or (cor_text) in pred_cor_set:
+                    tp_detect += 1
+
+            tp_correct += len(ref_cor_set & pred_cor_set)
+
+            # for edit in gold_edits:
+                # if edit in pred_edits or edit in pred_cor_set:
+                    # det_right_num += 1
+
+            # for edit in pred_edits:
+                # if edit[1] in gold_pos:
+                    # tp_detect += 1
+                # if edit in gold_edits:
+                    # tp_correct += 1
+
+        def compute_f1score(tp, p, n):
+
+            precision = tp / (p + 1e-10)
+            recall = tp / (n + 1e-10)
+            F1_score = 2 * precision * recall / (precision + recall + 1e-10)
+
+            return F1_score, precision, recall
 
         Turtle = time.time() - Achilles
 
-        if F1_score < 0.1:
+        F1_score_detect, Precision_detect, Recall_detect = compute_f1score(tp_detect, p, n)
+        F1_score_correct, Precision_correct, Recall_correct = compute_f1score(tp_correct, p, n)
+
+        if F1_score_detect < 0.1 or F1_score_correct < 0.1:
             print("Warning : metric F1_score is too Low , maybe something goes wrong, check your codes please.")
 
-        return {"F1_score": float(F1_score), "Precision":float(precision),  "Recall":float(recall),"Metric_time":Turtle}
+        return {"F1_score":float( 0.8 * F1_score_detect + 0.2 * F1_score_correct ), 
+                "F1_score_detect": float(F1_score_detect), 
+                "Precision_detect":float(Precision_detect),  
+                "Recall_detect":float(Recall_detect),
+                "F1_score_correct": float(F1_score_correct), 
+                "Precision_correct":float(Precision_correct),  
+                "Recall_correct":float(Recall_correct),
+                "Metric_time":Turtle}
 
     return compute_metrics
 

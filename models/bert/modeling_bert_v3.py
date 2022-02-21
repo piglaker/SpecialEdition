@@ -333,9 +333,9 @@ class MyBertEmbeddings(nn.Module):
         if position_ids is None:
             position_ids = self.position_ids[:, 0:seq_length]
 
-            print("position_ids :", position_ids)
-            print(lattice)
-            print(position_ids.shape)
+            #print("position_ids :", position_ids)
+            #print(lattice)
+            #print(position_ids.shape)
     
         # Setting the token_type_ids to the registered buffer in constructor where it is all zeros, which usually occurs
         # when its auto-generated, registered buffer helps users when tracing the model without passing token_type_ids, solves
@@ -1601,7 +1601,7 @@ class BertForMaskedLM_v2(BertPreTrainedModel):
 
         return {"input_ids": input_ids, "attention_mask": attention_mask}
 
-@add_start_docstrings("""Bert Model with a `language modeling` head on top. """, BERT_START_DOCSTRING)
+@add_start_docstrings("""Bert Model with a new init mlp ( as language modeling head) on top. """, BERT_START_DOCSTRING)
 class BertModelForCSC(BertPreTrainedModel):
 
     _keys_to_ignore_on_load_unexpected = [r"pooler"]
@@ -1715,7 +1715,7 @@ class BertModelForCSC(BertPreTrainedModel):
         return {"input_ids": input_ids, "attention_mask": attention_mask}
 
 
-@add_start_docstrings("""Bert Model with a `language modeling` head on top. """, BERT_START_DOCSTRING)
+@add_start_docstrings("""Bert Model with not  `language modeling` head on top. """, BERT_START_DOCSTRING)
 class BetterBertModelForCSC(BertPreTrainedModel):
     """
     Dot product with embeddings

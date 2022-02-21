@@ -1361,7 +1361,7 @@ class BertForMaskedLM_CL(BertPreTrainedModel):
             masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
             
             #print(prediction_scores.shape)
-            #print(labels.shape)
+            #(labels.shape)
 
             prediction_scores = torch.softmax(prediction_scores, dim=2)
 
@@ -1493,14 +1493,14 @@ class ProtoBertForMaskedLM(BertPreTrainedModel):
             return_dict=return_dict,
         )
 
-        sequence_output = outputs[0]
-        prediction_scores = self.cls(sequence_output)
+        hiddens = outputs[0]
+        prediction_scores = self.cls(hiddens)
         #prediction_scores = self.mlp(sequence_output)
 
-        print(input_ids.shape, labels.shape, attention_mask.shape) 
-
-        distill_ = self.bert(
-            labels,
+        labels_ = torch.where(labels != -100, labels, 0)
+        
+        distill_outputs = self.bert(
+            input_ids=labels_,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
             position_ids=position_ids,
@@ -1513,36 +1513,39 @@ class ProtoBertForMaskedLM(BertPreTrainedModel):
             return_dict=return_dict,
         )
 
-        print(input_ids)
-        print(labels)
-        exit()
+        distill_hiddens = distill_outputs[0]
+
+        distill_hiddens_detach = distill_hiddens.detach()
+        distill_scores = self.cls(distill_hiddens)
 
         logits = prediction_scores
+
+        distill_hiddens_detach = torch.nn.functional.normalize(distill_hiddens_detach, dim=-1)
+        hiddens = torch.nn.functional.normalize(hiddens, dim=-1)
 
         masked_lm_loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss()  # -100 index = padding token
             masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
 
-            scores = torch.einsum('blh,bkh->blk', sequence_output, distill_)  # bsz x len x len
-            scores = scores.masked_fill(attention_mask.unsqueeze(1).repeat(1, attention_mask.size(1), 1), 0)
+            scores = torch.einsum('blh,bkh->blk', hiddens, distill_hiddens_detach)  # bsz x len x len
+            scores = scores.masked_fill(attention_mask.unsqueeze(1).repeat(1, attention_mask.size(1), 1).bool(), 0)
             scores = torch.exp(scores / 2)
             pos_scores = torch.diagonal(scores, dim1=1, dim2=2)  # bsz x l
-            neg_scores = scores.sum(dim=-1)
+            neg_scores = scores.sum(dim=-1) # bsz x l 
             loss2 = -(pos_scores / neg_scores).log().masked_fill(attention_mask.eq(0), 0).sum() / attention_mask.sum()
 
-            #prediction_scores = torch.softmax(prediction_scores, dim=2)
-            no_target_mask = input_ids != labels
-            loss3 = loss_fct(distill_.logits.transpose(1, 2), labels.masked_fill(no_target_mask, -100), reduction='mean')
+            no_target_mask = (input_ids != labels).bool()
+            loss3 = torch.nn.functional.cross_entropy(distill_scores.view(-1, self.config.vocab_size), labels.masked_fill(no_target_mask, -100).view(-1), reduction='mean')
 
-            masked_lm_loss = 0.01 * loss2 + 0.01 * loss3
+            total_loss = masked_lm_loss + 0.6 * loss2 + 1 * loss3
 
         if not return_dict:
             output = (prediction_scores,) + outputs[2:]
-            return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
+            return ((total_loss,) + output) if total_loss is not None else output
 
         return MaskedLMOutput(
-            loss=masked_lm_loss,
+            loss=total_loss,
             logits=logits,#prediction_scores,
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,

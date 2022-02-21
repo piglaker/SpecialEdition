@@ -1,15 +1,17 @@
 #The final version
-dataset="sighan"
+dataset="ctc2021"
+#dataset="sighan"
 eval_dataset="15"
-model_name="Proto"
+model_name="CPT_NLG"
+#model_name="Proto"
 epoch=10
-batch_size=128
+batch_size=64
 
-name="bert_Raw_base_ReaLiSe_metric.$model_name.$eval_dataset.epoch$epoch.bs$batch_size"
+name=$model_name"_warmup2000_dataset_"$dataset"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
 
 echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 
-CUDA_VISIBLE_DEVICES=5 nohup python proto_model.py \
+CUDA_VISIBLE_DEVICES=6  nohup python proto_model.py \
     --do_train \
     --do_eval \
     --do_predict \
@@ -28,7 +30,7 @@ CUDA_VISIBLE_DEVICES=5 nohup python proto_model.py \
     --dataset $dataset \
     --eval_dataset $eval_dataset \
     --learning_rate 7e-5 \
-    --warmup_steps 5000 \
+    --warmup_steps 2000 \
     --eval_steps 2000 \
     --model_name $model_name \
 > logs/$dataset/$name.log 2>&1 &

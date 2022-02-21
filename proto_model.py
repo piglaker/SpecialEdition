@@ -36,7 +36,7 @@ from transformers import (
     Seq2SeqTrainingArguments,
     set_seed,
 )
-from transformers import Trainer, Seq2SeqTrainer
+
 from transformers import TrainingArguments
 from transformers import trainer_utils, training_args
 from transformers.trainer_pt_utils import nested_detach
@@ -51,14 +51,13 @@ from core import (
     get_dataset, 
     get_metrics, 
     argument_init, 
-    get_ReaLiSe_dataset,
+    get_dataset_plus,
     MySeq2SeqTrainingArguments, 
 )
-from lib import MyTrainer, FoolDataCollatorForSeq2Seq 
+from lib import MyTrainer, FoolDataCollatorForSeq2Seq, subTrainer 
 from data.DatasetLoadingHelper import load_ctc2021, load_sighan
 #from models.bart.modeling_bart_v2 import BartForConditionalGeneration
 from transformers import BertForMaskedLM
-from models.bert.modeling_bert_v3 import BertModelForCSC, BetterBertModelForCSC
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3"
 
@@ -81,7 +80,7 @@ def run():
     )
 
     # Dataset
-    train_dataset, eval_dataset, test_dataset = get_ReaLiSe_dataset(training_args.eval_dataset)#get_dataset(training_args.dataset) 
+    train_dataset, eval_dataset, test_dataset = get_dataset_plus(training_args.dataset, training_args.eval_dataset)#get_dataset(training_args.dataset) 
 
     # Model
     
@@ -91,7 +90,7 @@ def run():
     ) #base
 
     # Metrics
-    compute_metrics = get_metrics()
+    compute_metrics = get_metrics(training_args.dataset)
 
     # Data Collator
 
@@ -103,7 +102,13 @@ def run():
     )#my data collator  fix the length for bert.
     
     # Trainer
-    trainer = MyTrainer(
+    if training_args.dataset == "sighan":
+        Trainer = MyTrainer # MaskedLM        
+    elif training_args.dataset == "ctc2021":
+        Trainer = subTrainer # Seq2Seq
+        training_args.predict_with_generate = True
+
+    trainer = Trainer(
         model=model,
         args=training_args,         
         train_dataset=train_dataset,    
@@ -114,7 +119,6 @@ def run():
     )
 
     # Train
-
     train_result = trainer.train()
 
     trainer.save_model()  # Saves the tokenizer too for easy upload
