@@ -31,7 +31,7 @@ def load_json(data_path):
 
     return padded_data
 
-def load_ctc2021():
+def load_ctc2021(extra):
 
     #print("#"*5+ " Loading toy datasets for debugging ... " + '#'*5)
 
@@ -49,6 +49,23 @@ def load_ctc2021():
     test_source = read_csv(test_source_path)
     test_target = read_csv(test_target_path)
 
+    if extra:
+        print("Using Large v2 as extra train set")
+
+        train_source_path = "./data/rawdata/ctc2021/train_v2.src"
+        train_target_path = "./data/rawdata/ctc2021/train_v2.tgt"
+        #valid_source_path = "./data/rawdata/ctc2021/valid_v2.src"
+        #valid_target_path = "./data/rawdata/ctc2021/valid_v2.tgt"
+        #test_source_path = "./data/rawdata/ctc2021/test_v2.src"
+        #test_target_path = "./data/rawdata/ctc2021/test_v2.tgt"
+
+        train_source += read_csv(train_source_path)    
+        train_target += read_csv(train_target_path)
+        #valid_source += read_csv(valid_source_path)
+        #valid_target += read_csv(valid_target_path)
+        #test_source += read_csv(test_source_path)
+        #test_target += read_csv(test_target_path)
+
     tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
@@ -63,7 +80,6 @@ def load_ctc2021():
     valid_target_tok = tokenizer.batch_encode_plus(valid_target, return_token_type_ids=False)
     test_source_tok = tokenizer.batch_encode_plus(test_source, return_token_type_ids=False)
     test_target_tok = tokenizer.batch_encode_plus(test_target, return_token_type_ids=False)
-
 
     train_source_tok["labels"] = train_target_tok["input_ids"]
     valid_source_tok["labels"] = valid_target_tok["input_ids"]

@@ -80,7 +80,7 @@ def run():
     )
 
     # Dataset
-    train_dataset, eval_dataset, test_dataset = get_dataset_plus(training_args.dataset, training_args.eval_dataset)#get_dataset(training_args.dataset) 
+    train_dataset, eval_dataset, test_dataset = get_dataset_plus(training_args)#get_dataset(training_args.dataset) 
 
     # Model
     

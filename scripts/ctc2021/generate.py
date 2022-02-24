@@ -1,3 +1,7 @@
+
+# demo:
+# python generate.py v1
+#
 import os
 import re
 import sys
@@ -20,12 +24,18 @@ def strQ2B(ustring):
         rstring += chr(inside_code)
     return rstring
 
-def generate():
+def generate(which="v2"):
     """
     split raw data(train.json) to preprocessed target
     """
-    file = open("../../data/rawdata/ctc2021/train.json", 'r', encoding='utf-8')
-
+    if which == "v2":
+        file = open("../../data/rawdata/ctc2021/train_large_v2.json", 'r', encoding='utf-8')
+    elif which == "v1":
+        file = open("../../data/rawdata/ctc2021/train.json", 'r', encoding='utf-8')
+    else:
+        print("Error")
+        exit(0)
+    
     source, target = [], []
 
     source_back, target_back = [], []
@@ -34,8 +44,8 @@ def generate():
         s = strQ2B(sentence)
         back_num = re.findall('\d+', s)
         back_eng = re.findall(r'[a-zA-Z]+', s)
-        s = re.sub(r'[a-zA-Z]+', 'e', s)
-        s = re.sub('\d+', 'n', s)
+        #s = re.sub(r'[a-zA-Z]+', 'e', s)
+        #s = re.sub('\d+', 'n', s)
         return s, back_num + back_eng
 
     for line in file.readlines():
@@ -51,12 +61,12 @@ def generate():
         target.append(s)
         target_back.append(back)
 
-
     print(source[:3], target[:3])
 
     print(len(source), len(target))
 
     def write_to(path, contents):
+        print(path)
         f = open(path, "w", encoding='utf-8')
         f.write(contents)
         f.close()
@@ -69,19 +79,42 @@ def generate():
 
     print(through[0])
 
-    write_to("../../data/rawdata/ctc2021/test.src", "\n".join(source[:2000]))
-    write_to("../../data/rawdata/ctc2021/test.tgt", "\n".join(target[:2000]))
-    write_to("../../data/rawdata/ctc2021/test.through", "\n".join(through[:1000]))
+    if which == "v2":
+        write_to("../../data/rawdata/ctc2021/test_v2.src", "\n".join(source[200000:]))
+        write_to("../../data/rawdata/ctc2021/test_v2.tgt", "\n".join(target[200000:]))
+        # write_to("../../data/rawdata/ctc2021/test"+which+".through", "\n".join(through[90000:]))
 
-    write_to("../../data/rawdata/ctc2021/valid.src", "\n".join(source[2000:2500]))
-    write_to("../../data/rawdata/ctc2021/valid.tgt", "\n".join(target[2000:2500]))
-    write_to("../../data/rawdata/ctc2021/valid.through", "\n".join(through[2000:2500]))
+        write_to("../../data/rawdata/ctc2021/valid_v2.src", "\n".join(source[200000:]))
+        write_to("../../data/rawdata/ctc2021/valid_v2.tgt", "\n".join(target[200000:]))
+        # write_to("../../data/rawdata/ctc2021/valid"+which+".through", "\n".join(through[90000:]))
 
-    write_to("../../data/rawdata/ctc2021/train.src", "\n".join(source[2500:]))
-    write_to("../../data/rawdata/ctc2021/train.tgt", "\n".join(target[2500:]))
-    write_to("../../data/rawdata/ctc2021/train.through", "\n".join(through[2500:]))
+        write_to("../../data/rawdata/ctc2021/train_v2.src", "\n".join(source[:230000]))
+        write_to("../../data/rawdata/ctc2021/train_v2.tgt", "\n".join(target[:230000]))
+        # write_to("../../data/rawdata/ctc2021/train"+which+".through", "\n".join(through[:90000]))
 
+    else:
+        write_to("../../data/rawdata/ctc2021/test.src", "\n".join(source[99000:]))
+        write_to("../../data/rawdata/ctc2021/test.tgt", "\n".join(target[99000:]))
+        # write_to("../../data/rawdata/ctc2021/test"+which+".through", "\n".join(through[90000:]))
+
+        write_to("../../data/rawdata/ctc2021/valid.src", "\n".join(source[99000:]))
+        write_to("../../data/rawdata/ctc2021/valid.tgt", "\n".join(target[99000:]))
+        # write_to("../../data/rawdata/ctc2021/valid"+which+".through", "\n".join(through[90000:]))
+
+        write_to("../../data/rawdata/ctc2021/train.src", "\n".join(source[:99000]))
+        write_to("../../data/rawdata/ctc2021/train.tgt", "\n".join(target[:99000]))
+        # write_to("../../data/rawdata/ctc2021/train"+which+".through", "\n".join(through[:90000]))
 
 if __name__ == "__main__":
-    generate()
+    import argparse  
+   
+    parser = argparse.ArgumentParser()
+ 
+    parser.add_argument("which")         
+ 
+    args = parser.parse_args()
+
+    parser.parse_args()
+ 
+    generate(args.which)
 

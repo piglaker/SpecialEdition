@@ -50,6 +50,7 @@ class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     eval_dataset:str = field(default="sighan", metadata={"help":"dataset for eval"})
     max_length: int = field(default=128, metadata={"help": "max length"})
     num_beams: int = field(default=4, metadata={"help": "num beams"})
+    use_extra_dataset:bool = field(default=False, metadata={"help":"Only work for ctc2021, using larget v2"})
 
 class mydataset(Dataset):
     def __init__(self, data):
@@ -100,10 +101,18 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         from models.bert.modeling_bert_v4 import BertForMaskedLM_CL as ProtoModel
     elif model_name == "CPT_NLG":
         from models.bart.modeling_bart_v2 import BartForConditionalGeneration as ProtoModel
-        pretrained_model_name_or_path='/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
+        pretrained_model_name_or_path="fnlp/cpt-base" # '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
+        #pretrained_model_name_or_path = '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
+
     elif model_name == "CPT_NLU":
         from models.bart.modeling_bart_v2 import BartForMaskedLM as ProtoModel
-        pretrained_model_name_or_path='/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
+        pretrained_model_name_or_path="fnlp/cpt-large" # '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
+    elif model_name == "BART-base":
+        from models.bart.modeling_bart_v2 import BartForConditionalGeneration as ProtoModel
+        pretrained_model_name_or_path="fnlp/bart-base-chinese"# '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
+    elif model_name == "BART-large":
+        from models.bart.modeling_bart_v2 import BartForConditionalGeneration as ProtoModel
+        pretrained_model_name_or_path="fnlp/bart-large-chinese"# '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
     elif model_name == "Proto":
         from models.bert.modeling_bert_v4 import ProtoBertForMaskedLM as ProtoModel
     elif model_name is None or model_name == "MaskedLM":
@@ -120,7 +129,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         exit()
     return model
 
-def get_dataset(dataset, path_head=""):
+def get_dataset(training_args):
     """
     preprocess wrapped in load_ctc2021
     return : mydate
@@ -132,13 +141,13 @@ def get_dataset(dataset, path_head=""):
     print("Loading Dataset !")
     os.system("date")
 
-    if dataset == "ctc2021":
-        train_data, eval_data, test_data = load_ctc2021()
-    elif dataset == "sighan":
-        train_data, eval_data, test_data = load_sighan(path_head)
+    if training_args.dataset == "ctc2021":
+        train_data, eval_data, test_data = load_ctc2021(training_args.use_extra_dataset)
+    elif training_args.dataset == "sighan":
+        train_data, eval_data, test_data = load_sighan(path_head="")
     else:
         print("Error: No such dataset ")
-        print(dataset)
+        print(training_args.dataset)
         exit(0)
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
@@ -149,7 +158,7 @@ def get_dataset(dataset, path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
-def get_dataset_plus(dataset, path_head=""):
+def get_dataset_plus(training_args):
     """
     preprocess wrapped in load_ctc2021
     return : mydate
@@ -161,14 +170,14 @@ def get_dataset_plus(dataset, path_head=""):
     print("Loading Dataset !")
     os.system("date")
 
-    if dataset == "ctc2021":
-        train_data, eval_data, test_data = load_ctc2021()
-    elif dataset == "sighan":
+    if training_args.dataset == "ctc2021":
+        train_data, eval_data, test_data = load_ctc2021(extra=training_args.use_extra_dataset)
+    elif training_args.dataset == "sighan":
         #train_data, eval_data, test_data = load_sighan(path_head)
         return get_ReaLiSe_dataset()
     else:
         print("Error: No such dataset ")
-        print(dataset)
+        print(training_args.dataset)
         exit(0)
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
