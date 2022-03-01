@@ -33,6 +33,7 @@ from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokeni
 from data.DatasetLoadingHelper import (
     load_ctc2021, 
     load_sighan, 
+    load_sighan_gector,
     load_lattice_sighan, 
     load_abs_pos_sighan, 
     load_abs_pos_sighan_lang8, 
@@ -51,6 +52,7 @@ class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     max_length: int = field(default=128, metadata={"help": "max length"})
     num_beams: int = field(default=4, metadata={"help": "num beams"})
     use_extra_dataset:bool = field(default=False, metadata={"help":"Only work for ctc2021, using larget v2"})
+
 
 class mydataset(Dataset):
     def __init__(self, data):
@@ -103,7 +105,6 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         from models.bart.modeling_bart_v2 import BartForConditionalGeneration as ProtoModel
         pretrained_model_name_or_path="fnlp/cpt-base" # '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
         #pretrained_model_name_or_path = '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
-
     elif model_name == "CPT_NLU":
         from models.bart.modeling_bart_v2 import BartForMaskedLM as ProtoModel
         pretrained_model_name_or_path="fnlp/cpt-large" # '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
@@ -115,6 +116,8 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         pretrained_model_name_or_path="fnlp/bart-large-chinese"# '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
     elif model_name == "Proto":
         from models.bert.modeling_bert_v4 import ProtoBertForMaskedLM as ProtoModel
+    elif model_name == "Gector":
+        from models.bert.modeling_bert_v3 import GectorModel as ProtoModel
     elif model_name is None or model_name == "MaskedLM":
         print("Hint: Load Default BertForMaskedLM.")
         from transformers import BertForMaskedLM as ProtoModel
@@ -128,6 +131,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         print("Warning: wrong model name ! You ")
         exit()
     return model
+
 
 def get_dataset(training_args):
     """
@@ -174,12 +178,32 @@ def get_dataset_plus(training_args):
         train_data, eval_data, test_data = load_ctc2021(extra=training_args.use_extra_dataset)
     elif training_args.dataset == "sighan":
         #train_data, eval_data, test_data = load_sighan(path_head)
-        return get_ReaLiSe_dataset()
+        if training_args.model_name == "Gector":
+            return get_Gector_dataset()
+        else:
+            return get_ReaLiSe_dataset()
     else:
         print("Error: No such dataset ")
         print(training_args.dataset)
         exit(0)
 
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    print("Loading Succeed !")
+    os.system("date")
+
+    return train_dataset, eval_dataset, test_dataset
+
+
+def get_Gector_dataset(which="15"):
+    """
+    Gector for sighan
+    """
+    print("Loading Dataset !")
+    os.system("date")
+
+    train_data, eval_data, test_data = load_sighan_gector(path_head="")
+    
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
     print("Loading Succeed !")
@@ -260,6 +284,7 @@ def get_lattice_dataset(dataset="sighan", path_head="."):
 
     return datasets, vocabs, embeddings
 
+
 def get_magic_plus_dataset(dataset="sighan", path_head=""):
     """
     """
@@ -278,6 +303,7 @@ def get_magic_plus_dataset(dataset="sighan", path_head=""):
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
+
 
 def get_magic_dataset(dataset="sighan", path_head=""):
     """
@@ -298,6 +324,7 @@ def get_magic_dataset(dataset="sighan", path_head=""):
 
     return train_dataset, eval_dataset, test_dataset
 
+
 def get_magic_lang8_dataset(dataset="sighan", path_head=""):
     """
     """
@@ -316,6 +343,7 @@ def get_magic_lang8_dataset(dataset="sighan", path_head=""):
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
+
 
 def get_magic_expand_dataset(dataset="sighan", path_head=""):
     """
@@ -336,6 +364,7 @@ def get_magic_expand_dataset(dataset="sighan", path_head=""):
 
     return train_dataset, eval_dataset, test_dataset
 
+
 def get_super_magic_dataset(dataset="sighan", path_head=""):
     """
     """
@@ -355,16 +384,18 @@ def get_super_magic_dataset(dataset="sighan", path_head=""):
 
     return train_dataset, eval_dataset, test_dataset, tokenizer
 
-def get_metrics(dataset):
-    if dataset == "sighan":
-        return _get_metrics()
-    if dataset == "ctc2021":
-        return _get_seq2seq_metrics()
+
+def get_metrics(training_args):
+    if training_args.dataset == "sighan":
+        return _get_metrics(training_args)
+    if training_args.dataset == "ctc2021":
+        return _get_seq2seq_metrics(training_args)
     else:
         print("Error when getting metrics.")
         exit(0)
 
-def _get_metrics():
+
+def _get_metrics(training_args):
     """
     #https://huggingface.co/metrics
     #accuracy,bertscore, bleu, bleurt, coval, gleu, glue, meteor,
@@ -391,8 +422,8 @@ def _get_metrics():
             source, pred, label = sources[i], preds[i], labels[i]
             #print(source)
             #print(pred)
-            #print(label)
-
+            #print(label) 
+            #exit()
             source, label = source[ source != -100], label[label != -100]
             #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100]# pad idx for labels
             # print(source)
@@ -412,9 +443,9 @@ def _get_metrics():
             source, pred, label = np.where(source == 102, 101, source), np.where(pred == 102, 101, pred), np.where(label == 102, 101, label) 
             #source, pred, label = source[1:len(source)-1], pred[1:len(pred)-1], label[1:len(label)-1]
 
-            # print(source)
-            # print(pred)
-            # print(label)
+            # print("source", source)
+            # print("pred", pred)
+            # print("label",label)
 
             # print( (pred != source).any() )
             # print( (pred == label).all() )
@@ -435,13 +466,29 @@ def _get_metrics():
                 print(" Error Exit ")
                 exit(0)
 
-            if (pred != source).any():
-                sent_p += 1
-                if (pred == label).all():
-                    tp += 1
+            # print((pred != 1).any())
+            # print((pred == label).all())
+            # print((label != 1).any()) 
+            
+            if training_args.model_name != "Gector":
+                # label: [101, 2,... 3, 102]
+                if (pred != source).any():
+                    sent_p += 1
+                    if (pred == label).all():
+                        tp += 1
 
-            if (label != source).any():
-                sent_n += 1
+                if (label != source).any():
+                    sent_n += 1
+            else:
+                # label : [ 1,1,1,1,1 ]
+                if (pred != 1).any():
+                    sent_p += 1
+
+                    if (pred == label).all():
+                        tp += 1
+            
+                if (label != 1).any():
+                    sent_n += 1
 
         precision = tp / (sent_p + 1e-10)
 
@@ -458,7 +505,8 @@ def _get_metrics():
 
     return compute_metrics
 
-def _get_seq2seq_metrics():
+
+def _get_seq2seq_metrics(training_args):
     """
     Main difference from " get_metrics() " is that seq2seq output & labels doesn't match (length).
     #https://huggingface.co/metrics

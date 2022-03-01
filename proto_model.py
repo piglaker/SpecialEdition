@@ -90,7 +90,7 @@ def run():
     ) #base
 
     # Metrics
-    compute_metrics = get_metrics(training_args.dataset)
+    compute_metrics = get_metrics(training_args)
 
     # Data Collator
 
@@ -102,9 +102,9 @@ def run():
     )#my data collator  fix the length for bert.
     
     # Trainer
-    if training_args.dataset == "sighan":
+    if training_args.model_name in [ "MLP", "CL", "Dot", "Proto", "MaskedLM_v2", "CPT_NLU", "Gector"]:
         Trainer = MyTrainer # MaskedLM        
-    elif training_args.dataset == "ctc2021":
+    elif training_args.model_name in  [ "CPT_NLG", "BART-base", "BART-large" ] :
         Trainer = subTrainer # Seq2Seq
         training_args.predict_with_generate = True
 

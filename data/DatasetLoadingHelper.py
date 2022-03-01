@@ -16,6 +16,11 @@ sys.path.append("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition")
 
 from utils.io import read_csv
 
+
+def wash_n(data):
+    import re
+    return [re.sub("\n", "", i) for i in data ]
+
 def load_json(data_path):
     
     file = open(data_path, 'r', encoding='utf-8')
@@ -144,13 +149,81 @@ def load_sighan(path_head=""):
 
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_gector', _refresh=True)
+def load_sighan_gector(path_head=""):
+    """
+    Tokenizer : 
+        batch_encode_plus cause a problem that "笑嘻嘻中了set" would be tokenized to [1,2,3,4,5,6] ("set"'s token is 6 ),
+        so the length of source.tok dismatch the label ( seq2tag generate bu scripts/sighan_v1/generate_vocab.py)
+        I use ugly double for to solve this .
+    """
+    print("Loading SigHan GECTOR Dataset ...")
+
+    train_source_path = path_head + "./data/rawdata/sighan/gector/train.src"
+    train_target_path = path_head + "./data/rawdata/sighan/gector/train.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/gector/valid.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/gector/valid.tgt"#valid should be same to test ( sighan 15
+    test_source_path = path_head + "./data/rawdata/sighan/gector/test.src"
+    test_target_path = path_head + "./data/rawdata/sighan/gector/test.tgt"
+
+    train_source = wash_n(read_csv(train_source_path))#[:2000]#[274144:]#for only sighan
+    train_target = wash_n(read_csv(train_target_path))#[:2000]#[274144:]
+    
+    valid_source = wash_n(read_csv(valid_source_path))
+    valid_target = wash_n(read_csv(valid_target_path))
+
+    test_source = wash_n(read_csv(test_source_path))
+    test_target = wash_n(read_csv(test_target_path))
+
+    tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
+
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
+
+    def my_batch_encode_plus(source):
+        """
+        Almost squally to batch_encode_plus
+        """
+        new_source = { "input_ids":[], "attention_mask":[], "labels":[] }
+
+        for sentence in source:
+            tmp = [101]
+            for i in sentence:
+                tmp.append(tokenizer.convert_tokens_to_ids(i))
+            
+            tmp.append(102)
+            new_source["input_ids"].append(tmp)
+            new_source["attention_mask"].append( [ 1 for i in tmp] )
+
+        return new_source
+
+    train_source_tok = my_batch_encode_plus(train_source)#seems transformers max_length not work
+    #train_target_tok = tokenizer.batch_encode_plus(train_target, return_token_type_ids=False)#remove padding=True, max_length=512
+    valid_source_tok = my_batch_encode_plus(valid_source)
+    #valid_target_tok = tokenizer.batch_encode_plus(valid_target, return_token_type_ids=False)
+    test_source_tok = my_batch_encode_plus(test_source)
+    #test_target_tok = tokenizer.batch_encode_plus(test_target, return_token_type_ids=False)
+
+    def preprocess(s):
+        return list(map(int, s.split(",")))
+
+    train_source_tok["labels"] = list(map(preprocess, train_target))
+    valid_source_tok["labels"] = list(map(preprocess, valid_target))
+    test_source_tok["labels"] = list(map(preprocess, test_target))
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            #ugly fix for encoder model (the same length
+            features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+    return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
+
 def load_sighan13_test():
     """
     UnFinished ...
     """
     print("Loading SigHan13 Test Dataset ...")
-
-    exit()
 
     valid_source_path = "./data/rawdata/sighan/raw/valid14.src"
     valid_target_path = "./data/rawdata/sighan/raw/valid14.tgt"
@@ -175,8 +248,9 @@ def load_sighan13_test():
 
     return transpose(valid_source_tok)
 
-
 def load_sighan14_test(path_head="./"):
+    """
+    """
     print("Loading SigHan14 Test Dataset ...")
 
     valid_source_path = path_head + "data/rawdata/sighan/raw/valid14.src"
@@ -202,8 +276,9 @@ def load_sighan14_test(path_head="./"):
 
     return transpose(valid_source_tok)
 
-
 def load_sighan15_test(path_head="./"):
+    """
+    """
     print("Loading SigHan15 Test Dataset ...")
 
     valid_source_path = "./data/rawdata/sighan/std/test.src"
@@ -228,7 +303,6 @@ def load_sighan15_test(path_head="./"):
         return features 
 
     return transpose(valid_source_tok)
-
 
 def split_lattice_and_source(source):
     """
@@ -265,7 +339,6 @@ def split_lattice_and_source_plus(source):
 
     return res, lattice, sub_length
 
-
 def load_raw_lattice(raw_lattice_path="/data/rawdata/sighan/lattice/", path_head="."):
     """
     for flat
@@ -277,10 +350,6 @@ def load_raw_lattice(raw_lattice_path="/data/rawdata/sighan/lattice/", path_head
     valid_target_path = path_head + raw_lattice_path + "valid.tgt"
     test_source_path = path_head + raw_lattice_path + "test.src"
     test_target_path = path_head + raw_lattice_path + "test.tgt"
-
-    def wash_n(data):
-        import re
-        return [re.sub("\n", "", i) for i in data ]
     
     train_source = wash_n(read_csv(train_source_path))#[:2000]#[548288:]#[:2000]
     train_target = wash_n(read_csv(train_target_path))#[:2000]#[274144:]#[:1000]#
@@ -302,14 +371,12 @@ def load_raw_lattice(raw_lattice_path="/data/rawdata/sighan/lattice/", path_head
 
     return (train_source, train_lattice, train_target), (valid_source, valid_lattice, valid_target), (test_source, test_lattice, test_target)
 
-
 def trans2dataset(source_and_lattice_and_target, max_length=100024):
     """
     for flat
     source: ["sentence", "sentence"]
     return: <class 'fastNLP.core.dataset.DataSet'>
     """    
-    
     from fastNLP import DataSet
 
     source, lattice, target = source_and_lattice_and_target
@@ -363,7 +430,6 @@ def trans2dataset(source_and_lattice_and_target, max_length=100024):
 
     return DataSet({ "lattice":finals, "lex_nums":lex_nums, "attention_mask":atten_masks, "target": target_host, "pos_s":pos_s, "pos_e":pos_e})#bigram just a repalced name for char
 
-
 from fastNLP import cache_results
 @cache_results(_cache_fp='cache/sighan_lattice_test', _refresh=True)
 def load_lattice_sighan(dataset=None, path_head=""):
@@ -372,7 +438,6 @@ def load_lattice_sighan(dataset=None, path_head=""):
     for flat
     #use faskNLP module because Im FDU CS ! #Im LAZY.
     """
-
     print("Loading Lattice SigHan Dataset ...")
 
     pretrain_embedding_path = "/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/others/yangjie_word_char_mix.txt"
@@ -634,7 +699,6 @@ def load_abs_pos_and_spe_token_sighan(dataset=None, path_head=""):
 
     return transpose(train_dataset), transpose(valid_dataset), transpose(test_dataset), tokenizer
 
-
 def get_lattice_and_pos_plus(source_and_lattice_and_target, tokenizer, max_length=512):
     """
     for abs pos bert
@@ -747,7 +811,6 @@ def load_abs_pos_sighan_lang8(dataset=None, path_head=""):
 
     return transpose(train_dataset), transpose(valid_dataset), transpose(test_dataset)
 
-
 class myBatchEncoding():
     """
     Only Using when Debuging FaskNLP Dataset -> HuggingFace Transformers BatchEncodings
@@ -772,14 +835,21 @@ class myBatchEncoding():
 if __name__ == "__main__":
     #load_sighan()
     #a, b, c = load_lattice_sighan()
-    a,b,c = load_abs_pos_sighan_plus(path_head=".")
-    print(a[0])
-    for i in a:
-        if (len(i["input_ids"]) != len(i["lattice"])) or ( len(i["input_ids"]) != len(i["attention_mask"]) ):
+    #a,b,c = load_abs_pos_sighan_plus(path_head=".")
+    """
+    Check length for csc task
+    """
+    a,b,c = load_sighan_gector()
+    
+    
+    for index, i in enumerate(a):
+        if (len(i["input_ids"]) != len(i["labels"])) or ( len(i["input_ids"]) != len(i["attention_mask"]) ):
+            print(index)
             print(len(i['input_ids']))
-            print(len(i['lattice']))
+            print(len(i['labels']))
             print(len(i['attention_mask']))
             print(i['input_ids'])
+            print(i["labels"])
             print("something goes wrong!")
             exit()
     else:
