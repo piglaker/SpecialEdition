@@ -1,0 +1,14 @@
+Tue Mar  1 07:03:15 UTC 2022
+Tue Mar  1 07:03:15 UTC 2022
+Tue Mar  1 07:03:22 UTC 2022
+Some weights of the model checkpoint at hfl/chinese-roberta-wwm-ext were not used when initializing BertForMaskedLM: ['cls.seq_relationship.bias', 'cls.seq_relationship.weight']
+- This IS expected if you are initializing BertForMaskedLM from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertForMaskedLM from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Loading Dataset !
+Loading Dataset !
+Hint: The Data You loading now is the preprocessed sighan from ReaLise, 
+Hint: Using **SIGHAN15** for eval & test !
+Loading Succeed !
+Hint: Loading Model *****MaskedLM*****
+Hint: Load Default BertForMaskedLM.
+ Error: Unregistered Model !

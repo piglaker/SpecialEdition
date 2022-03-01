@@ -8,7 +8,7 @@ datetime=${d// /-}
 
 
 dataset="sighan"
-model_name="CPT_NLG"
+model_name="MaskedLM"
 use_extra_dataset=False
 
 epoch=10
@@ -16,7 +16,7 @@ batch_size=128
 
 eval_dataset="15"
 
-name=$model_name"_of_extra"$use_extra_dataset"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
+name=$model_name"_Mask_of_extra"$use_extra_dataset"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
 
 # echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 
@@ -33,7 +33,7 @@ CUDA_VISIBLE_DEVICES=6  nohup python proto_model.py \
     --per_device_eval_batch_size $batch_size \
     --eval_accumulation_steps 2 \
     --num_train_epochs $epoch \
-    --evaluation_strategy epoch \
+    --evaluation_strategy steps \
     --save_strategy epoch \
     --dataloader_pin_memory True \
     --metric_for_best_model F1_score \

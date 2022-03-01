@@ -80,7 +80,7 @@ def generate(need_preprocess=True):
         source, target = source_target
         new_target = []
         for i in range(len(source)):
-            birth = ["1"]
+            birth = [] # ["1"]
             for j, element in enumerate(source[i]):
                 
                 if element == target[i][j]:
@@ -88,7 +88,7 @@ def generate(need_preprocess=True):
                 else:
                     birth.append(str(int(char2ids[target[i][j]])+1))
      
-            birth.append("1")
+            #birth.append("1")
 
             new_target.append(",".join(birth))
 

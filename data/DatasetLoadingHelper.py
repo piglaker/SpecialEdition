@@ -219,6 +219,71 @@ def load_sighan_gector(path_head=""):
         return features 
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
+
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_mask', _refresh=True)
+def load_sighan_mask(path_head=""):
+    """
+    Tokenizer : 
+        to valid mask the original wrong char of source, train bert to predict
+
+    """
+    print("Loading SigHan GECTOR Dataset ...")
+
+    train_source_path = path_head + "./data/rawdata/sighan/std/train.src"
+    train_target_path = path_head + "./data/rawdata/sighan/std/train.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/std/valid.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/std/valid.tgt"#valid should be same to test ( sighan 15
+    test_source_path = path_head + "./data/rawdata/sighan/std/test.src"
+    test_target_path = path_head + "./data/rawdata/sighan/std/test.tgt"
+
+    train_source = wash_n(read_csv(train_source_path))#[:2000]#[274144:]#for only sighan
+    train_target = wash_n(read_csv(train_target_path))#[:2000]#[274144:]
+    
+    valid_source = wash_n(read_csv(valid_source_path))
+    valid_target = wash_n(read_csv(valid_target_path))
+
+    test_source = wash_n(read_csv(test_source_path))
+    test_target = wash_n(read_csv(test_target_path))
+
+    tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
+
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
+
+    train_source_tok = tokenizer.batch_encode_plus(train_source)#seems transformers max_length not work
+    train_target_tok = tokenizer.batch_encode_plus(train_target, return_token_type_ids=False)#remove padding=True, max_length=512
+    valid_source_tok = tokenizer.batch_encode_plus(valid_source)
+    valid_target_tok = tokenizer.batch_encode_plus(valid_target, return_token_type_ids=False)
+    test_source_tok = tokenizer.batch_encode_plus(test_source)
+    test_target_tok = tokenizer.batch_encode_plus(test_target, return_token_type_ids=False)
+
+    def preprocess(s):
+        return list(map(int, s.split(",")))
+
+    train_source_tok["labels"] = train_target_tok["input_ids"]
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+    test_source_tok["labels"] = test_target_tok["input_ids"]
+
+    # mask
+    def mask(source):
+        for i in range(len(source["input_ids"])):
+            for j in range(len(source["input_ids"][i])):
+                if source["input_ids"][i][j] == source["labels"][i][j]:
+                    source["input_ids"][i][j] = 103
+        return source
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            #ugly fix for encoder model (the same length
+            features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+
+    print("Hint: Rough code here to mask will cause program slow")
+
+    return mask(transpose(train_source_tok)), mask(transpose(valid_source_tok)), mask(transpose(test_source_tok))
+
+
 def load_sighan13_test():
     """
     UnFinished ...

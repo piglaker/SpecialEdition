@@ -34,6 +34,7 @@ from data.DatasetLoadingHelper import (
     load_ctc2021, 
     load_sighan, 
     load_sighan_gector,
+    load_sighan_mask,
     load_lattice_sighan, 
     load_abs_pos_sighan, 
     load_abs_pos_sighan_lang8, 
@@ -179,9 +180,9 @@ def get_dataset_plus(training_args):
     elif training_args.dataset == "sighan":
         #train_data, eval_data, test_data = load_sighan(path_head)
         if training_args.model_name == "Gector":
-            return get_Gector_dataset()
+            return _get_Gector_dataset()
         else:
-            return get_ReaLiSe_dataset()
+            return _get_ReaLiSe_dataset()
     else:
         print("Error: No such dataset ")
         print(training_args.dataset)
@@ -195,11 +196,28 @@ def get_dataset_plus(training_args):
     return train_dataset, eval_dataset, test_dataset
 
 
-def get_Gector_dataset(which="15"):
+def _get_mask_dataset(which="15"):
     """
     Gector for sighan
     """
-    print("Loading Dataset !")
+    print("Loading MASK Dataset !")
+    os.system("date")
+
+    train_data, eval_data, test_data = load_sighan_mask(path_head="")
+    
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    print("Loading Succeed !")
+    os.system("date")
+
+    return train_dataset, eval_dataset, test_dataset
+
+
+def _get_Gector_dataset(which="15"):
+    """
+    Gector for sighan
+    """
+    print("Loading GECTOR Dataset !")
     os.system("date")
 
     train_data, eval_data, test_data = load_sighan_gector(path_head="")
@@ -212,7 +230,7 @@ def get_Gector_dataset(which="15"):
     return train_dataset, eval_dataset, test_dataset
 
 
-def get_ReaLiSe_dataset(which="15"):
+def _get_ReaLiSe_dataset(which="15"):
     """
     For its 
     """
@@ -245,7 +263,7 @@ def get_ReaLiSe_dataset(which="15"):
     return trans2mydataset(train_dataset), trans2mydataset(eval_dataset), trans2mydataset(test_dataset)
 
 
-def get_sighan_test(which, path_head=""):
+def _get_sighan_test(which, path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -269,7 +287,7 @@ def get_sighan_test(which, path_head=""):
     return test_dataset
 
 
-def get_lattice_dataset(dataset="sighan", path_head="."):
+def _get_lattice_dataset(dataset="sighan", path_head="."):
     """
     """
     print("Loading Dataset !")
@@ -285,7 +303,7 @@ def get_lattice_dataset(dataset="sighan", path_head="."):
     return datasets, vocabs, embeddings
 
 
-def get_magic_plus_dataset(dataset="sighan", path_head=""):
+def _get_magic_plus_dataset(dataset="sighan", path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -305,7 +323,7 @@ def get_magic_plus_dataset(dataset="sighan", path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
-def get_magic_dataset(dataset="sighan", path_head=""):
+def _get_magic_dataset(dataset="sighan", path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -325,7 +343,7 @@ def get_magic_dataset(dataset="sighan", path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
-def get_magic_lang8_dataset(dataset="sighan", path_head=""):
+def _get_magic_lang8_dataset(dataset="sighan", path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -345,7 +363,7 @@ def get_magic_lang8_dataset(dataset="sighan", path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
-def get_magic_expand_dataset(dataset="sighan", path_head=""):
+def _get_magic_expand_dataset(dataset="sighan", path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -365,7 +383,7 @@ def get_magic_expand_dataset(dataset="sighan", path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
-def get_super_magic_dataset(dataset="sighan", path_head=""):
+def _get_super_magic_dataset(dataset="sighan", path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -433,15 +451,17 @@ def _get_metrics(training_args):
             #source, pred, label = source[source != 101], pred[pred != 101], label[label != 101]#remove  
             source, label = source[source != 0],  label[label != 0]#pad idx for input_ids 
             #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100] 
+            
+            #we guess pretrain Masked Language Model bert lack the surpvised sighan for 101 & 102 ( [CLS] & [SEP] ) , so we just ignore
+            source, pred, label = np.where(source == 102, 101, source), np.where(pred == 102, 101, pred), np.where(label == 102, 101, label) 
+            #source, pred, label = source[1:len(source)-1], pred[1:len(pred)-1], label[1:len(label)-1]
+
+            source, pred, label = source[ source != 101 ], pred[ pred != 101 ], label[ label != 101]
 
             source = source[:len(label)]
             pred = pred[:len(label)]
             #print(source, pred, label)    
             #print(type(pred), type(source), pred==source)
-
-            #we guess pretrain Masked Language Model bert lack the surpvised sighan for 101 & 102 ( [CLS] & [SEP] ) , so we just ignore
-            source, pred, label = np.where(source == 102, 101, source), np.where(pred == 102, 101, pred), np.where(label == 102, 101, label) 
-            #source, pred, label = source[1:len(source)-1], pred[1:len(pred)-1], label[1:len(label)-1]
 
             # print("source", source)
             # print("pred", pred)

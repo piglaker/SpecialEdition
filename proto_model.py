@@ -52,6 +52,7 @@ from core import (
     get_metrics, 
     argument_init, 
     get_dataset_plus,
+    _get_mask_dataset,
     MySeq2SeqTrainingArguments, 
 )
 from lib import MyTrainer, FoolDataCollatorForSeq2Seq, subTrainer 
@@ -102,11 +103,14 @@ def run():
     )#my data collator  fix the length for bert.
     
     # Trainer
-    if training_args.model_name in [ "MLP", "CL", "Dot", "Proto", "MaskedLM_v2", "CPT_NLU", "Gector"]:
+    if training_args.model_name in [ "MLP", "CL", "Dot", "Proto", "MaskedLM_v2", "CPT_NLU", "Gector", "MaskLM"]:
         Trainer = MyTrainer # MaskedLM        
     elif training_args.model_name in  [ "CPT_NLG", "BART-base", "BART-large" ] :
         Trainer = subTrainer # Seq2Seq
         training_args.predict_with_generate = True
+    else :
+        print(" Error: Unregistered Model !")
+        exit(0)
 
     trainer = Trainer(
         model=model,
