@@ -21,6 +21,7 @@ import os
 import warnings
 from dataclasses import dataclass
 from typing import Optional, Tuple
+from sqlalchemy import true
 
 import torch
 import torch.utils.checkpoint
@@ -1852,12 +1853,9 @@ class GectorModel(BertPreTrainedModel):
 
         self.LayerNorm = nn.LayerNorm(config.hidden_size)
 
-        self.mlp = nn.Linear(config.hidden_size, self.vocab_size, bias=False) 
+        self.cor = nn.Linear(config.hidden_size, self.vocab_size, bias=True) 
 
-        self.bias = nn.Parameter(torch.zeros(self.vocab_size))
-
-        # Need a link between the two variables so that the bias is correctly resized with `resize_token_embeddings`
-        self.mlp.bias = self.bias
+        self.det = nn.Linear(config.hidden_size, 2, bias=True)
 
         self.init_weights()
 
@@ -1913,21 +1911,31 @@ class GectorModel(BertPreTrainedModel):
         )
 
         sequence_output = outputs[0]
-        prediction_scores = self.mlp(self.LayerNorm(self.transform_act(self.transform(sequence_output))))
 
-        masked_lm_loss = None
+        #prediction_scores = self.cor(self.LayerNorm(self.transform_act(self.transform(sequence_output))))
+
+        cor_scores = self.cor(sequence_output)
+
+        det_scores = self.det(sequence_output)
+
+        loss, cor_loss, det_loss = None, None, None
+
+        d_labels = (labels != 1).long()
 
         if labels is not None:
             loss_fct = CrossEntropyLoss()  # -100 index = padding token
-            masked_lm_loss = loss_fct(prediction_scores.view(-1, self.vocab_size), labels.view(-1))
+            cor_loss = loss_fct(cor_scores.view(-1, self.vocab_size), labels.view(-1))
+            det_loss = loss_fct(det_scores.view(-1, 2), d_labels.view(-1))
+
+        loss = cor_loss + det_loss
 
         if not return_dict:
-            output = (prediction_scores,) + outputs[2:]
-            return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
+            output = (cor_scores,) + outputs[2:]
+            return ((loss,) + output) if loss is not None else output
 
         return MaskedLMOutput(
-            loss=masked_lm_loss,
-            logits=prediction_scores,
+            loss=loss,
+            logits=cor_scores,
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )

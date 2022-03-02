@@ -181,7 +181,7 @@ class FoolDataCollatorForSeq2Seq:
             
             return f_copy
 
-        for key in ["input_ids", "labels", "attention_mask"]:
+        for key in f_copy[0].keys():#["input_ids", "labels", "attention_mask"]:
             f_copy = simple_pad(f_copy, key)
 
         new = {}

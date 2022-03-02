@@ -1,5 +1,10 @@
 ## Chinese Spell Check
 
+
+
+use ./scripts/sighan/generate.py to generate data in ./data/rawdata/sighan
+
+
 # Important:
     ./data
     ./logs

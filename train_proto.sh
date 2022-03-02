@@ -20,7 +20,7 @@ name=$model_name"_Mask_of_extra"$use_extra_dataset"_eval"$eval_dataset"_epoch"$e
 
 # echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 
-CUDA_VISIBLE_DEVICES=6  nohup python proto_model.py \
+CUDA_VISIBLE_DEVICES=6 nohup python proto_model.py \
     --seed 233 \
     --do_train \
     --do_eval \

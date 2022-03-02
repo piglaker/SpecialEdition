@@ -438,38 +438,18 @@ def _get_metrics(training_args):
 
         for i in range(len(sources)):
             source, pred, label = sources[i], preds[i], labels[i]
-            #print(source)
-            #print(pred)
-            #print(label) 
-            #exit()
+
             source, label = source[ source != -100], label[label != -100]
-            #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100]# pad idx for labels
-            # print(source)
-            # print(pred)
-            # print(label)
-            #source, pred, label = source[source != 102], pred[ pred != 102 ], label[ label != 102]
-            #source, pred, label = source[source != 101], pred[pred != 101], label[label != 101]#remove  
+
             source, label = source[source != 0],  label[label != 0]#pad idx for input_ids 
-            #source, pred, label = source[source != -100], pred[pred != -100], label[label != -100] 
-            
+
             #we guess pretrain Masked Language Model bert lack the surpvised sighan for 101 & 102 ( [CLS] & [SEP] ) , so we just ignore
             source, pred, label = np.where(source == 102, 101, source), np.where(pred == 102, 101, pred), np.where(label == 102, 101, label) 
-            #source, pred, label = source[1:len(source)-1], pred[1:len(pred)-1], label[1:len(label)-1]
 
             source, pred, label = source[ source != 101 ], pred[ pred != 101 ], label[ label != 101]
 
             source = source[:len(label)]
             pred = pred[:len(label)]
-            #print(source, pred, label)    
-            #print(type(pred), type(source), pred==source)
-
-            # print("source", source)
-            # print("pred", pred)
-            # print("label",label)
-
-            # print( (pred != source).any() )
-            # print( (pred == label).all() )
-            # print( (label != source).any() )
 
             if len(pred) != len(source) or len(label) != len(source):
                 print("Warning : something goes wrong when compute metrics, check codes now.")
@@ -478,17 +458,12 @@ def _get_metrics(training_args):
                 print("pred: ", pred)
                 print("label:", label)
                 exit()
-
             try:
                 (pred != source).any()
             except:
                 print(pred, source)
                 print(" Error Exit ")
                 exit(0)
-
-            # print((pred != 1).any())
-            # print((pred == label).all())
-            # print((label != 1).any()) 
             
             if training_args.model_name != "Gector":
                 # label: [101, 2,... 3, 102]

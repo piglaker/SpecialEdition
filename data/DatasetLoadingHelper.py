@@ -228,7 +228,7 @@ def load_sighan_mask(path_head=""):
         to valid mask the original wrong char of source, train bert to predict
 
     """
-    print("Loading SigHan GECTOR Dataset ...")
+    print("Loading SigHan but Mask original wrong char Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/std/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/std/train.tgt"
@@ -250,26 +250,23 @@ def load_sighan_mask(path_head=""):
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
 
-    train_source_tok = tokenizer.batch_encode_plus(train_source)#seems transformers max_length not work
+    train_source_tok = tokenizer.batch_encode_plus(train_source, return_token_type_ids=False)#seems transformers max_length not work
     train_target_tok = tokenizer.batch_encode_plus(train_target, return_token_type_ids=False)#remove padding=True, max_length=512
-    valid_source_tok = tokenizer.batch_encode_plus(valid_source)
+    valid_source_tok = tokenizer.batch_encode_plus(valid_source, return_token_type_ids=False)
     valid_target_tok = tokenizer.batch_encode_plus(valid_target, return_token_type_ids=False)
-    test_source_tok = tokenizer.batch_encode_plus(test_source)
+    test_source_tok = tokenizer.batch_encode_plus(test_source, return_token_type_ids=False)
     test_target_tok = tokenizer.batch_encode_plus(test_target, return_token_type_ids=False)
-
-    def preprocess(s):
-        return list(map(int, s.split(",")))
 
     train_source_tok["labels"] = train_target_tok["input_ids"]
     valid_source_tok["labels"] = valid_target_tok["input_ids"]
     test_source_tok["labels"] = test_target_tok["input_ids"]
 
-    # mask
+    # a ugly mask to replace the 
     def mask(source):
-        for i in range(len(source["input_ids"])):
-            for j in range(len(source["input_ids"][i])):
-                if source["input_ids"][i][j] == source["labels"][i][j]:
-                    source["input_ids"][i][j] = 103
+        for i in range(len(source)):
+            for j in range(len(source[i]["input_ids"])):
+                if source[i]["input_ids"][j] != source[i]["labels"][j]:
+                    source[i]["input_ids"][j] = 103
         return source
 
     def transpose(inputs):
@@ -904,7 +901,7 @@ if __name__ == "__main__":
     """
     Check length for csc task
     """
-    a,b,c = load_sighan_gector()
+    a,b,c = load_sighan_mask()
     
     
     for index, i in enumerate(a):

@@ -81,10 +81,10 @@ def run():
     )
 
     # Dataset
-    train_dataset, eval_dataset, test_dataset = get_dataset_plus(training_args)#get_dataset(training_args.dataset) 
+    #train_dataset, eval_dataset, test_dataset = get_dataset_plus(training_args)#get_dataset(training_args.dataset) 
+    train_dataset, eval_dataset, test_dataset = _get_mask_dataset(training_args)
 
     # Model
-    
     model = get_model(
         model_name= "Dot" if training_args.model_name is None else training_args.model_name, 
         pretrained_model_name_or_path="hfl/chinese-roberta-wwm-ext" if pretrained_csc_model is None else pretrained_csc_model  #"bert-base-chinese" 
@@ -103,7 +103,7 @@ def run():
     )#my data collator  fix the length for bert.
     
     # Trainer
-    if training_args.model_name in [ "MLP", "CL", "Dot", "Proto", "MaskedLM_v2", "CPT_NLU", "Gector", "MaskLM"]:
+    if training_args.model_name in [ "MLP", "CL", "Dot", "Proto", "MaskedLM_v2", "CPT_NLU", "Gector", "MaskedLM"]:
         Trainer = MyTrainer # MaskedLM        
     elif training_args.model_name in  [ "CPT_NLG", "BART-base", "BART-large" ] :
         Trainer = subTrainer # Seq2Seq
