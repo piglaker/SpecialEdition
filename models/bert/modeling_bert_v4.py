@@ -1538,7 +1538,7 @@ class ProtoBertForMaskedLM(BertPreTrainedModel):
             no_target_mask = (input_ids != labels).bool()
             loss3 = torch.nn.functional.cross_entropy(distill_scores.view(-1, self.config.vocab_size), labels.masked_fill(no_target_mask, -100).view(-1), reduction='mean')
 
-            total_loss = 0.5 * masked_lm_loss + 1 * loss2 + 0.5 * loss3
+            total_loss = 1 * masked_lm_loss + 0 * loss2 + 0.01 * loss3
 
         if not return_dict:
             output = (prediction_scores,) + outputs[2:]

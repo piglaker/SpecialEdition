@@ -19,6 +19,7 @@ import logging
 import argparse
 from dataclasses import dataclass, field
 from typing import Optional,Dict, Union, Any, Tuple, List
+from joblib import parallel_backend
 
 import numpy as np
 import datasets
@@ -81,14 +82,22 @@ def run():
     )
 
     # Dataset
-    #train_dataset, eval_dataset, test_dataset = get_dataset_plus(training_args)#get_dataset(training_args.dataset) 
-    train_dataset, eval_dataset, test_dataset = _get_mask_dataset(training_args)
+    train_dataset, eval_dataset, test_dataset = get_dataset_plus(training_args)#get_dataset(training_args.dataset) 
+    # train_dataset, eval_dataset, test_dataset = _get_mask_dataset(training_args)
 
     # Model
     model = get_model(
         model_name= "Dot" if training_args.model_name is None else training_args.model_name, 
         pretrained_model_name_or_path="hfl/chinese-roberta-wwm-ext" if pretrained_csc_model is None else pretrained_csc_model  #"bert-base-chinese" 
     ) #base
+
+
+    """
+    Fix cls
+    """
+    # for name, param in model.named_parameters():
+    #      if 'cls' in name:
+    #         param.requires_grad = False
 
     # Metrics
     compute_metrics = get_metrics(training_args)

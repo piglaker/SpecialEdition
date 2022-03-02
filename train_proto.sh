@@ -8,20 +8,20 @@ datetime=${d// /-}
 
 
 dataset="sighan"
-model_name="MaskedLM"
-use_extra_dataset=False
+model_name="BART-base"
+
 
 epoch=10
 batch_size=128
 
 eval_dataset="15"
 
-name=$model_name"_Mask_of_extra"$use_extra_dataset"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
+name=$model_name"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
 
 # echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 
-CUDA_VISIBLE_DEVICES=6 nohup python proto_model.py \
-    --seed 233 \
+CUDA_VISIBLE_DEVICES=5 nohup python proto_model.py \
+    --seed 153603 \
     --do_train \
     --do_eval \
     --do_predict \
