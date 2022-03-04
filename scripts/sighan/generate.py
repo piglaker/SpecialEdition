@@ -35,7 +35,10 @@ def get_sighan_from_json():
     train_file1 = os.path.join(data_dir, "train_dev.json")
     train_file2 = os.path.join(data_dir, "train131415.json") 
     test14_file = os.path.join(data_dir, "test14.json")
-    test15_file = os.path.join(data_dir, "test15.json")
+
+    #test15_file = os.path.join(data_dir, "test15.json")
+    test15_file = "../../data/rawdata/sighan/enchanted/test15.enc.json"
+
 
     all_data["train"] = load_json(train_file1)
     all_data["train"].extend(load_json(train_file2))
@@ -60,12 +63,15 @@ def preprocess(sentence):
 def json2list(data, need_preprocess):
     source, target = [], []
 
-    for element in data:
+    for i, element in enumerate(data):
 
         if need_preprocess:
             source.append(preprocess(element["original_text"]))
             target.append(preprocess(element["correct_text"]))
+            assert len(preprocess(element["original_text"])) == len(preprocess(element["correct_text"])), preprocess(element["original_text"])+preprocess(element["correct_text"]) 
         else:
+            print("ERROR: ABORT !")
+            exit(0)
             source.append(strQ2B((element["original_text"])))
             target.append(strQ2B((element["correct_text"])))
 
@@ -98,20 +104,22 @@ def generate(need_preprocess=True):
 
     #print(train_through[0], valid_through[0])
 
-    write_to("../../data/rawdata/sighan/std/train.src", "\n".join(train_source))
-    write_to("../../data/rawdata/sighan/std/train.tgt", "\n".join(train_target))
+    ouput_name = "enchanted"
+
+    write_to("../../data/rawdata/sighan/" + ouput_name + "/train.src", "\n".join(train_source))
+    write_to("../../data/rawdata/sighan/"+ouput_name+"/train.tgt", "\n".join(train_target))
     #write_to("../../data/rawdata/sighan/std/train.through", "\n".join(train_through))
 
-    write_to("../../data/rawdata/sighan/std/valid14.src", "\n".join(valid14_source))
-    write_to("../../data/rawdata/sighan/std/valid14.tgt", "\n".join(valid14_target))
+    write_to("../../data/rawdata/sighan/"+ouput_name+"/valid14.src", "\n".join(valid14_source))
+    write_to("../../data/rawdata/sighan/"+ouput_name+"/valid14.tgt", "\n".join(valid14_target))
     #write_to("../../data/rawdata/sighan/std/valid14.through", "\n".join(valid14_through))
 
-    write_to("../../data/rawdata/sighan/std/test.src", "\n".join(valid_source))
-    write_to("../../data/rawdata/sighan/std/test.tgt", "\n".join(valid_target))
+    write_to("../../data/rawdata/sighan/"+ouput_name+"/test.src", "\n".join(valid_source))
+    write_to("../../data/rawdata/sighan/"+ouput_name+"/test.tgt", "\n".join(valid_target))
     #write_to("../../data/rawdata/sighan/std/test.through", "\n".join(valid_through))
 
-    write_to("../../data/rawdata/sighan/std/valid.src", "\n".join(valid_source))
-    write_to("../../data/rawdata/sighan/std/valid.tgt", "\n".join(valid_target))
+    write_to("../../data/rawdata/sighan/"+ouput_name+"/valid.src", "\n".join(valid_source))
+    write_to("../../data/rawdata/sighan/"+ouput_name+"/valid.tgt", "\n".join(valid_target))
     #write_to("../../data/rawdata/sighan/std/valid.through", "\n".join(valid_through[:500])) 
 
 

@@ -281,6 +281,58 @@ def load_sighan_mask(path_head=""):
     return mask(transpose(train_source_tok)), mask(transpose(valid_source_tok)), mask(transpose(test_source_tok))
 
 
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_enchanted', _refresh=True)
+def load_sighan_enchanted(path_head=""):
+
+    print("Loading SigHan Enchanted Dataset ...")
+
+    train_source_path = path_head + "./data/rawdata/sighan/enchanted/train.src"
+    train_target_path = path_head + "./data/rawdata/sighan/enchanted/train.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/enchanted/valid.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/enchanted/valid.tgt"#valid should be same to test ( sighan 15
+    test_source_path = path_head + "./data/rawdata/sighan/enchanted/test.src"
+    test_target_path = path_head + "./data/rawdata/sighan/enchanted/test.tgt"
+
+    train_source = read_csv(train_source_path)#[:2000]#[274144:]#for only sighan
+    train_target = read_csv(train_target_path)#[:2000]#[274144:]
+    
+    valid_source = read_csv(valid_source_path)
+    valid_target = read_csv(valid_target_path)
+
+    test_source = read_csv(test_source_path)
+    test_target = read_csv(test_target_path)
+
+    #valid_source = train_source[:1100]#for valid overfit problem
+    #valid_target = train_target[:1100]
+    #train_source = train_source[1100:]
+    #train_target = train_target[1100:]
+
+    tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
+
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
+
+    train_source_tok = tokenizer.batch_encode_plus(train_source, return_token_type_ids=False)#seems transformers max_length not work
+    train_target_tok = tokenizer.batch_encode_plus(train_target, return_token_type_ids=False)#remove padding=True, max_length=512
+    valid_source_tok = tokenizer.batch_encode_plus(valid_source, return_token_type_ids=False)
+    valid_target_tok = tokenizer.batch_encode_plus(valid_target, return_token_type_ids=False)
+    test_source_tok = tokenizer.batch_encode_plus(test_source, return_token_type_ids=False)
+    test_target_tok = tokenizer.batch_encode_plus(test_target, return_token_type_ids=False)
+
+    train_source_tok["labels"] = train_target_tok["input_ids"]
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+    test_source_tok["labels"] = test_target_tok["input_ids"]
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            #ugly fix for encoder model (the same length
+            features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+
+    return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
+
+
 def load_sighan13_test():
     """
     UnFinished ...
@@ -901,7 +953,7 @@ if __name__ == "__main__":
     """
     Check length for csc task
     """
-    a,b,c = load_sighan_mask()
+    a,b,c = load_sighan_enchanted()
     
     
     for index, i in enumerate(a):

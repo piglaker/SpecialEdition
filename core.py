@@ -32,7 +32,8 @@ from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokeni
 
 from data.DatasetLoadingHelper import (
     load_ctc2021, 
-    load_sighan, 
+    load_sighan,
+    load_sighan_enchanted, 
     load_sighan_gector,
     load_sighan_mask,
     load_lattice_sighan, 
@@ -53,6 +54,7 @@ class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     max_length: int = field(default=128, metadata={"help": "max length"})
     num_beams: int = field(default=4, metadata={"help": "num beams"})
     use_extra_dataset:bool = field(default=False, metadata={"help":"Only work for ctc2021, using larget v2"})
+    fix_cls:bool = field(default=False, metadata={"help":"whether or not fix the cls layer of BertMaskedLM"})
 
 
 class mydataset(Dataset):
@@ -177,17 +179,60 @@ def get_dataset_plus(training_args):
 
     if training_args.dataset == "ctc2021":
         train_data, eval_data, test_data = load_ctc2021(extra=training_args.use_extra_dataset)
-    elif training_args.dataset == "sighan":
+    elif "sighan" in training_args.dataset:
         #train_data, eval_data, test_data = load_sighan(path_head)
         if training_args.model_name == "Gector":
             return _get_Gector_dataset()
-        else:
+        elif "mask" in training_args.dataset:
+            return _get_mask_dataset()
+        elif "enchanted" in training_args.dataset:
+            return _get_enchanted_dataset()
+        elif "raw" in training_args.dataset:
+            return _get_raw_dataset()
+        elif 'ReaLiSe' in training_args.dataset:
             return _get_ReaLiSe_dataset()
+        else:
+            print("Unclear data type, load default raw sighan")
+            return _get_raw_dataset()
     else:
         print("Error: No such dataset ")
         print(training_args.dataset)
         exit(0)
 
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    print("Loading Succeed !")
+    os.system("date")
+
+    return train_dataset, eval_dataset, test_dataset
+
+
+def _get_enchanted_dataset(which="15"):
+    """
+    Gector for sighan
+    """
+    print("Loading Enchanted Dataset !")
+    os.system("date")
+
+    train_data, eval_data, test_data = load_sighan_enchanted(path_head="")
+    
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    print("Loading Succeed !")
+    os.system("date")
+
+    return train_dataset, eval_dataset, test_dataset
+
+
+def _get_raw_dataset(which="15"):
+    """
+    Gector for sighan
+    """
+    print("Loading Raw Dataset !")
+    os.system("date")
+
+    train_data, eval_data, test_data = load_sighan(path_head="")
+    
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
     print("Loading Succeed !")
@@ -234,7 +279,7 @@ def _get_ReaLiSe_dataset(which="15"):
     """
     For its 
     """
-    print("Loading Dataset !")
+    print("Loading ReaLiSe Dataset !")
     print("Hint: The Data You loading now is the preprocessed sighan from ReaLise, ")
     os.system("date")
 
@@ -404,9 +449,11 @@ def _get_super_magic_dataset(dataset="sighan", path_head=""):
 
 
 def get_metrics(training_args):
-    if training_args.dataset == "sighan":
+    if "sighan" in training_args.dataset:
+        print("Hint: Using aligned sighn F1_score as metric")
         return _get_metrics(training_args)
-    if training_args.dataset == "ctc2021":
+    if "ctc2021" in training_args.dataset :
+        print("Hint: Using Seq2Seq ctc2021 score as metric")
         return _get_seq2seq_metrics(training_args)
     else:
         print("Error when getting metrics.")
@@ -451,12 +498,17 @@ def _get_metrics(training_args):
             source = source[:len(label)]
             pred = pred[:len(label)]
 
+            pred = np.concatenate((pred, np.array([ 0 for i in range(len(label) - len(pred))])), axis=0)
+
             if len(pred) != len(source) or len(label) != len(source):
                 print("Warning : something goes wrong when compute metrics, check codes now.")
                 print(len(source), len(pred), len(label))
                 print("source: ", source)
                 print("pred: ", pred)
                 print("label:", label)
+                print("raw source: ", sources[i])
+                print("raw pred: ", preds[i])
+                print("raw label:", labels[i])
                 exit()
             try:
                 (pred != source).any()
