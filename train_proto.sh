@@ -6,21 +6,34 @@ datetime=${d// /-}
 #model_name="CPT_NLG"
 #use_extra_dataset=True
 
-task="sighan"
-dataset="sighan_enchanted"
-model_name="MaskedLM"
+task="ctc2021"
+dataset="ctc2021"
+model_name="CPT_NLG"
 
-epoch=20
-batch_size=32
+epoch=10
+batch_size=128
 
 eval_dataset="15"
 
-name=$model_name"_dataset"$dataset"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
+cl_weight=0
+repeat_weight=0
+copy_weight=0
+
+if [ ! -d "./logs/$task/$dataset" ]; then
+    mkdir ./logs/$task/$dataset
+fi
+
+if [ "$model_name" == "Proto" ];then
+
+    name=$model_name"_mask_cls_copy"$copy_weight"_cl"$cl_weight"_repeat"$repeat_weight"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
+else
+    name=$model_name"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
+fi
 
 # echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 
 CUDA_VISIBLE_DEVICES=6 nohup python proto_model.py \
-    --seed 153603 \
+    --seed 603 \
     --weight_decay 1e-2 \
     --max_grad_norm 5 \
     --do_train \
@@ -42,8 +55,12 @@ CUDA_VISIBLE_DEVICES=6 nohup python proto_model.py \
     --eval_dataset $eval_dataset \
     --learning_rate 7e-5 \
     --warmup_steps 5000 \
-    --eval_steps 1000 \
+    --eval_steps 2000 \
     --model_name $model_name \
     --use_extra_dataset $use_extra_dataset \
     --fix_cls False \
-> logs/$task/$name.log 2>&1 &
+    --save_total_limit 1 \
+    --cl_weight $cl_weight \
+    --repeat_weight $repeat_weight \
+    --copy_weight $copy_weight \
+> logs/$task/$dataset/$name.log 2>&1 &

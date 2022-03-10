@@ -9,6 +9,7 @@ import re
 import shutil
 import sys
 import time
+from turtle import position
 import warnings
 from logging import StreamHandler
 from pathlib import Path
@@ -217,6 +218,33 @@ if version.parse(torch.__version__) >= version.parse("1.6"):
     from torch.cuda.amp import autocast
 
 class Seq2SeqTrainer(Trainer):
+
+    def _report_to_hp_search(
+        self, trial: Union["optuna.Trial", Dict[str, Any]], epoch: int, metrics: Dict[str, float]
+    ):
+        """
+        For fitlog
+        """
+        import fitlog
+        for key, value in metrics.items():
+            fitlog.add_metric({"dev":{key:value}}, step=epoch)
+
+        if self.hp_search_backend is None or trial is None:
+            return
+        self.objective = self.compute_objective(metrics.copy())
+        if self.hp_search_backend == HPSearchBackend.OPTUNA:
+            import optuna
+
+            trial.report(self.objective, epoch)
+            if trial.should_prune():
+                raise optuna.TrialPruned()
+        elif self.hp_search_backend == HPSearchBackend.RAY:
+            from ray import tune
+
+            if self.control.should_save:
+                self._tune_save_checkpoint()
+            tune.report(objective=self.objective, **metrics)
+
     def create_optimizer(self):
         """
         Setup the optimizer.

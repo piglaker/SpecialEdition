@@ -15,3 +15,7 @@
 *.pickle
 *.pkl
 */cache
+
+.fitlog
+.fitconfig
+logs

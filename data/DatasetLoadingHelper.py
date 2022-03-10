@@ -38,8 +38,9 @@ def load_json(data_path):
 
 def load_ctc2021(extra):
 
-    #print("#"*5+ " Loading toy datasets for debugging ... " + '#'*5)
+    print("Load CTC2021 Dataset")
 
+    #print("#"*5+ " Loading toy datasets for debugging ... " + '#'*5)
     train_source_path = "./data/rawdata/ctc2021/train.src"
     train_target_path = "./data/rawdata/ctc2021/train.tgt"
     valid_source_path = "./data/rawdata/ctc2021/valid.src"
@@ -55,21 +56,19 @@ def load_ctc2021(extra):
     test_target = read_csv(test_target_path)
 
     if extra:
-        print("Using Large v2 as extra train set")
+        print("Using Large v2 & pseudo as extra train set")
 
-        train_source_path = "./data/rawdata/ctc2021/train_v2.src"
-        train_target_path = "./data/rawdata/ctc2021/train_v2.tgt"
-        #valid_source_path = "./data/rawdata/ctc2021/valid_v2.src"
-        #valid_target_path = "./data/rawdata/ctc2021/valid_v2.tgt"
-        #test_source_path = "./data/rawdata/ctc2021/test_v2.src"
-        #test_target_path = "./data/rawdata/ctc2021/test_v2.tgt"
+        train_v2_source_path = "./data/rawdata/ctc2021/train_v2.src"
+        train_v2_target_path = "./data/rawdata/ctc2021/train_v2.tgt"
+        
+        train_source += read_csv(train_v2_source_path)    
+        train_target += read_csv(train_v2_target_path)
+        
+        train_v3_source_path = "./data/rawdata/ctc2021/train_v3.src"
+        train_v3_target_path = "./data/rawdata/ctc2021/train_v3.tgt"
 
-        train_source += read_csv(train_source_path)    
-        train_target += read_csv(train_target_path)
-        #valid_source += read_csv(valid_source_path)
-        #valid_target += read_csv(valid_target_path)
-        #test_source += read_csv(test_source_path)
-        #test_target += read_csv(test_target_path)
+        train_source += read_csv(train_v3_source_path)    
+        train_target += read_csv(train_v3_target_path) 
 
     tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
 
@@ -150,7 +149,7 @@ def load_sighan(path_head=""):
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
 from fastNLP import cache_results
-@cache_results(_cache_fp='cache/sighan_gector', _refresh=True)
+@cache_results(_cache_fp='cache/sighan_gector', _refresh=False)
 def load_sighan_gector(path_head=""):
     """
     Tokenizer : 
@@ -219,9 +218,8 @@ def load_sighan_gector(path_head=""):
         return features 
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
-
 from fastNLP import cache_results
-@cache_results(_cache_fp='cache/sighan_mask', _refresh=True)
+@cache_results(_cache_fp='cache/sighan_mask', _refresh=False)
 def load_sighan_mask(path_head=""):
     """
     Tokenizer : 
@@ -280,9 +278,8 @@ def load_sighan_mask(path_head=""):
 
     return mask(transpose(train_source_tok)), mask(transpose(valid_source_tok)), mask(transpose(test_source_tok))
 
-
 from fastNLP import cache_results
-@cache_results(_cache_fp='cache/sighan_enchanted', _refresh=True)
+@cache_results(_cache_fp='cache/sighan_enchanted', _refresh=False)
 def load_sighan_enchanted(path_head=""):
 
     print("Loading SigHan Enchanted Dataset ...")
@@ -331,7 +328,6 @@ def load_sighan_enchanted(path_head=""):
         return features 
 
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
-
 
 def load_sighan13_test():
     """

@@ -1,8 +1,11 @@
 import os
+import re
 import time
 from dataclasses import dataclass, field
+from timeit import repeat
 from typing import Optional,Dict, Union, Any, Tuple, List
 
+import fitlog
 import nltk
 import numpy as np
 import datasets
@@ -46,6 +49,12 @@ from data.DatasetLoadingHelper import (
     load_sighan15_test,
 )
 
+def fitlogging(training_args):
+    for attr in dir(training_args):
+        if not re.match("__.*__", attr) and isinstance(getattr(training_args, attr), (int, str, bool, float)):
+            fitlog.add_hyper(value=getattr(training_args, attr), name=attr)
+    return
+
 @dataclass
 class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     model_name: str=field(default="MaskedLM", metadata={"help":"which bert model "})
@@ -55,7 +64,9 @@ class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     num_beams: int = field(default=4, metadata={"help": "num beams"})
     use_extra_dataset:bool = field(default=False, metadata={"help":"Only work for ctc2021, using larget v2"})
     fix_cls:bool = field(default=False, metadata={"help":"whether or not fix the cls layer of BertMaskedLM"})
-
+    cl_weight:float = field(default=0.2, metadata={"help": "contrastive learning loss weight"})
+    repeat_weight:float = field(default=0.2, metadata={"help": "distill repeat loss"})
+    copy_weight:float = field(default=0.5, metadata={"help":"copy weight"})
 
 class mydataset(Dataset):
     def __init__(self, data):
@@ -78,7 +89,7 @@ def argument_init(trainingarguments=Seq2SeqTrainingArguments):
     return training_args
 
 
-def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-roberta-wwm-ext"):
+def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-roberta-wwm-ext", training_args=None):
     """
     Just get model
     MLP:
@@ -128,7 +139,16 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         print("Hint: No such " + model_name)
         exit(0)
 
-    model = ProtoModel.from_pretrained(pretrained_model_name_or_path=pretrained_model_name_or_path)
+    config = AutoConfig.from_pretrained(pretrained_model_name_or_path=pretrained_model_name_or_path)
+
+    if model_name != "Proto":
+        model = ProtoModel(config=config)
+    else:
+        model = ProtoModel(config=config, 
+                           cl_weight=training_args.cl_weight, 
+                           repeat_weight=training_args.repeat_weight, 
+                           copy_weight=training_args.copy_weight
+                           )
 
     if not model:
         print("Warning: wrong model name ! You ")
@@ -450,7 +470,7 @@ def _get_super_magic_dataset(dataset="sighan", path_head=""):
 
 def get_metrics(training_args):
     if "sighan" in training_args.dataset:
-        print("Hint: Using aligned sighn F1_score as metric")
+        print("Hint: Using aligned sighan F1_score as metric")
         return _get_metrics(training_args)
     if "ctc2021" in training_args.dataset :
         print("Hint: Using Seq2Seq ctc2021 score as metric")
@@ -516,7 +536,11 @@ def _get_metrics(training_args):
                 print(pred, source)
                 print(" Error Exit ")
                 exit(0)
-            
+
+            #if i < 5:
+            #    print(source)
+            #    print(pred)
+            #    print(label) 
             if training_args.model_name != "Gector":
                 # label: [101, 2,... 3, 102]
                 if (pred != source).any():

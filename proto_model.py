@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import re
 import random
 import time
 import logging
@@ -21,6 +22,7 @@ from dataclasses import dataclass, field
 from typing import Optional,Dict, Union, Any, Tuple, List
 from joblib import parallel_backend
 
+import fitlog
 import numpy as np
 import datasets
 import torch
@@ -48,6 +50,7 @@ from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokeni
 from transformers.training_args import TrainingArguments
 
 from core import (
+    fitlogging,
     get_model,
     get_dataset, 
     get_metrics, 
@@ -65,11 +68,16 @@ from transformers import BertForMaskedLM
 
 logger = logging.getLogger(__name__)
 
+fitlog.set_log_dir("./fitlogs/")
+fitlog.add_hyper_in_file(__file__)
+
 
 def run():
     # Args
     training_args = argument_init(MySeq2SeqTrainingArguments)
 
+    fitlogging(training_args)
+    
     set_seed(training_args.seed)
 
     pretrained_csc_model = None#"/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/milestone/ReaLiSe/pretrained"#None
@@ -88,16 +96,15 @@ def run():
     # Model
     model = get_model(
         model_name= "Dot" if training_args.model_name is None else training_args.model_name, 
-        pretrained_model_name_or_path="hfl/chinese-roberta-wwm-ext" if pretrained_csc_model is None else pretrained_csc_model  #"bert-base-chinese" 
+        pretrained_model_name_or_path="hfl/chinese-roberta-wwm-ext" if pretrained_csc_model is None else pretrained_csc_model,  #"bert-base-chinese" 
+        training_args=training_args,
     ) #base
 
-
-    """
-    Fix cls
-    """
-    # for name, param in model.named_parameters():
-    #      if 'cls' in name:
-    #         param.requires_grad = False
+    # Fix cls
+    if training_args.fix_cls:    
+        for name, param in model.named_parameters():
+            if 'cls' in name:
+                param.requires_grad = False
 
     # Metrics
     compute_metrics = get_metrics(training_args)
@@ -128,8 +135,10 @@ def run():
         eval_dataset=eval_dataset,
         tokenizer=tokenizer,
         data_collator=data_collator,      
-        compute_metrics=compute_metrics#hint:num_beams and max_length effect heavily on metric["F1_score"], so I modify train_seq2seq.py to value default prediction_step function
+        compute_metrics=compute_metrics,#hint:num_beams and max_length effect heavily on metric["F1_score"], so I modify train_seq2seq.py to value default prediction_step function
     )
+
+    fitlog.finish()
 
     # Train
     train_result = trainer.train()

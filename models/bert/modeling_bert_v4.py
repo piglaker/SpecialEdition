@@ -19,14 +19,16 @@
 
 import math
 import os
+from timeit import repeat
 import warnings
 from dataclasses import dataclass
 from typing import Optional, Tuple
+from fastNLP import BCELoss
 
 import torch
 import torch.utils.checkpoint
 from packaging import version
-from torch import nn
+from torch import binary_cross_entropy_with_logits, nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 
 from transformers.activations import ACT2FN
@@ -1420,8 +1422,14 @@ class ProtoBertForMaskedLM(BertPreTrainedModel):
     _keys_to_ignore_on_load_unexpected = [r"pooler"]
     _keys_to_ignore_on_load_missing = [r"position_ids", r"predictions.decoder.bias"]
 
-    def __init__(self, config):
+    def __init__(self, config, cl_weight, repeat_weight, copy_weight):
         super().__init__(config)
+
+        self.cl_weight = cl_weight
+
+        self.repeat_weight = repeat_weight
+
+        self.copy_weight = copy_weight
 
         if config.is_decoder:
             logger.warning(
@@ -1433,12 +1441,14 @@ class ProtoBertForMaskedLM(BertPreTrainedModel):
         
         self.cls = BertOnlyMLMHead(config)
 
-        self.mlp = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+        self.mlp = nn.Linear(config.hidden_size, config.vocab_size, bias=True)
 
-        self.bias = nn.Parameter(torch.zeros(config.vocab_size))
+        #self.bias = nn.Parameter(torch.zeros(config.vocab_size))
+
+        self.copy = nn.Linear(config.hidden_size, 1, bias=False)#self.config.vocab_size, bias=False)
 
         # Need a link between the two variables so that the bias is correctly resized with `resize_token_embeddings`
-        self.mlp.bias = self.bias
+        #self.mlp.bias = self.bias
 
         self.init_weights()
 
@@ -1477,10 +1487,12 @@ class ProtoBertForMaskedLM(BertPreTrainedModel):
             (masked), the loss is only computed for the tokens with labels in ``[0, ..., config.vocab_size]``
         """
 
+        noneg_labels = torch.where(labels != -100, labels, 0)
+
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         outputs = self.bert(
-            input_ids,
+            input_ids, # noneg_labels, 
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
             position_ids=position_ids,
@@ -1493,52 +1505,105 @@ class ProtoBertForMaskedLM(BertPreTrainedModel):
             return_dict=return_dict,
         )
 
-        hiddens = outputs[0]
+        hiddens = outputs[0] # 0
+
         prediction_scores = self.cls(hiddens)
+
+        #prediction_scores = torch.softmax(torch.matmul(hiddens, self.bert.embeddings.word_embeddings.weight.T), dim=2)
+
         #prediction_scores = self.mlp(sequence_output)
 
-        labels_ = torch.where(labels != -100, labels, 0)
-        
-        distill_outputs = self.bert(
-            input_ids=labels_,
-            attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
-            position_ids=position_ids,
-            head_mask=head_mask,
-            inputs_embeds=inputs_embeds,
-            encoder_hidden_states=encoder_hidden_states,
-            encoder_attention_mask=encoder_attention_mask,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
-        )
+        if self.copy_weight > 0:
+            
+            from torch.nn.functional import one_hot, binary_cross_entropy_with_logits, binary_cross_entropy, nll_loss
 
-        distill_hiddens = distill_outputs[0]
+            copy_label = (noneg_labels == input_ids).long()
 
-        distill_hiddens_detach = distill_hiddens.detach()
-        distill_scores = self.cls(distill_hiddens)
+            # replace 0 with -100, may cause ddp device error here,
+            copy_label_mask = torch.where(labels != -100, torch.tensor(1).cuda(), labels) - 1
+
+            copy_label += copy_label_mask
+
+            wcopy_h = self.copy(hiddens)
+
+            copy_scores = torch.exp(wcopy_h) / (torch.exp(wcopy_h) + 1)
+
+            prediction_scores = copy_scores.detach() * one_hot(input_ids, self.config.vocab_size) + (1-copy_scores).detach() * prediction_scores        
 
         logits = prediction_scores
 
-        distill_hiddens_detach = torch.nn.functional.normalize(distill_hiddens_detach, dim=-1)
-        hiddens = torch.nn.functional.normalize(hiddens, dim=-1)
+        if self.repeat_weight != 0 or self.cl_weight != 0:
 
+            distill_outputs = self.bert(
+                input_ids=noneg_labels,
+                attention_mask=attention_mask,
+                token_type_ids=token_type_ids,
+                position_ids=position_ids,
+                head_mask=head_mask,
+                inputs_embeds=inputs_embeds,
+                encoder_hidden_states=encoder_hidden_states,
+                encoder_attention_mask=encoder_attention_mask,
+                output_attentions=output_attentions,
+                output_hidden_states=output_hidden_states,
+                return_dict=return_dict,
+            )
+
+            distill_hiddens = distill_outputs[0]
+
+            distill_hiddens_detach = distill_hiddens.detach()
+            distill_scores = self.cls(distill_hiddens)
+
+            distill_hiddens_detach = torch.nn.functional.normalize(distill_hiddens_detach, dim=-1)
+        
+            hiddens = torch.nn.functional.normalize(hiddens, dim=-1)
+
+        total_loss = None
         masked_lm_loss = None
+        copy_loss = 0
+        cl_loss = 0
+        repeat_loss = 0
+
         if labels is not None:
             loss_fct = CrossEntropyLoss()  # -100 index = padding token
-            masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
+            from torch.nn import BCELoss, BCEWithLogitsLoss
+            loss_fct2 = BCEWithLogitsLoss()
+            #loss_fct3 = nll_loss()
+            if self.copy_weight > 0:
 
-            scores = torch.einsum('blh,bkh->blk', hiddens, distill_hiddens_detach)  # bsz x len x len
-            scores = scores.masked_fill(attention_mask.unsqueeze(1).repeat(1, attention_mask.size(1), 1).bool(), 0)
-            scores = torch.exp(scores / 2)
-            pos_scores = torch.diagonal(scores, dim1=1, dim2=2)  # bsz x l
-            neg_scores = scores.sum(dim=-1) # bsz x l 
-            loss2 = -(pos_scores / neg_scores).log().masked_fill(attention_mask.eq(0), 0).sum() / attention_mask.sum()
+                #x_orig_eq_mlm = one_hot(copy_label, self.config.vocab_size)
 
-            no_target_mask = (input_ids != labels).bool()
-            loss3 = torch.nn.functional.cross_entropy(distill_scores.view(-1, self.config.vocab_size), labels.masked_fill(no_target_mask, -100).view(-1), reduction='mean')
+                # total_copy_score = ( x_orig_eq_mlm * copy_scores + (1-x_orig_eq_mlm) * (1 - copy_scores))
 
-            total_loss = 1 * masked_lm_loss + 0 * loss2 + 0 * loss3
+                #copy_loss = loss_fct(copy_scores.view(-1, self.config.vocab_size), copy_label.view(-1))# + loss_fct((1-copy_scores).view(-1, self.config.vocab_size), (1-copy_label).view(-1))
+
+                #copy_loss = loss_fct2(copy_scores.view(-1, self.config.vocab_size), one_hot(copy_label, self.config.vocab_size).float().view(-1, self.config.vocab_size))
+
+                copy_loss = loss_fct2(copy_scores.view(-1), copy_label.view(-1).float())
+
+                eq_label = (noneg_labels == input_ids).long()
+
+                mask_mask =  -100 * (noneg_labels != input_ids).long()
+
+                masked_lm_loss = nll_loss(prediction_scores.view(-1, self.config.vocab_size), (eq_label*labels + mask_mask).view(-1))
+            else:
+                masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
+
+            if self.cl_weight > 0 :
+                scores = torch.einsum('blh,bkh->blk', hiddens, distill_hiddens_detach)  # bsz x len x len
+                scores = scores.masked_fill(attention_mask.unsqueeze(1).repeat(1, attention_mask.size(1), 1).bool(), 0)
+                scores = torch.exp(scores / 2)
+                pos_scores = torch.diagonal(scores, dim1=1, dim2=2)  # bsz x l
+                neg_scores = scores.sum(dim=-1) # bsz x l 
+                cl_loss = -(pos_scores / neg_scores).log().masked_fill(attention_mask.eq(0), 0).sum() / attention_mask.sum()
+
+            if self.repeat_weight > 0:
+                no_target_mask = (input_ids != labels).bool()
+                repeat_loss = torch.nn.functional.cross_entropy(distill_scores.view(-1, self.config.vocab_size), labels.masked_fill(no_target_mask, -100).view(-1), reduction='mean')
+
+            total_loss = 1 * masked_lm_loss + \
+                            self.cl_weight * cl_loss + \
+                                self.repeat_weight * repeat_loss + \
+                                    self.copy_weight * copy_loss
 
         if not return_dict:
             output = (prediction_scores,) + outputs[2:]
