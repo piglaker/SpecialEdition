@@ -55,6 +55,7 @@ def fitlogging(training_args):
             fitlog.add_hyper(value=getattr(training_args, attr), name=attr)
     return
 
+
 @dataclass
 class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     model_name: str=field(default="MaskedLM", metadata={"help":"which bert model "})
@@ -62,11 +63,12 @@ class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     eval_dataset:str = field(default="sighan", metadata={"help":"dataset for eval"})
     max_length: int = field(default=128, metadata={"help": "max length"})
     num_beams: int = field(default=4, metadata={"help": "num beams"})
-    use_extra_dataset:bool = field(default=False, metadata={"help":"Only work for ctc2021, using larget v2"})
+    use_extra_dataset:bool = field(default=False, metadata={"help":"Only work for ctc2021, using larger v2"})
     fix_cls:bool = field(default=False, metadata={"help":"whether or not fix the cls layer of BertMaskedLM"})
     cl_weight:float = field(default=0.2, metadata={"help": "contrastive learning loss weight"})
     repeat_weight:float = field(default=0.2, metadata={"help": "distill repeat loss"})
     copy_weight:float = field(default=0.5, metadata={"help":"copy weight"})
+
 
 class mydataset(Dataset):
     def __init__(self, data):
@@ -129,7 +131,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         from models.bart.modeling_bart_v2 import BartForConditionalGeneration as ProtoModel
         pretrained_model_name_or_path="fnlp/bart-large-chinese"# '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
     elif model_name == "Proto":
-        from models.bert.modeling_bert_v4 import ProtoBertForMaskedLM as ProtoModel
+        from models.bert.modeling_bert_v4 import ProtoModel as ProtoModel
     elif model_name == "Gector":
         from models.bert.modeling_bert_v3 import GectorModel as ProtoModel
     elif model_name is None or model_name == "MaskedLM":
@@ -139,19 +141,18 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         print("Hint: No such " + model_name)
         exit(0)
 
-    config = AutoConfig.from_pretrained(pretrained_model_name_or_path=pretrained_model_name_or_path)
-
     if model_name != "Proto":
-        model = ProtoModel(config=config)
+        model = ProtoModel.from_pretrained(pretrained_model_name_or_path=pretrained_model_name_or_path)
     else:
-        model = ProtoModel(config=config, 
-                           cl_weight=training_args.cl_weight, 
-                           repeat_weight=training_args.repeat_weight, 
-                           copy_weight=training_args.copy_weight
-                           )
+        model = ProtoModel(
+                        pretrained_model_name_or_path=pretrained_model_name_or_path, 
+                        cl_weight=training_args.cl_weight, 
+                        repeat_weight=training_args.repeat_weight, 
+                        copy_weight=training_args.copy_weight
+                        )
 
     if not model:
-        print("Warning: wrong model name ! You ")
+        print("Warning: wrong model name ! Check the core.py  ")
         exit()
     return model
 
@@ -238,7 +239,7 @@ def _get_enchanted_dataset(which="15"):
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loading Succeed !")
+    print("Loaded successfully !")
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
@@ -255,7 +256,7 @@ def _get_raw_dataset(which="15"):
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loading Succeed !")
+    print("Loaded successfully !")
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
@@ -272,7 +273,7 @@ def _get_mask_dataset(which="15"):
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loading Succeed !")
+    print("Loaded successfully !")
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
@@ -289,7 +290,7 @@ def _get_Gector_dataset(which="15"):
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loading Succeed !")
+    print("Loaded successfully !")
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
@@ -322,9 +323,9 @@ def _get_ReaLiSe_dataset(which="15"):
         
         return mydataset(new)
 
-    print("Loading Succeed !")
+    print("Loaded successfully !")
     os.system("date")
-
+    print("over")
     return trans2mydataset(train_dataset), trans2mydataset(eval_dataset), trans2mydataset(test_dataset)
 
 
@@ -504,6 +505,10 @@ def _get_metrics(training_args):
         sent_p, sent_n = 0, 0
 
         for i in range(len(sources)):
+            #print(sources[i])
+            #print(preds[i])
+            #print(labels[i])
+
             source, pred, label = sources[i], preds[i], labels[i]
 
             source, label = source[ source != -100], label[label != -100]
@@ -538,18 +543,25 @@ def _get_metrics(training_args):
                 exit(0)
 
             #if i < 5:
-            #    print(source)
-            #    print(pred)
-            #    print(label) 
+            #print(source)
+            #print(pred)
+            #print(label)
+            #print((pred != source).any())
+            #print((pred == label).all())
+            #print((label != source).any())
+
             if training_args.model_name != "Gector":
                 # label: [101, 2,... 3, 102]
                 if (pred != source).any():
                     sent_p += 1
+                    #print("sent_p")
                     if (pred == label).all():
                         tp += 1
+                        print("tp")
 
                 if (label != source).any():
                     sent_n += 1
+                    #print("sent_n")
             else:
                 # label : [ 1,1,1,1,1 ]
                 if (pred != 1).any():
@@ -561,6 +573,8 @@ def _get_metrics(training_args):
                 if (label != 1).any():
                     sent_n += 1
 
+        #print(tp, sent_p, sent_n)
+
         precision = tp / (sent_p + 1e-10)
 
         recall = tp / (sent_n + 1e-10)
@@ -569,9 +583,9 @@ def _get_metrics(training_args):
 
         Turtle = time.time() - Achilles
 
-        if F1_score < 0.1:
-            print("Warning : metric F1_score is too Low , maybe something goes wrong, check your codes please.")
-
+        if F1_score < 0.05:
+            print("Warning : metric score is too Low , maybe something goes wrong, check your codes please.")
+            #exit(0)
         return {"F1_score": float(F1_score), "Precision":float(precision),  "Recall":float(recall),"Metric_time":Turtle}
 
     return compute_metrics
@@ -745,3 +759,4 @@ if __name__ == "__main__":
     compute_metrics = get_metrics(None)
 
     print("Done")
+

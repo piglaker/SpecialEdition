@@ -68,19 +68,19 @@ from transformers import BertForMaskedLM
 
 logger = logging.getLogger(__name__)
 
-fitlog.set_log_dir("./fitlogs/")
-fitlog.add_hyper_in_file(__file__)
+#fitlog.set_log_dir("./fitlogs/")
+#fitlog.add_hyper_in_file(__file__)
 
 
 def run():
     # Args
     training_args = argument_init(MySeq2SeqTrainingArguments)
 
-    fitlogging(training_args)
+    #fitlogging(training_args)
     
     set_seed(training_args.seed)
 
-    pretrained_csc_model = None#"/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/milestone/ReaLiSe/pretrained"#None
+    pretrained_csc_model = "hfl/chinese-roberta-wwm-ext"#"bert-base-chinese"#None#"/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/milestone/ReaLiSe/pretrained"#None
 
     # Tokenizer    
     tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext" if pretrained_csc_model is None else pretrained_csc_model 
@@ -101,10 +101,10 @@ def run():
     ) #base
 
     # Fix cls
-    if training_args.fix_cls:    
-        for name, param in model.named_parameters():
-            if 'cls' in name:
-                param.requires_grad = False
+    #if training_args.fix_cls:    
+    #    for name, param in model.named_parameters():
+    #        if 'cls' in name:
+    #            param.requires_grad = False
 
     # Metrics
     compute_metrics = get_metrics(training_args)
@@ -138,7 +138,7 @@ def run():
         compute_metrics=compute_metrics,#hint:num_beams and max_length effect heavily on metric["F1_score"], so I modify train_seq2seq.py to value default prediction_step function
     )
 
-    fitlog.finish()
+    # fitlog.finish()
 
     # Train
     train_result = trainer.train()

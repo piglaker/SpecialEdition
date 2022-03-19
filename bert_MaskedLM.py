@@ -35,9 +35,9 @@ from transformers.training_args import TrainingArguments
 from core import (
     get_model,
     get_dataset, 
-    get_metrics, 
+    #get_metrics, 
     argument_init, 
-    get_ReaLiSe_dataset,
+    _get_ReaLiSe_dataset,
     MySeq2SeqTrainingArguments, 
 )
 from lib import MyTrainer, FoolDataCollatorForSeq2Seq 
@@ -49,6 +49,97 @@ from models.bert.modeling_bert_v3 import BertModelForCSC, BetterBertModelForCSC
 #os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3"
 
 logger = logging.getLogger(__name__)
+
+def get_metrics():
+
+    import numpy as np
+    from datasets import load_metric
+
+    def compute_metrics(eval_preds):
+        """
+        reference: https://github.com/ACL2020SpellGCN/SpellGCN/blob/master/run_spellgcn.py
+        """
+        Achilles = time.time()
+
+        sources, preds, labels = eval_preds# (num, length) np.array
+ 
+        tp, fp, fn = 0, 0, 0
+
+        sent_p, sent_n = 0, 0
+
+        for i in range(len(sources)):
+            print(sources[i])
+            print(preds[i])
+            print(labels[i])
+
+            source, pred, label = sources[i], preds[i], labels[i]
+
+            source, label = source[ source != -100], label[label != -100]
+
+            source, label = source[source != 0],  label[label != 0]#pad idx for input_ids 
+
+            #we guess pretrain Masked Language Model bert lack the surpvised sighan for 101 & 102 ( [CLS] & [SEP] ) , so we just ignore
+            source, pred, label = np.where(source == 102, 101, source), np.where(pred == 102, 101, pred), np.where(label == 102, 101, label) 
+
+            source, pred, label = source[ source != 101 ], pred[ pred != 101 ], label[ label != 101]
+
+            source = source[:len(label)]
+            pred = pred[:len(label)]
+
+            pred = np.concatenate((pred, np.array([ 0 for i in range(len(label) - len(pred))])), axis=0)
+
+            if len(pred) != len(source) or len(label) != len(source):
+                print("Warning : something goes wrong when compute metrics, check codes now.")
+                print(len(source), len(pred), len(label))
+                print("source: ", source)
+                print("pred: ", pred)
+                print("label:", label)
+                print("raw source: ", sources[i])
+                print("raw pred: ", preds[i])
+                print("raw label:", labels[i])
+                exit()
+            try:
+                (pred != source).any()
+            except:
+                print(pred, source)
+                print(" Error Exit ")
+                exit(0)
+
+            #if i < 5:
+            print(source)
+            print(pred)
+            print(label)
+            print((pred != source).any())
+            print((pred == label).all())
+            print((label != source).any())
+            
+            if (pred != source).any():
+                sent_p += 1
+                print("sent_p")
+                if (pred == label).all():
+                    tp += 1
+                    print("tp")
+
+            if (label != source).any():
+                sent_n += 1
+                print("sent_n")
+            
+        print(tp, sent_p, sent_n)
+
+        precision = tp / (sent_p + 1e-10)
+
+        recall = tp / (sent_n + 1e-10)
+
+        F1_score = 2 * precision * recall / (precision + recall + 1e-10)
+
+        Turtle = time.time() - Achilles
+
+        if F1_score < 0.05:
+            print("Warning : metric score is too Low , maybe something goes wrong, check your codes please.")
+            #exit(0)
+        return {"F1_score": float(F1_score), "Precision":float(precision),  "Recall":float(recall),"Metric_time":Turtle}
+
+    return compute_metrics
 
 
 def run():
@@ -67,14 +158,11 @@ def run():
     )
 
     # Dataset
-    train_dataset, eval_dataset, test_dataset = get_ReaLiSe_dataset(training_args.eval_dataset)#get_dataset(training_args.dataset) 
+    train_dataset, eval_dataset, test_dataset = _get_ReaLiSe_dataset(training_args.eval_dataset)#get_dataset(training_args.dataset) 
 
     # Model
     
-    model = get_model(
-        model_name= "Dot" if training_args.model_name is None else training_args.model_name, 
-        pretrained_model_name_or_path="hfl/chinese-roberta-wwm-ext" if pretrained_csc_model is None else pretrained_csc_model  #"bert-base-chinese" 
-    ) #base
+    model = BertForMaskedLM.from_pretrained("hfl/chinese-roberta-wwm-ext")
 
     # Metrics
     compute_metrics = get_metrics()

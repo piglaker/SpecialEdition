@@ -98,7 +98,7 @@ def load_ctc2021(extra):
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
 from fastNLP import cache_results
-@cache_results(_cache_fp='cache/sighan_raw', _refresh=False)
+@cache_results(_cache_fp='cache/sighan_raw', _refresh=True)
 def load_sighan(path_head=""):
 
     print("Loading SigHan Dataset ...")
@@ -219,7 +219,7 @@ def load_sighan_gector(path_head=""):
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
 from fastNLP import cache_results
-@cache_results(_cache_fp='cache/sighan_mask', _refresh=False)
+@cache_results(_cache_fp='cache/sighan_mask', _refresh=True)
 def load_sighan_mask(path_head=""):
     """
     Tokenizer : 
@@ -243,6 +243,9 @@ def load_sighan_mask(path_head=""):
 
     test_source = wash_n(read_csv(test_source_path))
     test_target = wash_n(read_csv(test_target_path))
+
+    valid_source = train_source[:1100]#for valid overfit problem
+    valid_target = train_target[:1100]
 
     tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
 
@@ -949,8 +952,8 @@ if __name__ == "__main__":
     """
     Check length for csc task
     """
-    a,b,c = load_sighan_enchanted()
-    
+    #a,b,c = load_sighan_enchanted()
+    a, b, c = load_sighan()
     
     for index, i in enumerate(a):
         if (len(i["input_ids"]) != len(i["labels"])) or ( len(i["input_ids"]) != len(i["attention_mask"]) ):
