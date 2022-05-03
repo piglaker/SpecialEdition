@@ -1,4 +1,0 @@
-  File "bert_Flat.py", line 294
-    len(vocabs['label']),
-    ^
-SyntaxError: positional argument follows keyword argument

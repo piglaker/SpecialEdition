@@ -1,19 +1,0 @@
-2021年 12月 01日 星期三 05:08:44 UTC
-2021年 12月 01日 星期三 05:08:51 UTC
-Some weights of the model checkpoint at bert-base-chinese were not used when initializing BertForMaskedLM_v2: ['cls.seq_relationship.bias', 'cls.seq_relationship.weight']
-- This IS expected if you are initializing BertForMaskedLM_v2 from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
-- This IS NOT expected if you are initializing BertForMaskedLM_v2 from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-Using amp fp16 backend
-***** Running training *****
-  Num examples = 284196
-  Num Epochs = 10
-  Instantaneous batch size per device = 48
-  Total train batch size (w. parallel, distributed & accumulation) = 192
-  Gradient Accumulation steps = 1
-  Total optimization steps = 14810
-Loading Dataset !
-Read cache from cache/sighan_magic_test.
-Loading Succeed !
-  0%|          | 0/14810 [00:00<?, ?it/s]/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/_functions.py:68: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
-  warnings.warn('Was asked to gather along dimension 0, but all '
-  0%|          | 1/14810 [00:10<42:18:27, 10.28s/it]  0%|          | 2/14810 [00:11<19:34:23,  4.76s/it]  0%|          | 3/14810 [00:12<12:16:44,  2.99s/it]  0%|          | 4/14810 [00:12<8:52:39,  2.16s/it]   0%|          | 5/14810 [00:13<6:59:20,  1.70s/it]  0%|          | 6/14810 [00:14<5:50:09,  1.42s/it]  0%|          | 7/14810 [00:15<5:06:19,  1.24s/it]  0%|          | 8/14810 [00:16<4:38:13,  1.13s/it]  0%|          | 9/14810 [00:17<4:19:40,  1.05s/it]  0%|          | 10/14810 [00:18<4:06:41,  1.00s/it]  0%|          | 11/14810 [00:19<3:57:25,  1.04it/s]  0%|          | 12/14810 [00:20<3:52:03,  1.06it/s]  0%|          | 13/14810 [00:20<3:50:34,  1.07it/s]  0%|          | 14/14810 [00:21<3:47:44,  1.08it/s]  0%|          | 15/14810 [00:22<3:45:16,  1.09it/s]  0%|          | 16/14810 [00:23<3:42:57,  1.11it/s]  0%|          | 17/14810 [00:24<3:41:25,  1.11it/s]  0%|          | 18/14810 [00:25<3:40:28,  1.12it/s]  0%|          | 19/14810 [00:26<3:40:32,  1.12it/s]  0%|          | 20/14810 [00:27<3:39:48,  1.12it/s]  0%|          | 21/14810 [00:28<3:39:37,  1.12it/s]  0%|          | 22/14810 [00:28<3:39:33,  1.12it/s]  0%|          | 23/14810 [00:29<3:40:18,  1.12it/s]  0%|          | 24/14810 [00:30<3:39:29,  1.12it/s]  0%|          | 25/14810 [00:31<3:41:23,  1.11it/s]  0%|          | 26/14810 [00:32<3:40:19,  1.12it/s]  0%|          | 27/14810 [00:33<3:39:34,  1.12it/s]  0%|          | 28/14810 [00:34<3:39:44,  1.12it/s]  0%|          | 29/14810 [00:35<3:40:03,  1.12it/s]  0%|          | 30/14810 [00:36<3:40:19,  1.12it/s]  0%|          | 31/14810 [00:36<3:40:50,  1.12it/s]  0%|          | 32/14810 [00:37<3:41:09,  1.11it/s]  0%|          | 33/14810 [00:38<3:46:25,  1.09it/s]  0%|          | 34/14810 [00:39<3:47:50,  1.08it/s]  0%|          | 35/14810 [00:40<3:47:04,  1.08it/s]  0%|          | 36/14810 [00:41<3:45:34,  1.09it/s]

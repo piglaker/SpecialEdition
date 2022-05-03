@@ -1,49 +1,0 @@
-Thu Dec  9 12:58:09 UTC 2021
-***** Running training *****
-  Num examples = 284196
-  Num Epochs = 10
-  Instantaneous batch size per device = 64
-  Total train batch size (w. parallel, distributed & accumulation) = 64
-  Gradient Accumulation steps = 1
-  Total optimization steps = 44410
-Loading Dataset !
-Loading Lattice SigHan Dataset ...
-Found 50373 out of 55714 words in the pre-training embedding.
-Save cache to cache/sighan_lattice_test.
-loading vocabulary file /remote-home/xtzhang/.fastNLP/embedding/bert-chinese-wwm/vocab.txt
-Load pre-trained BERT parameters from file /remote-home/xtzhang/.fastNLP/embedding/bert-chinese-wwm/chinese_wwm_pytorch.bin.
-Bert Model will return 1 layers (layer-0 is embedding result): [-1]
-  0%|          | 0/44410 [00:00<?, ?it/s]  0%|          | 1/44410 [00:01<18:05:45,  1.47s/it]  0%|          | 2/44410 [00:01<10:35:07,  1.17it/s]  0%|          | 3/44410 [00:02<10:46:18,  1.15it/s]  0%|          | 4/44410 [00:03<8:23:19,  1.47it/s]   0%|          | 5/44410 [00:03<7:41:19,  1.60it/s]  0%|          | 6/44410 [00:04<6:30:07,  1.90it/s]  0%|          | 7/44410 [00:04<6:06:43,  2.02it/s]  0%|          | 8/44410 [00:05<6:16:55,  1.96it/s]  0%|          | 9/44410 [00:05<6:04:49,  2.03it/s]  0%|          | 10/44410 [00:05<5:48:25,  2.12it/s]  0%|          | 11/44410 [00:06<5:32:12,  2.23it/s]  0%|          | 12/44410 [00:06<5:26:37,  2.27it/s]  0%|          | 13/44410 [00:07<5:23:47,  2.29it/s]  0%|          | 14/44410 [00:07<5:39:43,  2.18it/s]  0%|          | 15/44410 [00:08<5:52:44,  2.10it/s]  0%|          | 16/44410 [00:08<6:09:14,  2.00it/s]  0%|          | 17/44410 [00:09<5:43:10,  2.16it/s]  0%|          | 18/44410 [00:09<5:07:40,  2.40it/s]  0%|          | 19/44410 [00:09<4:40:43,  2.64it/s]  0%|          | 20/44410 [00:10<4:47:57,  2.57it/s]  0%|          | 21/44410 [00:10<4:40:19,  2.64it/s]Traceback (most recent call last):
-  File "bert_Flat.py", line 429, in <module>
-    run()
-  File "bert_Flat.py", line 361, in run
-    train_result = trainer.train()
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/trainer.py", line 1289, in train
-    tr_loss += self.training_step(model, inputs)
-  File "bert_Flat.py", line 140, in training_step
-    loss, _ = self.compute_loss(model, inputs)
-  File "bert_Flat.py", line 173, in compute_loss
-    loss, logits = model(**inputs)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
-    return forward_call(*input, **kwargs)
-  File "/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bert/modeling_flat_v1.py", line 492, in forward
-    encoded = self.encoder(embedding,seq_len,lex_num=lex_num,pos_s=pos_s,pos_e=pos_e)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
-    return forward_call(*input, **kwargs)
-  File "/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bert/V1_modules.py", line 1315, in forward
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
-    return forward_call(*input, **kwargs)
-  File "/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bert/V1_modules.py", line 149, in forward
-    gate_score = self.pos_gate_score(pe_4).view(batch,max_seq_len,max_seq_len,4,self.hidden_size)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
-    return forward_call(*input, **kwargs)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/container.py", line 139, in forward
-    input = module(input)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
-    return forward_call(*input, **kwargs)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/linear.py", line 96, in forward
-    return F.linear(input, self.weight, self.bias)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/functional.py", line 1847, in linear
-    return torch._C._nn.linear(input, weight, bias)
-RuntimeError: CUDA out of memory. Tried to allocate 2.46 GiB (GPU 0; 23.70 GiB total capacity; 15.64 GiB already allocated; 1.75 GiB free; 20.47 GiB reserved in total by PyTorch)
-  0%|          | 21/44410 [00:14<8:13:30,  1.50it/s]

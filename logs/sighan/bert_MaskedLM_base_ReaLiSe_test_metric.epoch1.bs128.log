@@ -1,64 +1,0 @@
-Thu Dec 23 07:45:57 UTC 2021
-Thu Dec 23 07:46:04 UTC 2021
-Some weights of the model checkpoint at hfl/chinese-roberta-wwm-ext were not used when initializing BertForMaskedLM: ['cls.seq_relationship.bias', 'cls.seq_relationship.weight']
-- This IS expected if you are initializing BertForMaskedLM from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
-- This IS NOT expected if you are initializing BertForMaskedLM from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-Using amp fp16 backend
-***** Running training *****
-  Num examples = 2000
-  Num Epochs = 1
-  Instantaneous batch size per device = 128
-  Total train batch size (w. parallel, distributed & accumulation) = 128
-  Gradient Accumulation steps = 1
-  Total optimization steps = 16
-Loading Dataset !
-Hint: The Data You loading now is the preprocessed sighan from ReaLise, 
-Loading Succeed !
-  0%|          | 0/16 [00:00<?, ?it/s]  6%|▋         | 1/16 [00:02<00:31,  2.09s/it] 12%|█▎        | 2/16 [00:02<00:14,  1.04s/it] 19%|█▉        | 3/16 [00:02<00:09,  1.39it/s] 25%|██▌       | 4/16 [00:03<00:06,  1.76it/s] 31%|███▏      | 5/16 [00:03<00:05,  2.06it/s] 38%|███▊      | 6/16 [00:03<00:04,  2.30it/s] 44%|████▍     | 7/16 [00:04<00:03,  2.48it/s] 50%|█████     | 8/16 [00:04<00:03,  2.62it/s] 56%|█████▋    | 9/16 [00:04<00:02,  2.72it/s] 62%|██████▎   | 10/16 [00:05<00:02,  2.80it/s] 69%|██████▉   | 11/16 [00:05<00:01,  2.85it/s] 75%|███████▌  | 12/16 [00:05<00:01,  2.99it/s] 81%|████████▏ | 13/16 [00:06<00:01,  2.98it/s] 88%|████████▊ | 14/16 [00:06<00:00,  2.97it/s] 94%|█████████▍| 15/16 [00:06<00:00,  2.97it/s]100%|██████████| 16/16 [00:06<00:00,  3.30it/s]
-  0%|          | 0/9 [00:00<?, ?it/s][A
- 33%|███▎      | 3/9 [00:00<00:00, 19.86it/s][A
- 56%|█████▌    | 5/9 [00:00<00:00, 11.58it/s][A
- 78%|███████▊  | 7/9 [00:00<00:00, 10.56it/s][A
-100%|██████████| 9/9 [00:00<00:00,  9.79it/s][A                                               
-                                             [A100%|██████████| 16/16 [00:07<00:00,  3.30it/s]
-100%|██████████| 9/9 [00:00<00:00,  9.79it/s][A
-                                             [ASaving model checkpoint to ./tmp/sighan/bert_MaskedLM_base_ReaLiSe_test_metric.epoch1.bs128/checkpoint-16
-Configuration saved in ./tmp/sighan/bert_MaskedLM_base_ReaLiSe_test_metric.epoch1.bs128/checkpoint-16/config.json
-Model weights saved in ./tmp/sighan/bert_MaskedLM_base_ReaLiSe_test_metric.epoch1.bs128/checkpoint-16/pytorch_model.bin
-tokenizer config file saved in ./tmp/sighan/bert_MaskedLM_base_ReaLiSe_test_metric.epoch1.bs128/checkpoint-16/tokenizer_config.json
-Special tokens file saved in ./tmp/sighan/bert_MaskedLM_base_ReaLiSe_test_metric.epoch1.bs128/checkpoint-16/special_tokens_map.json
-
-
-Training completed. Do not forget to share your model on huggingface.co/models =)
-
-
-Loading best model from ./tmp/sighan/bert_MaskedLM_base_ReaLiSe_test_metric.epoch1.bs128/checkpoint-16 (score: 0.0).
-                                               100%|██████████| 16/16 [00:13<00:00,  3.30it/s]100%|██████████| 16/16 [00:13<00:00,  1.20it/s]
-Saving model checkpoint to ./tmp/sighan/bert_MaskedLM_base_ReaLiSe_test_metric.epoch1.bs128
-Configuration saved in ./tmp/sighan/bert_MaskedLM_base_ReaLiSe_test_metric.epoch1.bs128/config.json
-Model weights saved in ./tmp/sighan/bert_MaskedLM_base_ReaLiSe_test_metric.epoch1.bs128/pytorch_model.bin
-tokenizer config file saved in ./tmp/sighan/bert_MaskedLM_base_ReaLiSe_test_metric.epoch1.bs128/tokenizer_config.json
-Special tokens file saved in ./tmp/sighan/bert_MaskedLM_base_ReaLiSe_test_metric.epoch1.bs128/special_tokens_map.json
-{'eval_loss': 0.3490868806838989, 'eval_F1_score': 0.0, 'eval_Precision': 0.0, 'eval_Recall': 0.0, 'eval_Metric_time': 0.026266098022460938, 'eval_runtime': 0.9486, 'eval_samples_per_second': 1159.636, 'eval_steps_per_second': 9.488, 'epoch': 1.0}
-{'train_runtime': 13.3701, 'train_samples_per_second': 149.588, 'train_steps_per_second': 1.197, 'train_loss': 0.46430081129074097, 'epoch': 1.0}
-***** train metrics *****
-  epoch                    =        1.0
-  train_loss               =     0.4643
-  train_runtime            = 0:00:13.37
-  train_samples            =       2000
-  train_samples_per_second =    149.588
-  train_steps_per_second   =      1.197
-  0%|          | 0/9 [00:00<?, ?it/s] 33%|███▎      | 3/9 [00:00<00:00, 19.54it/s] 56%|█████▌    | 5/9 [00:00<00:00, 11.53it/s] 78%|███████▊  | 7/9 [00:00<00:00, 10.49it/s]100%|██████████| 9/9 [00:00<00:00,  9.76it/s]100%|██████████| 9/9 [00:00<00:00, 10.29it/s]
-***** eval metrics *****
-  epoch                   =        1.0
-  eval_F1_score           =        0.0
-  eval_Metric_time        =     0.0264
-  eval_Precision          =        0.0
-  eval_Recall             =        0.0
-  eval_loss               =     0.3491
-  eval_runtime            = 0:00:00.95
-  eval_samples            =       1100
-  eval_samples_per_second =   1148.498
-  eval_steps_per_second   =      9.397
-  0%|          | 0/9 [00:00<?, ?it/s] 33%|███▎      | 3/9 [00:00<00:00, 20.05it/s] 67%|██████▋   | 6/9 [00:00<00:00, 11.08it/s] 89%|████████▉ | 8/9 [00:00<00:00,  9.45it/s]100%|██████████| 9/9 [00:00<00:00,  9.67it/s]
-**********over**********

@@ -1,76 +1,0 @@
-2021年 11月 14日 星期日 14:03:14 UTC
-Loading Dataset !
-Loading SigHan Dataset ...
-  0%|          | 0/284196 [00:00<?, ?it/s]  3%|▎         | 9507/284196 [00:00<00:02, 95061.48it/s]  7%|▋         | 20509/284196 [00:00<00:02, 103855.54it/s] 11%|█▏        | 32611/284196 [00:00<00:02, 111689.00it/s] 16%|█▌        | 44250/284196 [00:00<00:02, 113539.94it/s] 20%|█▉        | 55807/284196 [00:00<00:02, 114193.06it/s] 24%|██▎       | 67227/284196 [00:00<00:01, 113277.65it/s] 28%|██▊       | 79148/284196 [00:00<00:01, 115202.47it/s] 32%|███▏      | 90671/284196 [00:02<00:08, 21555.23it/s]  36%|███▋      | 103527/284196 [00:02<00:06, 29915.37it/s] 41%|████      | 116416/284196 [00:02<00:04, 39852.81it/s] 45%|████▌     | 128690/284196 [00:02<00:03, 50249.91it/s] 50%|████▉     | 141031/284196 [00:02<00:02, 61359.62it/s] 54%|█████▎    | 152518/284196 [00:02<00:01, 70461.31it/s] 58%|█████▊    | 163887/284196 [00:02<00:01, 77682.77it/s] 62%|██████▏   | 174954/284196 [00:02<00:01, 82969.41it/s] 65%|██████▌   | 185694/284196 [00:03<00:01, 88100.43it/s] 69%|██████▉   | 196340/284196 [00:04<00:05, 16444.01it/s] 74%|███████▍  | 210474/284196 [00:05<00:03, 23894.26it/s] 79%|███████▉  | 224329/284196 [00:05<00:01, 32875.42it/s] 84%|████████▍ | 238926/284196 [00:05<00:01, 44275.40it/s] 89%|████████▊ | 251911/284196 [00:05<00:00, 55046.11it/s] 94%|█████████▎| 265963/284196 [00:05<00:00, 68072.61it/s] 98%|█████████▊| 279688/284196 [00:05<00:00, 80439.81it/s]100%|██████████| 284196/284196 [00:05<00:00, 50896.80it/s]
-  0%|          | 0/500 [00:00<?, ?it/s]100%|██████████| 500/500 [00:00<00:00, 130924.71it/s]
-  0%|          | 0/1100 [00:00<?, ?it/s]100%|██████████| 1100/1100 [00:00<00:00, 107641.60it/s]2021年 11月 14日 星期日 14:04:06 UTC
-
-Using amp fp16 backend
-***** Running training *****
-  Num examples = 284196
-  Num Epochs = 10
-  Instantaneous batch size per device = 48
-  Total train batch size (w. parallel, distributed & accumulation) = 192
-  Gradient Accumulation steps = 1
-  Total optimization steps = 14810
-Loading Succeed !
-  0%|          | 0/14810 [00:00<?, ?it/s]/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/_functions.py:68: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
-  warnings.warn('Was asked to gather along dimension 0, but all '
-  0%|          | 1/14810 [00:19<81:25:25, 19.79s/it]input:  torch.Size([48, 128])
-logits:  torch.Size([48, 128, 21128])
-labels: torch.Size([48, 128])
-input:  torch.Size([48, 128])
-logits:  torch.Size([48, 128, 21128])
-labels: torch.Size([48, 128])
-input:  torch.Size([48, 128])
-logits:  torch.Size([48, 128, 21128])
-labels: torch.Size([48, 128])
-input:  torch.Size([48, 128])
-logits:  torch.Size([48, 128, 21128])
-labels: torch.Size([48, 128])
-input:  torch.Size([48, 128])
-logits:  torch.Size([48, 128, 21128])
-labels: torch.Size([48, 128])
-input:  torch.Size([48, 128])
-logits:  torch.Size([48, 128, 21128])
-labels: torch.Size([48, 128])
-input:  torch.Size([48, 128])
-logits:  torch.Size([48, 128, 21128])
-labels: torch.Size([48, 128])
-input:  torch.Size([48, 128])
-logits:  torch.Size([48, 128, 21128])
-labels: torch.Size([48, 128])
-Traceback (most recent call last):
-  File "bart_seq2seq.py", line 154, in <module>
-    run()
-  File "bart_seq2seq.py", line 87, in run
-    train_result = trainer.train()
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/trainer.py", line 1289, in train
-    tr_loss += self.training_step(model, inputs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/trainer.py", line 1780, in training_step
-    loss = self.compute_loss(model, inputs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/trainer.py", line 1814, in compute_loss
-    outputs = model(**inputs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
-    return forward_call(*input, **kwargs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/data_parallel.py", line 169, in forward
-    return self.gather(outputs, self.output_device)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/data_parallel.py", line 181, in gather
-    return gather(outputs, output_device, dim=self.dim)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 78, in gather
-    res = gather_map(outputs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 69, in gather_map
-    return type(out)(((k, gather_map([d[k] for d in outputs]))
-  File "<string>", line 12, in __init__
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/file_utils.py", line 1861, in __post_init__
-    for element in iterator:
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 69, in <genexpr>
-    return type(out)(((k, gather_map([d[k] for d in outputs]))
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 63, in gather_map
-    return Gather.apply(target_device, dim, *outputs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/_functions.py", line 75, in forward
-    return comm.gather(inputs, ctx.dim, ctx.target_device)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/comm.py", line 235, in gather
-    return torch._C._gather(tensors, dim, destination)
-RuntimeError: CUDA out of memory. Tried to allocate 1.94 GiB (GPU 0; 10.92 GiB total capacity; 8.16 GiB already allocated; 25.38 MiB free; 10.12 GiB reserved in total by PyTorch)
-  0%|          | 1/14810 [00:22<93:51:10, 22.82s/it]

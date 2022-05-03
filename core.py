@@ -11,6 +11,7 @@ import numpy as np
 import datasets
 import torch
 import torch.nn as nn
+import torch.distributed as dist
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 import transformers
@@ -48,6 +49,21 @@ from data.DatasetLoadingHelper import (
     load_sighan14_test,
     load_sighan15_test,
 )
+
+
+def ddp_print(*something):
+    """
+    """
+    if os.environ["LOCAL_RANK"] != '0':
+    #if dist.get_rank() != '0':
+        return
+
+    for thing in something:
+        print(thing)
+
+
+    return 
+
 
 def fitlogging(training_args):
     for attr in dir(training_args):
@@ -107,7 +123,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
     """
     model = None
 
-    print("Hint: Loading Model " + "*"*5 + model_name + "*"*5)
+    ddp_print("Hint: Loading Model " + "*"*5 + model_name + "*"*5)
 
     if model_name == "MLP":
         from models.bert.modeling_bert_v3 import BertModelForCSC as ProtoModel
@@ -135,10 +151,10 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
     elif model_name == "Gector":
         from models.bert.modeling_bert_v3 import GectorModel as ProtoModel
     elif model_name is None or model_name == "MaskedLM":
-        print("Hint: Load Default BertForMaskedLM.")
+        ddp_print("Hint: Load Default BertForMaskedLM.")
         from transformers import BertForMaskedLM as ProtoModel
     else:
-        print("Hint: No such " + model_name)
+        ddp_print("Hint: No such " + model_name)
         exit(0)
 
     if model_name != "Proto":
@@ -152,7 +168,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
                         )
 
     if not model:
-        print("Warning: wrong model name ! Check the core.py  ")
+        ddp_print("Warning: wrong model name ! Check the core.py  ")
         exit()
     return model
 
@@ -166,7 +182,7 @@ def get_dataset(training_args):
         Good day!
     """
 
-    print("Loading Dataset !")
+    ddp_print("Loading Dataset !")
     os.system("date")
 
     if training_args.dataset == "ctc2021":
@@ -174,13 +190,13 @@ def get_dataset(training_args):
     elif training_args.dataset == "sighan":
         train_data, eval_data, test_data = load_sighan(path_head="")
     else:
-        print("Error: No such dataset ")
-        print(training_args.dataset)
+        ddp_print("Error: No such dataset ")
+        ddp_print(training_args.dataset)
         exit(0)
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loading Succeed !")
+    ddp_print("Loading Succeed !")
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
@@ -195,7 +211,7 @@ def get_dataset_plus(training_args):
         Good day!
     """
 
-    print("Loading Dataset !")
+    ddp_print("Loading Dataset !")
     os.system("date")
 
     if training_args.dataset == "ctc2021":
@@ -213,16 +229,16 @@ def get_dataset_plus(training_args):
         elif 'ReaLiSe' in training_args.dataset:
             return _get_ReaLiSe_dataset()
         else:
-            print("Unclear data type, load default raw sighan")
+            ddp_print("Unclear data type, load default raw sighan")
             return _get_raw_dataset()
     else:
-        print("Error: No such dataset ")
-        print(training_args.dataset)
+        ddp_print("Error: No such dataset ")
+        ddp_print(training_args.dataset)
         exit(0)
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loading Succeed !")
+    ddp_print("Loading Succeed !")
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
@@ -232,14 +248,14 @@ def _get_enchanted_dataset(which="15"):
     """
     Gector for sighan
     """
-    print("Loading Enchanted Dataset !")
+    ddp_print("Loading Enchanted Dataset !")
     os.system("date")
 
     train_data, eval_data, test_data = load_sighan_enchanted(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loaded successfully !")
+    ddp_print("Loaded successfully !")
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
@@ -249,14 +265,14 @@ def _get_raw_dataset(which="15"):
     """
     Gector for sighan
     """
-    print("Loading Raw Dataset !")
+    ddp_print("Loading Raw Dataset !")
     os.system("date")
 
     train_data, eval_data, test_data = load_sighan(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loaded successfully !")
+    ddp_print("Loaded successfully !")
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
@@ -266,14 +282,14 @@ def _get_mask_dataset(which="15"):
     """
     Gector for sighan
     """
-    print("Loading MASK Dataset !")
+    ddp_print("Loading MASK Dataset !")
     os.system("date")
 
     train_data, eval_data, test_data = load_sighan_mask(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loaded successfully !")
+    ddp_ddp_print("Loaded successfully !")
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
@@ -283,14 +299,14 @@ def _get_Gector_dataset(which="15"):
     """
     Gector for sighan
     """
-    print("Loading GECTOR Dataset !")
+    ddp_print("Loading GECTOR Dataset !")
     os.system("date")
 
     train_data, eval_data, test_data = load_sighan_gector(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loaded successfully !")
+    ddp_print("Loaded successfully !")
     os.system("date")
 
     return train_dataset, eval_dataset, test_dataset
@@ -300,8 +316,8 @@ def _get_ReaLiSe_dataset(which="15"):
     """
     For its 
     """
-    print("Loading ReaLiSe Dataset !")
-    print("Hint: The Data You loading now is the preprocessed sighan from ReaLise, ")
+    ddp_print("Loading ReaLiSe Dataset !")
+    ddp_print("Hint: The Data You loading now is the preprocessed sighan from ReaLise, ")
     os.system("date")
 
     path = "../SE_tmp_back/milestone/ReaLiSe/data/"
@@ -310,7 +326,7 @@ def _get_ReaLiSe_dataset(which="15"):
     eval_dataset = pickle.load(open(path + "test.sighan" + which + ".pkl", "rb"))
     test_dataset = pickle.load(open(path + "test.sighan" + which + ".pkl", "rb"))
 
-    print("Hint: Using **SIGHAN" + which + "** for eval & test !")
+    ddp_print("Hint: Using **SIGHAN" + which + "** for eval & test !")
 
     def trans2mydataset(features):
         new = []
@@ -323,16 +339,16 @@ def _get_ReaLiSe_dataset(which="15"):
         
         return mydataset(new)
 
-    print("Loaded successfully !")
+    ddp_print("Loaded successfully !")
     os.system("date")
-    print("over")
+    ddp_print("over")
     return trans2mydataset(train_dataset), trans2mydataset(eval_dataset), trans2mydataset(test_dataset)
 
 
 def _get_sighan_test(which, path_head=""):
     """
     """
-    print("Loading Dataset !")
+    ddp_print("Loading Dataset !")
     os.system("date")
     if which == "13":
         test_data = load_sighan13_test(path_head)
@@ -341,13 +357,13 @@ def _get_sighan_test(which, path_head=""):
     elif which == "15":
         test_data = load_sighan15_test(path_head)
     else:
-        print("Error: No such dataset ")
-        print(which)
+        ddp_print("Error: No such dataset ")
+        ddp_print(which)
         exit(0)
 
     test_dataset = mydataset(test_data)
 
-    print("Loading Succeed !")
+    ddp_print("Loading Succeed !")
     os.system("date")
 
     return test_dataset
@@ -356,7 +372,7 @@ def _get_sighan_test(which, path_head=""):
 def _get_lattice_dataset(dataset="sighan", path_head="."):
     """
     """
-    print("Loading Dataset !")
+    ddp_print("Loading Dataset !")
     os.system("date")
 
     if dataset == "sighan":
@@ -372,7 +388,7 @@ def _get_lattice_dataset(dataset="sighan", path_head="."):
 def _get_magic_plus_dataset(dataset="sighan", path_head=""):
     """
     """
-    print("Loading Dataset !")
+    ddp_print("Loading Dataset !")
     os.system("date")
 
     if dataset == "sighan":
@@ -382,7 +398,7 @@ def _get_magic_plus_dataset(dataset="sighan", path_head=""):
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loading Succeed !")
+    ddp_print("Loading Succeed !")
 
     os.system("date")
 
@@ -392,7 +408,7 @@ def _get_magic_plus_dataset(dataset="sighan", path_head=""):
 def _get_magic_dataset(dataset="sighan", path_head=""):
     """
     """
-    print("Loading Dataset !")
+    ddp_print("Loading Dataset !")
     os.system("date")
 
     if dataset == "sighan":
@@ -402,7 +418,7 @@ def _get_magic_dataset(dataset="sighan", path_head=""):
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loading Succeed !")
+    ddp_print("Loading Succeed !")
 
     os.system("date")
 
@@ -412,7 +428,7 @@ def _get_magic_dataset(dataset="sighan", path_head=""):
 def _get_magic_lang8_dataset(dataset="sighan", path_head=""):
     """
     """
-    print("Loading Dataset !")
+    ddp_print("Loading Dataset !")
     os.system("date")
 
     if dataset == "sighan":
@@ -422,7 +438,7 @@ def _get_magic_lang8_dataset(dataset="sighan", path_head=""):
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loading Succeed !")
+    ddp_print("Loading Succeed !")
 
     os.system("date")
 
@@ -432,7 +448,7 @@ def _get_magic_lang8_dataset(dataset="sighan", path_head=""):
 def _get_magic_expand_dataset(dataset="sighan", path_head=""):
     """
     """
-    print("Loading Dataset !")
+    ddp_print("Loading Dataset !")
     os.system("date")
 
     if dataset == "sighan":
@@ -442,7 +458,7 @@ def _get_magic_expand_dataset(dataset="sighan", path_head=""):
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loading Succeed !")
+    ddp_print("Loading Succeed !")
 
     os.system("date")
 
@@ -452,7 +468,7 @@ def _get_magic_expand_dataset(dataset="sighan", path_head=""):
 def _get_super_magic_dataset(dataset="sighan", path_head=""):
     """
     """
-    print("Loading Dataset !")
+    ddp_print("Loading Dataset !")
     os.system("date")
 
     if dataset == "sighan":
@@ -462,7 +478,7 @@ def _get_super_magic_dataset(dataset="sighan", path_head=""):
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    print("Loading Succeed !")
+    ddp_print("Loading Succeed !")
 
     os.system("date")
 
@@ -471,13 +487,13 @@ def _get_super_magic_dataset(dataset="sighan", path_head=""):
 
 def get_metrics(training_args):
     if "sighan" in training_args.dataset:
-        print("Hint: Using aligned sighan F1_score as metric")
+        ddp_print("Hint: Using aligned sighan F1_score as metric")
         return _get_metrics(training_args)
     if "ctc2021" in training_args.dataset :
-        print("Hint: Using Seq2Seq ctc2021 score as metric")
+        ddp_print("Hint: Using Seq2Seq ctc2021 score as metric")
         return _get_seq2seq_metrics(training_args)
     else:
-        print("Error when getting metrics.")
+        ddp_print("Error when getting metrics.")
         exit(0)
 
 
@@ -505,9 +521,9 @@ def _get_metrics(training_args):
         sent_p, sent_n = 0, 0
 
         for i in range(len(sources)):
-            #print(sources[i])
-            #print(preds[i])
-            #print(labels[i])
+            #ddp_print(sources[i])
+            #ddp_print(preds[i])
+            #ddp_print(labels[i])
 
             source, pred, label = sources[i], preds[i], labels[i]
 
@@ -526,42 +542,42 @@ def _get_metrics(training_args):
             pred = np.concatenate((pred, np.array([ 0 for i in range(len(label) - len(pred))])), axis=0)
 
             if len(pred) != len(source) or len(label) != len(source):
-                print("Warning : something goes wrong when compute metrics, check codes now.")
-                print(len(source), len(pred), len(label))
-                print("source: ", source)
-                print("pred: ", pred)
-                print("label:", label)
-                print("raw source: ", sources[i])
-                print("raw pred: ", preds[i])
-                print("raw label:", labels[i])
+                ddp_print("Warning : something goes wrong when compute metrics, check codes now.")
+                ddp_print(len(source), len(pred), len(label))
+                ddp_print("source: ", source)
+                ddp_print("pred: ", pred)
+                ddp_print("label:", label)
+                ddp_print("raw source: ", sources[i])
+                ddp_print("raw pred: ", preds[i])
+                ddp_print("raw label:", labels[i])
                 exit()
             try:
                 (pred != source).any()
             except:
-                print(pred, source)
-                print(" Error Exit ")
+                ddp_print(pred, source)
+                ddp_print(" Error Exit ")
                 exit(0)
 
             #if i < 5:
-            #print(source)
-            #print(pred)
-            #print(label)
-            #print((pred != source).any())
-            #print((pred == label).all())
-            #print((label != source).any())
+            #ddp_print(source)
+            #ddp_print(pred)
+            #ddp_print(label)
+            #ddp_print((pred != source).any())
+            #ddp_print((pred == label).all())
+            #ddp_print((label != source).any())
 
             if training_args.model_name != "Gector":
                 # label: [101, 2,... 3, 102]
                 if (pred != source).any():
                     sent_p += 1
-                    #print("sent_p")
+                    #ddp_print("sent_p")
                     if (pred == label).all():
                         tp += 1
-                        print("tp")
+                        # ddp_print("tp")
 
                 if (label != source).any():
                     sent_n += 1
-                    #print("sent_n")
+                    #ddp_print("sent_n")
             else:
                 # label : [ 1,1,1,1,1 ]
                 if (pred != 1).any():
@@ -573,7 +589,7 @@ def _get_metrics(training_args):
                 if (label != 1).any():
                     sent_n += 1
 
-        #print(tp, sent_p, sent_n)
+        #ddp_print(tp, sent_p, sent_n)
 
         precision = tp / (sent_p + 1e-10)
 
@@ -584,7 +600,7 @@ def _get_metrics(training_args):
         Turtle = time.time() - Achilles
 
         if F1_score < 0.05:
-            print("Warning : metric score is too Low , maybe something goes wrong, check your codes please.")
+            ddp_print("Warning : metric score is too Low , maybe something goes wrong, check your codes please.")
             #exit(0)
         return {"F1_score": float(F1_score), "Precision":float(precision),  "Recall":float(recall),"Metric_time":Turtle}
 
@@ -632,15 +648,15 @@ def _get_seq2seq_metrics(training_args):
 
             from utils.levenshtein import levenshtein4seq
             
-            # print(source.shape, pred.shape, label.shape)
-            # print(source)
-            # print(pred)
-            # print(label)
+            # ddp_print(source.shape, pred.shape, label.shape)
+            # ddp_print(source)
+            # ddp_print(pred)
+            # ddp_print(label)
 
             pred_edits, gold_edits = levenshtein4seq(source, pred, only_edits=True), levenshtein4seq(source, label, only_edits=True)
 
-            # print(pred_edits)
-            # print(gold_edits)
+            # ddp_print(pred_edits)
+            # ddp_print(gold_edits)
 
             # gold_pos = [ edit[1] for edit in gold_edits]
 
@@ -690,7 +706,7 @@ def _get_seq2seq_metrics(training_args):
         F1_score_correct, Precision_correct, Recall_correct = compute_f1score(tp_correct, p, n)
 
         if F1_score_detect < 0.1 or F1_score_correct < 0.1:
-            print("Warning : metric F1_score is too Low , maybe something goes wrong, check your codes please.")
+            ddp_print("Warning : metric F1_score is too Low , maybe something goes wrong, check your codes please.")
 
         return {"F1_score":float( 0.8 * F1_score_detect + 0.2 * F1_score_correct ), 
                 "F1_score_detect": float(F1_score_detect), 
@@ -750,7 +766,7 @@ def get_lattice_metrics():
 
 
 if __name__ == "__main__":
-    print("Lets test !")
+    ddp_print("Lets test !")
 
     training_args = argument_init(TrainingArguments)
 
@@ -758,5 +774,5 @@ if __name__ == "__main__":
 
     compute_metrics = get_metrics(None)
 
-    print("Done")
+    ddp_print("Done")
 

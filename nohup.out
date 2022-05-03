@@ -21,3 +21,4 @@ Traceback (most recent call last):
   File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/tokenization_utils_fast.py", line 405, in _batch_encode_plus
     encodings = self._tokenizer.encode_batch(
 KeyboardInterrupt
+python: can't open file 'python': [Errno 2] No such file or directory

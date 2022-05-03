@@ -225,20 +225,6 @@ class FoolDataCollatorForSeq2Seq:
 
         black_list = []
 
-        """
-        import numpy as np
-        for f in f_copy:
-            for k, v in f.items():
-                print(k, v)
-                if k == "input_ids":
-                    print(len([ i for i in v if i != 0]))
-                elif k == "labels":
-                    print(len([ i for i in v if i != -100]))
-                elif k == "attention_mask":
-                    print(len([ i for i in v if i != 0]))
-        exit()
-        """
-
         for key in f_copy[0].keys():  
             new[key] = []
         
@@ -781,8 +767,21 @@ class subTrainer(Seq2SeqTrainer):
                     logits = self.preprocess_logits_for_metrics(logits, labels)
                 preds_host = logits if preds_host is None else nested_concat(preds_host, logits, padding_index=-100)
             if inputs is not None:
-                sources = self._pad_across_processes(inputs["input_ids"])
+                data = inputs["input_ids"]
+                
+                kwargs = dict(device=self.args.device)
+
+                if self.deepspeed and data.dtype != torch.int64:
+                    # NLP models inputs are int64 and those get adjusted to the right dtype of the
+                    # embedding. Other models such as wav2vec2's inputs are already float and thus
+                    # may need special handling to match the dtypes of the model
+                    kwargs.update(dict(dtype=self.args.hf_deepspeed_config.dtype()))
+            
+                sources = self._pad_across_processes(data.to(**kwargs))
+
+                #sources = self._pad_across_processes(sources)
                 sources = self._nested_gather(sources)
+                #sources = self._nested_gather(inputs["input_ids"])
                 sources_host = sources if sources_host is None else nested_concat(sources_host, sources, padding_index=0)
             #----------------------------------------------------------------------------------------------------
 
