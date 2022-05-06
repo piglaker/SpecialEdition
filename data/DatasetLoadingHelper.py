@@ -1,4 +1,5 @@
 
+from asyncore import read
 import re
 import json
 from typing import Dict, List
@@ -98,7 +99,7 @@ def load_ctc2021(extra):
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
 from fastNLP import cache_results
-@cache_results(_cache_fp='cache/sighan_raw', _refresh=True)
+@cache_results(_cache_fp='cache/sighan_raw', _refresh=False)
 def load_sighan(path_head=""):
 
     print("Loading SigHan Dataset ...")
@@ -130,6 +131,63 @@ def load_sighan(path_head=""):
 
     train_source_tok = tokenizer.batch_encode_plus(train_source, return_token_type_ids=False)#seems transformers max_length not work
     train_target_tok = tokenizer.batch_encode_plus(train_target, return_token_type_ids=False)#remove padding=True, max_length=512
+    valid_source_tok = tokenizer.batch_encode_plus(valid_source, return_token_type_ids=False)
+    valid_target_tok = tokenizer.batch_encode_plus(valid_target, return_token_type_ids=False)
+    test_source_tok = tokenizer.batch_encode_plus(test_source, return_token_type_ids=False)
+    test_target_tok = tokenizer.batch_encode_plus(test_target, return_token_type_ids=False)
+
+    train_source_tok["labels"] = train_target_tok["input_ids"]
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+    test_source_tok["labels"] = test_target_tok["input_ids"]
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            #ugly fix for encoder model (the same length
+            features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+
+    return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
+
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_expand', _refresh=False)
+def load_sighan_expand(path_head=""):
+    """
+    """
+    print("NLPCC_and HSK only for UNALIGNED Correction!")
+
+    exit()
+    
+    print("Loading Expand SigHan Dataset ...")
+
+    train_source_path = path_head + "./data/rawdata/sighan/raw/train.src"
+    train_target_path = path_head + "./data/rawdata/sighan/raw/train.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/raw/valid.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/raw/valid.tgt"#valid should be same to test ( sighan 15
+    test_source_path = path_head + "./data/rawdata/sighan/raw/test.src"
+    test_target_path = path_head + "./data/rawdata/sighan/raw/test.tgt"
+
+    expand_source_path = path_head + "./data/nlpcc_and_hsk/train.src"
+    expand_target_path = path_head + "./data/nlpcc_and_hsk/train.trg"
+
+    train_source = read_csv(train_source_path)#[:2000]#[274144:]#for only sighan
+    train_target = read_csv(train_target_path)#[:2000]#[274144:]
+    
+    valid_source = read_csv(valid_source_path)
+    valid_target = read_csv(valid_target_path)
+
+    test_source = read_csv(test_source_path)
+    test_target = read_csv(test_target_path)
+
+    expand_source = read_csv(expand_source_path, remove_blank=True)
+    expand_target = read_csv(expand_target_path, remove_blank=True)
+
+    tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
+
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
+
+    train_source_tok = tokenizer.batch_encode_plus(train_source + expand_source, return_token_type_ids=False)#seems transformers max_length not work
+    train_target_tok = tokenizer.batch_encode_plus(train_target + expand_target, return_token_type_ids=False)#remove padding=True, max_length=512
     valid_source_tok = tokenizer.batch_encode_plus(valid_source, return_token_type_ids=False)
     valid_target_tok = tokenizer.batch_encode_plus(valid_target, return_token_type_ids=False)
     test_source_tok = tokenizer.batch_encode_plus(test_source, return_token_type_ids=False)

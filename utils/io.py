@@ -8,17 +8,20 @@ def load_json(fp):
     f.close()
     return data
 
-def read_csv(path):
+def read_csv(path, remove_blank=False):
     result = []
     try:
         with open(path) as f:
             for line in f.readlines():
-                #result.append(line.replace(" ", ""))
-                result.append(line)
+                if remove_blank:
+                    result.append(line.replace(" ", ""))
+                else:
+                    result.append(line)
         return result
     except Exception as e:
         print(e)
         return 
+
 
 def write_to(path, contents):
     f = open(path, "w", encoding='utf-8')

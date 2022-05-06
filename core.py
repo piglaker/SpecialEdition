@@ -40,6 +40,7 @@ from data.DatasetLoadingHelper import (
     load_sighan_enchanted, 
     load_sighan_gector,
     load_sighan_mask,
+    load_sighan_expand,
     load_lattice_sighan, 
     load_abs_pos_sighan, 
     load_abs_pos_sighan_lang8, 
@@ -50,27 +51,31 @@ from data.DatasetLoadingHelper import (
     load_sighan15_test,
 )
 
+def ddp_exec(command):
+    """
+    """
+    if os.environ["LOCAL_RANK"] != '0':
+        return
+    else:
+        exec(command)
+ 
 
 def ddp_print(*something):
     """
     """
     if os.environ["LOCAL_RANK"] != '0':
-    #if dist.get_rank() != '0':
         return
+    else:
+        for thing in something:
+            print(thing)
 
-    for thing in something:
-        print(thing)
-
-
-    return 
-
+        return 
 
 def fitlogging(training_args):
     for attr in dir(training_args):
         if not re.match("__.*__", attr) and isinstance(getattr(training_args, attr), (int, str, bool, float)):
             fitlog.add_hyper(value=getattr(training_args, attr), name=attr)
     return
-
 
 @dataclass
 class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
@@ -84,7 +89,8 @@ class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     cl_weight:float = field(default=0.2, metadata={"help": "contrastive learning loss weight"})
     repeat_weight:float = field(default=0.2, metadata={"help": "distill repeat loss"})
     copy_weight:float = field(default=0.5, metadata={"help":"copy weight"})
-
+    num_gpus:int = field(default=4, metadata={"help":"num_gpus"})
+    pretrained_name:str = field(default="roberta", metadata={"help":"pretrained_name"})
 
 class mydataset(Dataset):
     def __init__(self, data):
@@ -150,6 +156,8 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         from models.bert.modeling_bert_v4 import ProtoModel as ProtoModel
     elif model_name == "Gector":
         from models.bert.modeling_bert_v3 import GectorModel as ProtoModel
+    elif model_name == "GPT":
+        from transformers import GPT2LMHeadModel as ProtoModel
     elif model_name is None or model_name == "MaskedLM":
         ddp_print("Hint: Load Default BertForMaskedLM.")
         from transformers import BertForMaskedLM as ProtoModel
@@ -183,7 +191,7 @@ def get_dataset(training_args):
     """
 
     ddp_print("Loading Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     if training_args.dataset == "ctc2021":
         train_data, eval_data, test_data = load_ctc2021(training_args.use_extra_dataset)
@@ -197,7 +205,7 @@ def get_dataset(training_args):
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
     ddp_print("Loading Succeed !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
 
@@ -212,7 +220,7 @@ def get_dataset_plus(training_args):
     """
 
     ddp_print("Loading Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     if training_args.dataset == "ctc2021":
         train_data, eval_data, test_data = load_ctc2021(extra=training_args.use_extra_dataset)
@@ -228,6 +236,8 @@ def get_dataset_plus(training_args):
             return _get_raw_dataset()
         elif 'ReaLiSe' in training_args.dataset:
             return _get_ReaLiSe_dataset()
+        elif 'expand' in training_args.dataset:
+            return _get_expand_dataset()
         else:
             ddp_print("Unclear data type, load default raw sighan")
             return _get_raw_dataset()
@@ -239,7 +249,7 @@ def get_dataset_plus(training_args):
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
     ddp_print("Loading Succeed !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
 
@@ -249,14 +259,14 @@ def _get_enchanted_dataset(which="15"):
     Gector for sighan
     """
     ddp_print("Loading Enchanted Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_enchanted(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
     ddp_print("Loaded successfully !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
 
@@ -266,14 +276,14 @@ def _get_raw_dataset(which="15"):
     Gector for sighan
     """
     ddp_print("Loading Raw Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
     ddp_print("Loaded successfully !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
 
@@ -283,14 +293,14 @@ def _get_mask_dataset(which="15"):
     Gector for sighan
     """
     ddp_print("Loading MASK Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_mask(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_ddp_print("Loaded successfully !")
-    os.system("date")
+    ddp_print("Loaded successfully !")
+    ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
 
@@ -300,14 +310,14 @@ def _get_Gector_dataset(which="15"):
     Gector for sighan
     """
     ddp_print("Loading GECTOR Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_gector(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
     ddp_print("Loaded successfully !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
 
@@ -318,7 +328,7 @@ def _get_ReaLiSe_dataset(which="15"):
     """
     ddp_print("Loading ReaLiSe Dataset !")
     ddp_print("Hint: The Data You loading now is the preprocessed sighan from ReaLise, ")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     path = "../SE_tmp_back/milestone/ReaLiSe/data/"
     import pickle
@@ -340,16 +350,31 @@ def _get_ReaLiSe_dataset(which="15"):
         return mydataset(new)
 
     ddp_print("Loaded successfully !")
-    os.system("date")
+    ddp_exec("os.system('date')")
     ddp_print("over")
     return trans2mydataset(train_dataset), trans2mydataset(eval_dataset), trans2mydataset(test_dataset)
 
+def _get_expand_dataset(which="15"):
+    """
+    NLPcc and HSK Expand for sighan
+    """
+    ddp_print("Loading Expand Dataset !")
+    ddp_exec("os.system('date')")
+
+    train_data, eval_data, test_data = load_sighan_expand(path_head="")
+    
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    ddp_print("Loaded successfully !")
+    ddp_exec("os.system('date')")
+
+    return train_dataset, eval_dataset, test_dataset
 
 def _get_sighan_test(which, path_head=""):
     """
     """
     ddp_print("Loading Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
     if which == "13":
         test_data = load_sighan13_test(path_head)
     elif which == "14":
@@ -364,7 +389,7 @@ def _get_sighan_test(which, path_head=""):
     test_dataset = mydataset(test_data)
 
     ddp_print("Loading Succeed !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     return test_dataset
 
@@ -373,7 +398,7 @@ def _get_lattice_dataset(dataset="sighan", path_head="."):
     """
     """
     ddp_print("Loading Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     if dataset == "sighan":
         datasets, vocabs, embeddings = load_lattice_sighan(path_head=path_head)
@@ -389,7 +414,7 @@ def _get_magic_plus_dataset(dataset="sighan", path_head=""):
     """
     """
     ddp_print("Loading Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     if dataset == "sighan":
         train_data, eval_data, test_data = load_abs_pos_sighan_plus(path_head=path_head)
@@ -400,7 +425,7 @@ def _get_magic_plus_dataset(dataset="sighan", path_head=""):
 
     ddp_print("Loading Succeed !")
 
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
 
@@ -409,7 +434,7 @@ def _get_magic_dataset(dataset="sighan", path_head=""):
     """
     """
     ddp_print("Loading Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     if dataset == "sighan":
         train_data, eval_data, test_data = load_abs_pos_sighan(path_head=path_head)
@@ -420,7 +445,7 @@ def _get_magic_dataset(dataset="sighan", path_head=""):
 
     ddp_print("Loading Succeed !")
 
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
 
@@ -429,7 +454,7 @@ def _get_magic_lang8_dataset(dataset="sighan", path_head=""):
     """
     """
     ddp_print("Loading Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     if dataset == "sighan":
         train_data, eval_data, test_data = load_abs_pos_sighan_lang8(path_head=path_head)
@@ -440,7 +465,7 @@ def _get_magic_lang8_dataset(dataset="sighan", path_head=""):
 
     ddp_print("Loading Succeed !")
 
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
 
@@ -449,7 +474,7 @@ def _get_magic_expand_dataset(dataset="sighan", path_head=""):
     """
     """
     ddp_print("Loading Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     if dataset == "sighan":
         train_data, eval_data, test_data = load_abs_pos_sighan_plus(path_head=path_head)
@@ -460,7 +485,7 @@ def _get_magic_expand_dataset(dataset="sighan", path_head=""):
 
     ddp_print("Loading Succeed !")
 
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
 
@@ -469,7 +494,7 @@ def _get_super_magic_dataset(dataset="sighan", path_head=""):
     """
     """
     ddp_print("Loading Dataset !")
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     if dataset == "sighan":
         train_data, eval_data, test_data, tokenizer = load_abs_pos_and_spe_token_sighan(path_head=path_head)
@@ -480,7 +505,7 @@ def _get_super_magic_dataset(dataset="sighan", path_head=""):
 
     ddp_print("Loading Succeed !")
 
-    os.system("date")
+    ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset, tokenizer
 

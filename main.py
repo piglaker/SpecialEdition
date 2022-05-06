@@ -13,10 +13,32 @@
 # limitations under the License.
 
 import os
+import io
+import sys
+from tqdm import tqdm
+
+class DDP_std_IO(io.StringIO):
+    def write(self, txt):
+        #if os.environ["LOCAL_RANK"] != '0':
+        #    pass
+        #else:
+        #    sys.__stdout__.write(txt)
+        sys.__stdout__.write(txt)
+
+class DDP_err_IO(io.StringIO):
+    def write(self, txt):
+        if os.environ["LOCAL_RANK"] != '0':
+            pass
+        else:
+            sys.__stderr__.write(txt)
+
+sys.stdout = DDP_std_IO()
+sys.stderr = DDP_err_IO()
+
 import re
 import random
 import time
-import logging
+
 import argparse
 from dataclasses import dataclass, field
 from typing import Optional,Dict, Union, Any, Tuple, List
@@ -28,7 +50,7 @@ import datasets
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
-from tqdm import tqdm
+
 import transformers
 from transformers import (
     DataCollatorForSeq2Seq,
@@ -50,6 +72,7 @@ from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokeni
 from transformers.training_args import TrainingArguments
 
 from core import (
+    ddp_print,
     fitlogging,
     get_model,
     get_dataset, 
@@ -66,10 +89,22 @@ from transformers import BertForMaskedLM
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3"
 
-logger = logging.getLogger(__name__)
-
 #fitlog.set_log_dir("./fitlogs/")
 #fitlog.add_hyper_in_file(__file__)
+
+#sys.stdout = sys.__stdout__
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+logger.info("???")
+
+
+def adapt_learning_rate(training_args):
+    training_args.learning_rate = (training_args.num_gpus * training_args.per_device_train_batch_size / 128 )* 7e-5
+    ddp_print("Adapted Learning_rate:", training_args.learning_rate)
+    return training_args
 
 
 def run():
@@ -80,7 +115,23 @@ def run():
     
     set_seed(training_args.seed)
 
-    pretrained_csc_model = "hfl/chinese-macbert-base"#"hfl/chinese-roberta-wwm-ext"#"bert-base-chinese"#None#"/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/milestone/ReaLiSe/pretrained"#None
+    training_args = adapt_learning_rate(training_args)
+
+    name_dict = { 
+    
+        "bert":"hfl/chinese-bert-wwm-ext", \
+        "roberta":"hfl/chinese-roberta-wwm-ext", \
+        "macbert":"hfl/chinese-macbert-base", \
+        "xlnet":"hfl/chinese-xlnet-base", \
+        "ChineseBert":"ShannonAI/ChineseBERT-base", \
+        "electra":"hfl/chinese-electra-180g-base-discriminator", \
+    }
+
+    name = name_dict[training_args.pretrained_name]
+
+    ddp_print("Pretrained Model name_path:" + name)
+
+    pretrained_csc_model = name#"hfl/chinese-macbert-base"#"junnyu/ChineseBERT-base"##"hfl/chinese-roberta-wwm-ext"#"bert-base-chinese"#None#"/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/milestone/ReaLiSe/pretrained"#None
 
     # Tokenizer    
     tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext" if pretrained_csc_model is None else pretrained_csc_model 

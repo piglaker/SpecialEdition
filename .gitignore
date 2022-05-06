@@ -4,6 +4,7 @@
 /data/embed_corpus
 /data/others
 /data/rawdata
+/data/nlpcc_and_hsk
 /milestone
 /models/bart/bart-zh
 /predict
