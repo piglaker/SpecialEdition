@@ -1,50 +1,0 @@
-Thu Oct 21 11:44:55 UTC 2021
-Loading Dataset !
-  0%|          | 0/95000 [00:00<?, ?it/s] 14%|█▎        | 12927/95000 [00:00<00:00, 125535.75it/s] 29%|██▉       | 27627/95000 [00:00<00:00, 136275.81it/s] 43%|████▎     | 41258/95000 [00:00<00:01, 37627.61it/s]  58%|█████▊    | 55404/95000 [00:00<00:00, 53291.30it/s] 74%|███████▎  | 69930/95000 [00:01<00:00, 69596.86it/s] 86%|████████▋ | 81958/95000 [00:01<00:00, 34649.45it/s] 99%|█████████▊| 93776/95000 [00:01<00:00, 43949.79it/s]100%|██████████| 95000/95000 [00:01<00:00, 48949.60it/s]
-  0%|          | 0/5000 [00:00<?, ?it/s]100%|██████████| 5000/5000 [00:00<00:00, 61131.66it/s]Thu Oct 21 11:45:19 UTC 2021
-
-Using amp fp16 backend
-***** Running training *****
-  Num examples = 95000
-  Num Epochs = 10
-  Instantaneous batch size per device = 128
-  Total train batch size (w. parallel, distributed & accumulation) = 256
-  Gradient Accumulation steps = 1
-  Total optimization steps = 3720
-Loading Succeed !
-  0%|          | 0/3720 [00:00<?, ?it/s]/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/_functions.py:68: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
-  warnings.warn('Was asked to gather along dimension 0, but all '
-Traceback (most recent call last):
-  File "bart_through.py", line 256, in <module>
-    run()
-  File "bart_through.py", line 198, in run
-    train_result = trainer.train()
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/trainer.py", line 1289, in train
-    tr_loss += self.training_step(model, inputs)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/trainer.py", line 1780, in training_step
-    loss = self.compute_loss(model, inputs)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/trainer.py", line 1814, in compute_loss
-    outputs = model(**inputs)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
-    return forward_call(*input, **kwargs)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/data_parallel.py", line 169, in forward
-    return self.gather(outputs, self.output_device)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/data_parallel.py", line 181, in gather
-    return gather(outputs, output_device, dim=self.dim)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 78, in gather
-    res = gather_map(outputs)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 69, in gather_map
-    return type(out)(((k, gather_map([d[k] for d in outputs]))
-  File "<string>", line 12, in __init__
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/transformers/file_utils.py", line 1861, in __post_init__
-    for element in iterator:
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 69, in <genexpr>
-    return type(out)(((k, gather_map([d[k] for d in outputs]))
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 63, in gather_map
-    return Gather.apply(target_device, dim, *outputs)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/_functions.py", line 75, in forward
-    return comm.gather(inputs, ctx.dim, ctx.target_device)
-  File "/remote-home/xtzhang/anaconda3/envs/117/lib/python3.8/site-packages/torch/nn/parallel/comm.py", line 235, in gather
-    return torch._C._gather(tensors, dim, destination)
-RuntimeError: CUDA out of memory. Tried to allocate 2.58 GiB (GPU 0; 23.70 GiB total capacity; 16.91 GiB already allocated; 1.34 GiB free; 17.17 GiB reserved in total by PyTorch)
-  0%|          | 0/3720 [00:06<?, ?it/s]

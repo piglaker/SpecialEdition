@@ -1,50 +1,0 @@
-Thu Oct 21 12:01:12 UTC 2021
-Loading Dataset !
-  0%|          | 0/95000 [00:00<?, ?it/s] 12%|█▏        | 11357/95000 [00:00<00:00, 111486.47it/s] 25%|██▌       | 23915/95000 [00:00<00:00, 119706.71it/s] 38%|███▊      | 36263/95000 [00:00<00:00, 121418.55it/s] 51%|█████     | 48409/95000 [00:00<00:01, 39990.58it/s]  64%|██████▍   | 60706/95000 [00:01<00:00, 52956.00it/s] 77%|███████▋  | 73360/95000 [00:01<00:00, 66385.68it/s] 90%|████████▉ | 85206/95000 [00:01<00:00, 33861.39it/s]100%|██████████| 95000/95000 [00:01<00:00, 49718.80it/s]
-  0%|          | 0/5000 [00:00<?, ?it/s]100%|██████████| 5000/5000 [00:00<00:00, 116073.81it/s]Thu Oct 21 12:01:38 UTC 2021
-
-Using amp fp16 backend
-***** Running training *****
-  Num examples = 95000
-  Num Epochs = 10
-  Instantaneous batch size per device = 64
-  Total train batch size (w. parallel, distributed & accumulation) = 128
-  Gradient Accumulation steps = 1
-  Total optimization steps = 7430
-Loading Succeed !
-  0%|          | 0/7430 [00:00<?, ?it/s]/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/_functions.py:68: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
-  warnings.warn('Was asked to gather along dimension 0, but all '
-Traceback (most recent call last):
-  File "bart_through.py", line 256, in <module>
-    run()
-  File "bart_through.py", line 198, in run
-    train_result = trainer.train()
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/trainer.py", line 1289, in train
-    tr_loss += self.training_step(model, inputs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/trainer.py", line 1780, in training_step
-    loss = self.compute_loss(model, inputs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/trainer.py", line 1814, in compute_loss
-    outputs = model(**inputs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
-    return forward_call(*input, **kwargs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/data_parallel.py", line 169, in forward
-    return self.gather(outputs, self.output_device)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/data_parallel.py", line 181, in gather
-    return gather(outputs, output_device, dim=self.dim)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 78, in gather
-    res = gather_map(outputs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 69, in gather_map
-    return type(out)(((k, gather_map([d[k] for d in outputs]))
-  File "<string>", line 12, in __init__
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/transformers/file_utils.py", line 1861, in __post_init__
-    for element in iterator:
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 69, in <genexpr>
-    return type(out)(((k, gather_map([d[k] for d in outputs]))
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/scatter_gather.py", line 63, in gather_map
-    return Gather.apply(target_device, dim, *outputs)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/_functions.py", line 75, in forward
-    return comm.gather(inputs, ctx.dim, ctx.target_device)
-  File "/remote-home/xtzhang/anaconda3/envs/dophin/lib/python3.8/site-packages/torch/nn/parallel/comm.py", line 235, in gather
-    return torch._C._gather(tensors, dim, destination)
-RuntimeError: CUDA out of memory. Tried to allocate 1.29 GiB (GPU 0; 10.92 GiB total capacity; 8.81 GiB already allocated; 1.16 GiB free; 8.99 GiB reserved in total by PyTorch)
-  0%|          | 0/7430 [00:05<?, ?it/s]
