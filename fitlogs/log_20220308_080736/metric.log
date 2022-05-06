@@ -1,9 +1,0 @@
-Step:0	{"metric": {"dev": {"eval_loss": 4.214993953704834}}, "step": 0}
-Step:0	{"metric": {"dev": {"eval_F1_score": 0.9226361031017555}}, "step": 0}
-Step:0	{"metric": {"dev": {"eval_Precision": 0.9583333333331432}}, "step": 0}
-Step:0	{"metric": {"dev": {"eval_Recall": 0.8895027624307753}}, "step": 0}
-Step:0	{"metric": {"dev": {"eval_Metric_time": 0.10134315490722656}}, "step": 0}
-Step:0	{"metric": {"dev": {"eval_runtime": 1.4933}}, "step": 0}
-Step:0	{"metric": {"dev": {"eval_samples_per_second": 736.634}}, "step": 0}
-Step:0	{"metric": {"dev": {"eval_steps_per_second": 6.027}}, "step": 0}
-Step:0	{"metric": {"dev": {"epoch": 0.45}}, "step": 0}
