@@ -96,6 +96,43 @@ def generate(need_preprocess=True):
     print(valid_source[:3], valid_target[:3])
     print(len(valid_source), len(valid_target)) 
 
+    need_remove = {}
+    # cluster all need_remove
+    for i, sample in enumerate(valid_source):
+        for j, char in enumerate(sample):
+            tgt = valid_target[i][j]
+            if char != tgt:
+                need_remove[ (char, tgt) ] = 0
+
+    for i, sample in enumerate(valid14_source):
+        for j, char in enumerate(sample):
+            tgt = valid14_target[i][j]
+            if char != tgt:
+                need_remove[ (char, tgt) ] = 0 
+
+    #remove
+    remove_count = 0
+    new_train_source, new_train_target = [], []
+    for i, sample in enumerate(train_source):
+        skip = False
+        for j, char in enumerate(sample):
+            tgt = train_target[i][j]
+            if char != tgt:
+                key  = (char, tgt)
+
+                if key in need_remove:
+                    skip = True
+                    remove_count += 1
+                    break
+
+        if not skip:
+            new_train_source.append(sample)
+            new_train_target.append(train_target[i])
+
+    print("Total Skip: ", remove_count)
+
+    train_source, train_target = new_train_source, new_train_target
+
     #f_src = levenstein.tokenize(source, vocab_file_path="vocab.txt")
     
     train_through = levenshtein.convert_from_sentpair_through(train_source, train_target, train_source)
@@ -105,7 +142,8 @@ def generate(need_preprocess=True):
     #print(train_through[0], valid_through[0])
 
     #output_name = "enchanted"
-    output_name = "raw"
+    #output_name = "raw"
+    output_name = "holy"
 
     write_to("../../data/rawdata/sighan/" + output_name + "/train.src", "\n".join(train_source))
     write_to("../../data/rawdata/sighan/"+output_name+"/train.tgt", "\n".join(train_target))

@@ -49,6 +49,11 @@ from data.DatasetLoadingHelper import (
     load_sighan13_test,
     load_sighan14_test,
     load_sighan15_test,
+    load_sighan_chinesebert,
+    load_sighan_chinesebert_mask,
+    load_sighan_chinesebert_holy, 
+    load_sighan_holy,  
+
 )
 
 def ddp_exec(command):
@@ -57,8 +62,7 @@ def ddp_exec(command):
     if os.environ["LOCAL_RANK"] != '0':
         return
     else:
-        exec(command)
- 
+        exec(command) 
 
 def ddp_print(*something):
     """
@@ -159,6 +163,17 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
     elif model_name == "GPT":
         from transformers import GPT2LMHeadModel as ProtoModel
     elif model_name is None or model_name == "MaskedLM":
+        if training_args.pretrained_name == "chinesebert":
+            ddp_print("Hint: Load ChineseBert MaskedLM")
+            from chinesebert import ChineseBertConfig, ChineseBertForMaskedLM 
+            config = ChineseBertConfig.from_pretrained(pretrained_model_name_or_path)
+            model = ChineseBertForMaskedLM.from_pretrained(pretrained_model_name_or_path, config=config)
+            return model
+        elif training_args.pretrained_name == "roformer":
+            from roformer import RoFormerForMaskedLM
+            model = RoFormerForMaskedLM.from_pretrained( pretrained_model_name_or_path )
+            return model
+
         ddp_print("Hint: Load Default BertForMaskedLM.")
         from transformers import BertForMaskedLM as ProtoModel
     else:
@@ -228,8 +243,17 @@ def get_dataset_plus(training_args):
         #train_data, eval_data, test_data = load_sighan(path_head)
         if training_args.model_name == "Gector":
             return _get_Gector_dataset()
+        if training_args.pretrained_name == "chinesebert":
+            if "mask" in training_args.dataset:
+                return _get_chinesebert_mask_dataset()
+            elif "holy" in training_args.dataset:
+                return _get_chinesebert_holy_dataset()
+            else:
+                return _get_chinesebert_dataset()
         elif "mask" in training_args.dataset:
             return _get_mask_dataset()
+        elif "holy" in training_args.dataset:
+            return _get_holy_dataset()
         elif "enchanted" in training_args.dataset:
             return _get_enchanted_dataset()
         elif "raw" in training_args.dataset:
@@ -287,6 +311,22 @@ def _get_raw_dataset(which="15"):
 
     return train_dataset, eval_dataset, test_dataset
 
+def _get_holy_dataset(which="15"):
+    """
+    Gector for sighan
+    """
+    ddp_print("Loading Holy Dataset !")
+    ddp_exec("os.system('date')")
+
+    train_data, eval_data, test_data = load_sighan_holy(path_head="")
+    
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    ddp_print("Loaded successfully !")
+    ddp_exec("os.system('date')")
+
+    return train_dataset, eval_dataset, test_dataset
+
 
 def _get_mask_dataset(which="15"):
     """
@@ -313,6 +353,57 @@ def _get_Gector_dataset(which="15"):
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_gector(path_head="")
+    
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    ddp_print("Loaded successfully !")
+    ddp_exec("os.system('date')")
+
+    return train_dataset, eval_dataset, test_dataset
+
+def _get_chinesebert_holy_dataset(which="15"):
+    """
+    ChineseBert for sighan
+    Mainly diff in no max_length and 'pinyin_idx' must be 8 * len('input_ids')
+    """
+    ddp_print("Loading ChineseBert Holy Dataset !")
+    ddp_exec("os.system('date')")
+
+    train_data, eval_data, test_data = load_sighan_chinesebert_holy(path_head="")
+    
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    ddp_print("Loaded successfully !")
+    ddp_exec("os.system('date')")
+
+    return train_dataset, eval_dataset, test_dataset
+
+def _get_chinesebert_dataset(which="15"):
+    """
+    ChineseBert for sighan
+    Mainly diff in no max_length and 'pinyin_idx' must be 8 * len('input_ids')
+    """
+    ddp_print("Loading ChineseBert Dataset !")
+    ddp_exec("os.system('date')")
+
+    train_data, eval_data, test_data = load_sighan_chinesebert(path_head="")
+    
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    ddp_print("Loaded successfully !")
+    ddp_exec("os.system('date')")
+
+    return train_dataset, eval_dataset, test_dataset
+
+def _get_chinesebert_mask_dataset(which="15"):
+    """
+    ChineseBert for sighan
+    Mainly diff in no max_length and 'pinyin_idx' must be 8 * len('input_ids')
+    """
+    ddp_print("Loading Masked ChineseBert Dataset !")
+    ddp_exec("os.system('date')")
+
+    train_data, eval_data, test_data = load_sighan_chinesebert_mask(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 

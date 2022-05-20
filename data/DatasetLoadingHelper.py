@@ -277,6 +277,174 @@ def load_sighan_gector(path_head=""):
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
 from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_chinesebert', _refresh=False)
+def load_sighan_chinesebert(path_head=""):
+    """
+    Tokenizer : 
+        import torch
+        from chinesebert import ChineseBertForMaskedLM, ChineseBertTokenizerFast, ChineseBertConfig
+        pretrained_model_name = "junnyu/ChineseBERT-base"
+
+        tokenizer = ChineseBertTokenizerFast.from_pretrained(pretrained_model_name)
+        chinese_bert = ChineseBertForMaskedLM.from_pretrained(pretrained_model_name)
+
+        text = "北京是[MASK]国的首都。"
+        inputs = tokenizer(text, return_tensors="pt")
+
+        with torch.no_grad():
+            o = chinese_bert(**inputs)
+            l = o.logits
+    """
+    print("Loading SigHan ChineseBert Dataset ...")
+
+    train_source_path = path_head + "./data/rawdata/sighan/raw/train.src"
+    train_target_path = path_head + "./data/rawdata/sighan/raw/train.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/raw/valid.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/raw/valid.tgt"#valid should be same to test ( sighan 15
+    test_source_path = path_head + "./data/rawdata/sighan/raw/test.src"
+    test_target_path = path_head + "./data/rawdata/sighan/raw/test.tgt"
+
+    train_source = read_csv(train_source_path)#[:2000]#[274144:]#for only sighan
+    train_target = read_csv(train_target_path)#[:2000]#[274144:]
+    
+    valid_source = read_csv(valid_source_path)
+    valid_target = read_csv(valid_target_path)
+
+    test_source = read_csv(test_source_path)
+    test_target = read_csv(test_target_path)
+
+    from chinesebert import ChineseBertTokenizerFast
+    pretrained_model_name = "junnyu/ChineseBERT-base"
+
+    tokenizer = ChineseBertTokenizerFast.from_pretrained(pretrained_model_name)
+
+    train_source_tok = tokenizer(train_source, padding=True, truncation=True, max_length=128)
+    train_target_tok = tokenizer(train_target, padding=True, truncation=True, max_length=128) 
+    valid_source_tok = tokenizer(valid_source, padding=True, truncation=True, max_length=128)
+    valid_target_tok = tokenizer(valid_target, padding=True, truncation=True, max_length=128) 
+    test_source_tok = tokenizer(test_source, padding=True, truncation=True, max_length=128) 
+    test_target_tok = tokenizer(test_target, padding=True, truncation=True, max_length=128) 
+
+    train_source_tok["labels"] = train_target_tok["input_ids"]
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+    test_source_tok["labels"] = test_target_tok["input_ids"]
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            #ugly fix for encoder model (the same length
+            features.append({key:inputs[key][i] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+
+    return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
+
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_chinesebert_holy', _refresh=False)
+def load_sighan_chinesebert_holy(path_head=""):
+    """
+        Holy
+    """
+    print("Loading Holy SigHan ChineseBert Dataset ...")
+
+    train_source_path = path_head + "./data/rawdata/sighan/holy/train.src"
+    train_target_path = path_head + "./data/rawdata/sighan/holy/train.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/holy/valid.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/holy/valid.tgt"#valid should be same to test ( sighan 15
+    test_source_path = path_head + "./data/rawdata/sighan/holy/test.src"
+    test_target_path = path_head + "./data/rawdata/sighan/holy/test.tgt"
+
+    train_source = read_csv(train_source_path)#[:2000]#[274144:]#for only sighan
+    train_target = read_csv(train_target_path)#[:2000]#[274144:]
+    
+    valid_source = read_csv(valid_source_path)
+    valid_target = read_csv(valid_target_path)
+
+    test_source = read_csv(test_source_path)
+    test_target = read_csv(test_target_path)
+
+    from chinesebert import ChineseBertTokenizerFast
+    pretrained_model_name = "junnyu/ChineseBERT-base"
+
+    tokenizer = ChineseBertTokenizerFast.from_pretrained(pretrained_model_name)
+
+    train_source_tok = tokenizer(train_source, padding=True, truncation=True, max_length=128)
+    train_target_tok = tokenizer(train_target, padding=True, truncation=True, max_length=128) 
+    valid_source_tok = tokenizer(valid_source, padding=True, truncation=True, max_length=128)
+    valid_target_tok = tokenizer(valid_target, padding=True, truncation=True, max_length=128) 
+    test_source_tok = tokenizer(test_source, padding=True, truncation=True, max_length=128) 
+    test_target_tok = tokenizer(test_target, padding=True, truncation=True, max_length=128) 
+
+    train_source_tok["labels"] = train_target_tok["input_ids"]
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+    test_source_tok["labels"] = test_target_tok["input_ids"]
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            #ugly fix for encoder model (the same length
+            features.append({key:inputs[key][i] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+
+    return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
+
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_chinesebert_mask', _refresh=False)
+def load_sighan_chinesebert_mask(path_head=""):
+    """
+    """
+    print("Loading SigHan ChineseBert Dataset ...")
+
+    train_source_path = path_head + "./data/rawdata/sighan/raw/train.src"
+    train_target_path = path_head + "./data/rawdata/sighan/raw/train.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/raw/valid.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/raw/valid.tgt"#valid should be same to test ( sighan 15
+    test_source_path = path_head + "./data/rawdata/sighan/raw/test.src"
+    test_target_path = path_head + "./data/rawdata/sighan/raw/test.tgt"
+
+    train_source = read_csv(train_source_path)#[:2000]#[274144:]#for only sighan
+    train_target = read_csv(train_target_path)#[:2000]#[274144:]
+    
+    valid_source = read_csv(valid_source_path)
+    valid_target = read_csv(valid_target_path)
+
+    test_source = read_csv(test_source_path)
+    test_target = read_csv(test_target_path)
+
+    from chinesebert import ChineseBertTokenizerFast
+    pretrained_model_name = "junnyu/ChineseBERT-base"
+
+    tokenizer = ChineseBertTokenizerFast.from_pretrained(pretrained_model_name)
+
+    train_source_tok = tokenizer(train_source, padding=True, truncation=True, max_length=128)
+    train_target_tok = tokenizer(train_target, padding=True, truncation=True, max_length=128) 
+    valid_source_tok = tokenizer(valid_source, padding=True, truncation=True, max_length=128)
+    valid_target_tok = tokenizer(valid_target, padding=True, truncation=True, max_length=128) 
+    test_source_tok = tokenizer(test_source, padding=True, truncation=True, max_length=128) 
+    test_target_tok = tokenizer(test_target, padding=True, truncation=True, max_length=128) 
+
+    train_source_tok["labels"] = train_target_tok["input_ids"]
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+    test_source_tok["labels"] = test_target_tok["input_ids"]
+
+    # a ugly mask to replace the 
+    def mask(source):
+        for i in range(len(source)):
+            for j in range(len(source[i]["input_ids"])):
+                if source[i]["input_ids"][j] != source[i]["labels"][j]:
+                    source[i]["input_ids"][j] = 103
+        return source
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            #ugly fix for encoder model (the same length
+            features.append({key:inputs[key][i] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+
+    return mask(transpose(train_source_tok)), mask(transpose(valid_source_tok)), mask(transpose(test_source_tok))
+
+
+from fastNLP import cache_results
 @cache_results(_cache_fp='cache/sighan_mask', _refresh=True)
 def load_sighan_mask(path_head=""):
     """
@@ -302,8 +470,8 @@ def load_sighan_mask(path_head=""):
     test_source = wash_n(read_csv(test_source_path))
     test_target = wash_n(read_csv(test_target_path))
 
-    valid_source = train_source[:1100]#for valid overfit problem
-    valid_target = train_target[:1100]
+    #valid_source = train_source[:1100]#for valid overfit problem
+    #valid_target = train_target[:1100]
 
     tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
 
@@ -338,6 +506,55 @@ def load_sighan_mask(path_head=""):
     print("Hint: Rough code here to mask will cause program slow")
 
     return mask(transpose(train_source_tok)), mask(transpose(valid_source_tok)), mask(transpose(test_source_tok))
+
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_holy', _refresh=False)
+def load_sighan_holy(path_head=""):
+    """
+        "Holy" means remvoe all the overlapped pair between train and test
+    """
+    print("Loading SigHan Holy Dataset ...")
+
+    train_source_path = path_head + "./data/rawdata/sighan/holy/train.src"
+    train_target_path = path_head + "./data/rawdata/sighan/holy/train.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/holy/valid.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/holy/valid.tgt"#valid should be same to test ( sighan 15
+    test_source_path = path_head + "./data/rawdata/sighan/holy/test.src"
+    test_target_path = path_head + "./data/rawdata/sighan/holy/test.tgt"
+
+    train_source = read_csv(train_source_path)#[:2000]#[274144:]#for only sighan
+    train_target = read_csv(train_target_path)#[:2000]#[274144:]
+    
+    valid_source = read_csv(valid_source_path)
+    valid_target = read_csv(valid_target_path)
+
+    test_source = read_csv(test_source_path)
+    test_target = read_csv(test_target_path)
+
+    tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
+
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
+
+    train_source_tok = tokenizer.batch_encode_plus(train_source, return_token_type_ids=False)#seems transformers max_length not work
+    train_target_tok = tokenizer.batch_encode_plus(train_target, return_token_type_ids=False)#remove padding=True, max_length=512
+    valid_source_tok = tokenizer.batch_encode_plus(valid_source, return_token_type_ids=False)
+    valid_target_tok = tokenizer.batch_encode_plus(valid_target, return_token_type_ids=False)
+    test_source_tok = tokenizer.batch_encode_plus(test_source, return_token_type_ids=False)
+    test_target_tok = tokenizer.batch_encode_plus(test_target, return_token_type_ids=False)
+
+    train_source_tok["labels"] = train_target_tok["input_ids"]
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+    test_source_tok["labels"] = test_target_tok["input_ids"]
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            #ugly fix for encoder model (the same length
+            features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+
+    return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
+
 
 from fastNLP import cache_results
 @cache_results(_cache_fp='cache/sighan_enchanted', _refresh=False)

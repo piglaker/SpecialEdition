@@ -19,11 +19,11 @@ from tqdm import tqdm
 
 class DDP_std_IO(io.StringIO):
     def write(self, txt):
-        #if os.environ["LOCAL_RANK"] != '0':
-        #    pass
-        #else:
-        #    sys.__stdout__.write(txt)
-        sys.__stdout__.write(txt)
+        if os.environ["LOCAL_RANK"] != '0':
+            pass
+        else:
+            sys.__stdout__.write(txt)
+        #sys.__stdout__.write(txt)
 
 class DDP_err_IO(io.StringIO):
     def write(self, txt):
@@ -123,12 +123,16 @@ def run():
         "roberta":"hfl/chinese-roberta-wwm-ext", \
         "macbert":"hfl/chinese-macbert-base", \
         "xlnet":"hfl/chinese-xlnet-base", \
-        "ChineseBert":"ShannonAI/ChineseBERT-base", \
+        "chinesebert":"ShannonAI/ChineseBERT-base", \
         "electra":"hfl/chinese-electra-180g-base-discriminator", \
+        "albert":"voidful/albert_chinese_base", \
+        "roformer":"junnyu/roformer_v2_chinese_char_large", \
+        "nezha":"peterchou/nezha-chinese-base", \
     }
 
     name = name_dict[training_args.pretrained_name]
 
+    ddp_print("The Train Dataset Name:" + training_args.dataset)
     ddp_print("Pretrained Model name_path:" + name)
 
     pretrained_csc_model = name#"hfl/chinese-macbert-base"#"junnyu/ChineseBERT-base"##"hfl/chinese-roberta-wwm-ext"#"bert-base-chinese"#None#"/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/milestone/ReaLiSe/pretrained"#None
