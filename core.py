@@ -66,6 +66,7 @@ def ddp_exec(command):
 
 def ddp_print(*something):
     """
+    out of time
     """
     if os.environ["LOCAL_RANK"] != '0':
         return
@@ -95,6 +96,7 @@ class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     copy_weight:float = field(default=0.5, metadata={"help":"copy weight"})
     num_gpus:int = field(default=4, metadata={"help":"num_gpus"})
     pretrained_name:str = field(default="roberta", metadata={"help":"pretrained_name"})
+    log_path:str = field(default="Recent_train.log", metadata={"help":"log path or name"})
 
 class mydataset(Dataset):
     def __init__(self, data):
@@ -133,7 +135,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
     """
     model = None
 
-    ddp_print("Hint: Loading Model " + "*"*5 + model_name + "*"*5)
+    print("Hint: Loading Model " + "*"*5 + model_name + "*"*5)
 
     if model_name == "MLP":
         from models.bert.modeling_bert_v3 import BertModelForCSC as ProtoModel
@@ -164,7 +166,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         from transformers import GPT2LMHeadModel as ProtoModel
     elif model_name is None or model_name == "MaskedLM":
         if training_args.pretrained_name == "chinesebert":
-            ddp_print("Hint: Load ChineseBert MaskedLM")
+            print("Hint: Load ChineseBert MaskedLM")
             from chinesebert import ChineseBertConfig, ChineseBertForMaskedLM 
             config = ChineseBertConfig.from_pretrained(pretrained_model_name_or_path)
             model = ChineseBertForMaskedLM.from_pretrained(pretrained_model_name_or_path, config=config)
@@ -174,10 +176,10 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
             model = RoFormerForMaskedLM.from_pretrained( pretrained_model_name_or_path )
             return model
 
-        ddp_print("Hint: Load Default BertForMaskedLM.")
+        print("Hint: Load Default BertForMaskedLM.")
         from transformers import BertForMaskedLM as ProtoModel
     else:
-        ddp_print("Hint: No such " + model_name)
+        print("Hint: No such " + model_name)
         exit(0)
 
     if model_name != "Proto":
@@ -191,7 +193,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
                         )
 
     if not model:
-        ddp_print("Warning: wrong model name ! Check the core.py  ")
+        print("Warning: wrong model name ! Check the core.py  ")
         exit()
     return model
 
@@ -205,7 +207,7 @@ def get_dataset(training_args):
         Good day!
     """
 
-    ddp_print("Loading Dataset !")
+    print("Loading Dataset !")
     ddp_exec("os.system('date')")
 
     if training_args.dataset == "ctc2021":
@@ -213,13 +215,13 @@ def get_dataset(training_args):
     elif training_args.dataset == "sighan":
         train_data, eval_data, test_data = load_sighan(path_head="")
     else:
-        ddp_print("Error: No such dataset ")
-        ddp_print(training_args.dataset)
+        print("Error: No such dataset ")
+        print(training_args.dataset)
         exit(0)
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loading Succeed !")
+    print("Loading Succeed !")
     ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
@@ -234,7 +236,7 @@ def get_dataset_plus(training_args):
         Good day!
     """
 
-    ddp_print("Loading Dataset !")
+    print("Loading Dataset !")
     ddp_exec("os.system('date')")
 
     if training_args.dataset == "ctc2021":
@@ -263,16 +265,16 @@ def get_dataset_plus(training_args):
         elif 'expand' in training_args.dataset:
             return _get_expand_dataset()
         else:
-            ddp_print("Unclear data type, load default raw sighan")
+            print("Unclear data type, load default raw sighan")
             return _get_raw_dataset()
     else:
-        ddp_print("Error: No such dataset ")
-        ddp_print(training_args.dataset)
+        print("Error: No such dataset ")
+        print(training_args.dataset)
         exit(0)
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loading Succeed !")
+    print("Loading Succeed !")
     ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
@@ -282,14 +284,14 @@ def _get_enchanted_dataset(which="15"):
     """
     Gector for sighan
     """
-    ddp_print("Loading Enchanted Dataset !")
+    print("Loading Enchanted Dataset !")
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_enchanted(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loaded successfully !")
+    print("Loaded successfully !")
     ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
@@ -299,14 +301,14 @@ def _get_raw_dataset(which="15"):
     """
     Gector for sighan
     """
-    ddp_print("Loading Raw Dataset !")
+    print("Loading Raw Dataset !")
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loaded successfully !")
+    print("Loaded successfully !")
     ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
@@ -315,14 +317,14 @@ def _get_holy_dataset(which="15"):
     """
     Gector for sighan
     """
-    ddp_print("Loading Holy Dataset !")
+    print("Loading Holy Dataset !")
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_holy(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loaded successfully !")
+    print("Loaded successfully !")
     ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
@@ -332,14 +334,14 @@ def _get_mask_dataset(which="15"):
     """
     Gector for sighan
     """
-    ddp_print("Loading MASK Dataset !")
+    print("Loading MASK Dataset !")
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_mask(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loaded successfully !")
+    print("Loaded successfully !")
     ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
@@ -349,14 +351,14 @@ def _get_Gector_dataset(which="15"):
     """
     Gector for sighan
     """
-    ddp_print("Loading GECTOR Dataset !")
+    print("Loading GECTOR Dataset !")
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_gector(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loaded successfully !")
+    print("Loaded successfully !")
     ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
@@ -366,14 +368,14 @@ def _get_chinesebert_holy_dataset(which="15"):
     ChineseBert for sighan
     Mainly diff in no max_length and 'pinyin_idx' must be 8 * len('input_ids')
     """
-    ddp_print("Loading ChineseBert Holy Dataset !")
+    print("Loading ChineseBert Holy Dataset !")
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_chinesebert_holy(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loaded successfully !")
+    print("Loaded successfully !")
     ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
@@ -383,14 +385,14 @@ def _get_chinesebert_dataset(which="15"):
     ChineseBert for sighan
     Mainly diff in no max_length and 'pinyin_idx' must be 8 * len('input_ids')
     """
-    ddp_print("Loading ChineseBert Dataset !")
+    print("Loading ChineseBert Dataset !")
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_chinesebert(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loaded successfully !")
+    print("Loaded successfully !")
     ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
@@ -400,14 +402,14 @@ def _get_chinesebert_mask_dataset(which="15"):
     ChineseBert for sighan
     Mainly diff in no max_length and 'pinyin_idx' must be 8 * len('input_ids')
     """
-    ddp_print("Loading Masked ChineseBert Dataset !")
+    print("Loading Masked ChineseBert Dataset !")
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_chinesebert_mask(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loaded successfully !")
+    print("Loaded successfully !")
     ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
@@ -417,8 +419,8 @@ def _get_ReaLiSe_dataset(which="15"):
     """
     For its 
     """
-    ddp_print("Loading ReaLiSe Dataset !")
-    ddp_print("Hint: The Data You loading now is the preprocessed sighan from ReaLise, ")
+    print("Loading ReaLiSe Dataset !")
+    print("Hint: The Data You loading now is the preprocessed sighan from ReaLise, ")
     ddp_exec("os.system('date')")
 
     path = "../SE_tmp_back/milestone/ReaLiSe/data/"
@@ -427,7 +429,7 @@ def _get_ReaLiSe_dataset(which="15"):
     eval_dataset = pickle.load(open(path + "test.sighan" + which + ".pkl", "rb"))
     test_dataset = pickle.load(open(path + "test.sighan" + which + ".pkl", "rb"))
 
-    ddp_print("Hint: Using **SIGHAN" + which + "** for eval & test !")
+    print("Hint: Using **SIGHAN" + which + "** for eval & test !")
 
     def trans2mydataset(features):
         new = []
@@ -440,23 +442,23 @@ def _get_ReaLiSe_dataset(which="15"):
         
         return mydataset(new)
 
-    ddp_print("Loaded successfully !")
+    print("Loaded successfully !")
     ddp_exec("os.system('date')")
-    ddp_print("over")
+    print("over")
     return trans2mydataset(train_dataset), trans2mydataset(eval_dataset), trans2mydataset(test_dataset)
 
 def _get_expand_dataset(which="15"):
     """
     NLPcc and HSK Expand for sighan
     """
-    ddp_print("Loading Expand Dataset !")
+    print("Loading Expand Dataset !")
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_expand(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loaded successfully !")
+    print("Loaded successfully !")
     ddp_exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
@@ -464,7 +466,7 @@ def _get_expand_dataset(which="15"):
 def _get_sighan_test(which, path_head=""):
     """
     """
-    ddp_print("Loading Dataset !")
+    print("Loading Dataset !")
     ddp_exec("os.system('date')")
     if which == "13":
         test_data = load_sighan13_test(path_head)
@@ -473,13 +475,13 @@ def _get_sighan_test(which, path_head=""):
     elif which == "15":
         test_data = load_sighan15_test(path_head)
     else:
-        ddp_print("Error: No such dataset ")
-        ddp_print(which)
+        print("Error: No such dataset ")
+        print(which)
         exit(0)
 
     test_dataset = mydataset(test_data)
 
-    ddp_print("Loading Succeed !")
+    print("Loading Succeed !")
     ddp_exec("os.system('date')")
 
     return test_dataset
@@ -488,7 +490,7 @@ def _get_sighan_test(which, path_head=""):
 def _get_lattice_dataset(dataset="sighan", path_head="."):
     """
     """
-    ddp_print("Loading Dataset !")
+    print("Loading Dataset !")
     ddp_exec("os.system('date')")
 
     if dataset == "sighan":
@@ -504,7 +506,7 @@ def _get_lattice_dataset(dataset="sighan", path_head="."):
 def _get_magic_plus_dataset(dataset="sighan", path_head=""):
     """
     """
-    ddp_print("Loading Dataset !")
+    print("Loading Dataset !")
     ddp_exec("os.system('date')")
 
     if dataset == "sighan":
@@ -514,7 +516,7 @@ def _get_magic_plus_dataset(dataset="sighan", path_head=""):
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loading Succeed !")
+    print("Loading Succeed !")
 
     ddp_exec("os.system('date')")
 
@@ -524,7 +526,7 @@ def _get_magic_plus_dataset(dataset="sighan", path_head=""):
 def _get_magic_dataset(dataset="sighan", path_head=""):
     """
     """
-    ddp_print("Loading Dataset !")
+    print("Loading Dataset !")
     ddp_exec("os.system('date')")
 
     if dataset == "sighan":
@@ -534,7 +536,7 @@ def _get_magic_dataset(dataset="sighan", path_head=""):
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loading Succeed !")
+    print("Loading Succeed !")
 
     ddp_exec("os.system('date')")
 
@@ -544,7 +546,7 @@ def _get_magic_dataset(dataset="sighan", path_head=""):
 def _get_magic_lang8_dataset(dataset="sighan", path_head=""):
     """
     """
-    ddp_print("Loading Dataset !")
+    print("Loading Dataset !")
     ddp_exec("os.system('date')")
 
     if dataset == "sighan":
@@ -554,7 +556,7 @@ def _get_magic_lang8_dataset(dataset="sighan", path_head=""):
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loading Succeed !")
+    print("Loading Succeed !")
 
     ddp_exec("os.system('date')")
 
@@ -564,7 +566,7 @@ def _get_magic_lang8_dataset(dataset="sighan", path_head=""):
 def _get_magic_expand_dataset(dataset="sighan", path_head=""):
     """
     """
-    ddp_print("Loading Dataset !")
+    print("Loading Dataset !")
     ddp_exec("os.system('date')")
 
     if dataset == "sighan":
@@ -574,7 +576,7 @@ def _get_magic_expand_dataset(dataset="sighan", path_head=""):
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loading Succeed !")
+    print("Loading Succeed !")
 
     ddp_exec("os.system('date')")
 
@@ -584,7 +586,7 @@ def _get_magic_expand_dataset(dataset="sighan", path_head=""):
 def _get_super_magic_dataset(dataset="sighan", path_head=""):
     """
     """
-    ddp_print("Loading Dataset !")
+    print("Loading Dataset !")
     ddp_exec("os.system('date')")
 
     if dataset == "sighan":
@@ -594,7 +596,7 @@ def _get_super_magic_dataset(dataset="sighan", path_head=""):
 
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
-    ddp_print("Loading Succeed !")
+    print("Loading Succeed !")
 
     ddp_exec("os.system('date')")
 
@@ -603,13 +605,13 @@ def _get_super_magic_dataset(dataset="sighan", path_head=""):
 
 def get_metrics(training_args):
     if "sighan" in training_args.dataset:
-        ddp_print("Hint: Using aligned sighan F1_score as metric")
+        print("Hint: Using aligned sighan F1_score as metric")
         return _get_metrics(training_args)
     if "ctc2021" in training_args.dataset :
-        ddp_print("Hint: Using Seq2Seq ctc2021 score as metric")
+        print("Hint: Using Seq2Seq ctc2021 score as metric")
         return _get_seq2seq_metrics(training_args)
     else:
-        ddp_print("Error when getting metrics.")
+        print("Error when getting metrics.")
         exit(0)
 
 
@@ -637,9 +639,9 @@ def _get_metrics(training_args):
         sent_p, sent_n = 0, 0
 
         for i in range(len(sources)):
-            #ddp_print(sources[i])
-            #ddp_print(preds[i])
-            #ddp_print(labels[i])
+            #print(sources[i])
+            #print(preds[i])
+            #print(labels[i])
 
             source, pred, label = sources[i], preds[i], labels[i]
 
@@ -658,42 +660,42 @@ def _get_metrics(training_args):
             pred = np.concatenate((pred, np.array([ 0 for i in range(len(label) - len(pred))])), axis=0)
 
             if len(pred) != len(source) or len(label) != len(source):
-                ddp_print("Warning : something goes wrong when compute metrics, check codes now.")
-                ddp_print(len(source), len(pred), len(label))
-                ddp_print("source: ", source)
-                ddp_print("pred: ", pred)
-                ddp_print("label:", label)
-                ddp_print("raw source: ", sources[i])
-                ddp_print("raw pred: ", preds[i])
-                ddp_print("raw label:", labels[i])
+                print("Warning : something goes wrong when compute metrics, check codes now.")
+                print(len(source), len(pred), len(label))
+                print("source: ", source)
+                print("pred: ", pred)
+                print("label:", label)
+                print("raw source: ", sources[i])
+                print("raw pred: ", preds[i])
+                print("raw label:", labels[i])
                 exit()
             try:
                 (pred != source).any()
             except:
-                ddp_print(pred, source)
-                ddp_print(" Error Exit ")
+                print(pred, source)
+                print(" Error Exit ")
                 exit(0)
 
             #if i < 5:
-            #ddp_print(source)
-            #ddp_print(pred)
-            #ddp_print(label)
-            #ddp_print((pred != source).any())
-            #ddp_print((pred == label).all())
-            #ddp_print((label != source).any())
+            #print(source)
+            #print(pred)
+            #print(label)
+            #print((pred != source).any())
+            #print((pred == label).all())
+            #print((label != source).any())
 
             if training_args.model_name != "Gector":
                 # label: [101, 2,... 3, 102]
                 if (pred != source).any():
                     sent_p += 1
-                    #ddp_print("sent_p")
+                    #print("sent_p")
                     if (pred == label).all():
                         tp += 1
-                        # ddp_print("tp")
+                        # print("tp")
 
                 if (label != source).any():
                     sent_n += 1
-                    #ddp_print("sent_n")
+                    #print("sent_n")
             else:
                 # label : [ 1,1,1,1,1 ]
                 if (pred != 1).any():
@@ -705,7 +707,7 @@ def _get_metrics(training_args):
                 if (label != 1).any():
                     sent_n += 1
 
-        #ddp_print(tp, sent_p, sent_n)
+        #print(tp, sent_p, sent_n)
 
         precision = tp / (sent_p + 1e-10)
 
@@ -716,7 +718,7 @@ def _get_metrics(training_args):
         Turtle = time.time() - Achilles
 
         if F1_score < 0.05:
-            ddp_print("Warning : metric score is too Low , maybe something goes wrong, check your codes please.")
+            print("Warning : metric score is too Low , maybe something goes wrong, check your codes please.")
             #exit(0)
         return {"F1_score": float(F1_score), "Precision":float(precision),  "Recall":float(recall),"Metric_time":Turtle}
 
@@ -764,15 +766,15 @@ def _get_seq2seq_metrics(training_args):
 
             from utils.levenshtein import levenshtein4seq
             
-            # ddp_print(source.shape, pred.shape, label.shape)
-            # ddp_print(source)
-            # ddp_print(pred)
-            # ddp_print(label)
+            # print(source.shape, pred.shape, label.shape)
+            # print(source)
+            # print(pred)
+            # print(label)
 
             pred_edits, gold_edits = levenshtein4seq(source, pred, only_edits=True), levenshtein4seq(source, label, only_edits=True)
 
-            # ddp_print(pred_edits)
-            # ddp_print(gold_edits)
+            # print(pred_edits)
+            # print(gold_edits)
 
             # gold_pos = [ edit[1] for edit in gold_edits]
 
@@ -822,7 +824,7 @@ def _get_seq2seq_metrics(training_args):
         F1_score_correct, Precision_correct, Recall_correct = compute_f1score(tp_correct, p, n)
 
         if F1_score_detect < 0.1 or F1_score_correct < 0.1:
-            ddp_print("Warning : metric F1_score is too Low , maybe something goes wrong, check your codes please.")
+            print("Warning : metric F1_score is too Low , maybe something goes wrong, check your codes please.")
 
         return {"F1_score":float( 0.8 * F1_score_detect + 0.2 * F1_score_correct ), 
                 "F1_score_detect": float(F1_score_detect), 
@@ -882,7 +884,7 @@ def get_lattice_metrics():
 
 
 if __name__ == "__main__":
-    ddp_print("Lets test !")
+    print("Lets test !")
 
     training_args = argument_init(TrainingArguments)
 
@@ -890,5 +892,5 @@ if __name__ == "__main__":
 
     compute_metrics = get_metrics(None)
 
-    ddp_print("Done")
+    print("Done")
 

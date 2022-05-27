@@ -28,7 +28,7 @@ if [ "$model_name" == "Proto" ];then
 
     name=$model_name"_mask_cls_copy"$copy_weight"_cl"$cl_weight"_repeat"$repeat_weight"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
 else
-    name=$model_name"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size"_test"
+    name=$model_name"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
 fi
 
 # echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
@@ -74,33 +74,35 @@ fi
 
 echo "Use GPUs: "$available_gpus
 
-#bert
-#roberta
-#macbert
-#xlnet
-#chinesebert
-#electra
-#albert
-#roformer
-#nezha
-
-pretrained_name=macbert # pretrain bert type
+pretrained_name=roberta # pretrain bert type: bert roberta macbert xlnet chinesebert electra albert roformer nezha
 
 VALUE=1
 
-#seed 153603
-#lr  #7e-5
+head=ConfusionCluster/3
 
-CUDA_VISIBLE_DEVICES=$available_gpus OMP_NUM_THREADS=$VALUE torchrun --nproc_per_node=$num_gpus --master_port 6393 --nnodes=1 --node_rank=0 main.py \
+output_dir=./tmp/$dataset/$head/$pretrained_name
+
+if [ "$model_name" == "Proto" ];then
+    name=$model_name"_mask_cls_copy"$copy_weight"_cl"$cl_weight"_repeat"$repeat_weight"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
+else
+    name=$model_name"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size"_test"
+fi
+
+log_path=logs/$task/$dataset/$head/$pretrained_name/$name.log
+
+#seed 153603 27 3472
+#lr  5e-5 7e-5 6e-5
+
+CUDA_VISIBLE_DEVICES=$available_gpus OMP_NUM_THREADS=$VALUE torchrun --nproc_per_node=$num_gpus --master_port 6500 --nnodes=1 --node_rank=0 main.py \
     --sharded_ddp zero_dp_2 \
-    --seed 27 \
+    --seed 3472 \
     --do_train \
     --do_eval \
     --do_predict \
     --fp16 True \
     --disable_tqdm False \
     --dataloader_num_workers 0 \
-    --output_dir ./tmp/$dataset/ConfusionCluster/2/$pretrained_name \
+    --output_dir $output_dir \
     --per_device_train_batch_size $batch_size \
     --per_device_eval_batch_size $batch_size \
     --eval_accumulation_steps 1 \
@@ -112,7 +114,7 @@ CUDA_VISIBLE_DEVICES=$available_gpus OMP_NUM_THREADS=$VALUE torchrun --nproc_per
     --metric_for_best_model F1_score \
     --dataset $dataset \
     --eval_dataset $eval_dataset \
-    --learning_rate 5e-5 \
+    --learning_rate 6e-5 \
     --warmup_steps 2500 \
     --eval_steps 1000 \
     --save_total_limit 1 \
@@ -124,4 +126,4 @@ CUDA_VISIBLE_DEVICES=$available_gpus OMP_NUM_THREADS=$VALUE torchrun --nproc_per
     --copy_weight $copy_weight \
     --num_gpus $num_gpus \
     --pretrained_name $pretrained_name \
-#> logs/$task/$dataset/$name.log 2>&1 &
+    --log_path $log_path \

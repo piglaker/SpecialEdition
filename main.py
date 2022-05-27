@@ -17,12 +17,14 @@ import io
 import sys
 from tqdm import tqdm
 
+
 class DDP_std_IO(io.StringIO):
     def write(self, txt):
         if os.environ["LOCAL_RANK"] != '0':
             pass
         else:
             sys.__stdout__.write(txt)
+
         #sys.__stdout__.write(txt)
 
 class DDP_err_IO(io.StringIO):
@@ -41,7 +43,7 @@ import time
 
 import argparse
 from dataclasses import dataclass, field
-from typing import Optional,Dict, Union, Any, Tuple, List
+from typing import Optional, Dict, Union, Any, Tuple, List
 from joblib import parallel_backend
 
 import fitlog
@@ -63,7 +65,7 @@ from transformers import (
 )
 
 from transformers import TrainingArguments
-from transformers import trainer_utils, training_args
+#from transformers import trainer_utils, training_args
 from transformers.trainer_pt_utils import nested_detach
 from transformers import BertForMaskedLM
 from transformers.file_utils import PaddingStrategy
@@ -98,21 +100,49 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-logger.info("???")
-
-
 def adapt_learning_rate(training_args):
     training_args.learning_rate = (training_args.num_gpus * training_args.per_device_train_batch_size / 128 )* 7e-5
-    ddp_print("Adapted Learning_rate:", training_args.learning_rate)
+    print("Adapted Learning_rate:", training_args.learning_rate)
     return training_args
 
+class DDP_std_saver(io.StringIO):
+    def __init__(self, filename="Default.log"):
+        self.terminal = sys.__stdout__
+        dirs = "/".join(filename.split("/")[:-1])
+        if not os.path.exists(dirs):
+            os.makedirs(dirs)
+        self.log = open(filename, "w+")
+ 
+    def write(self, txt):
+        if os.environ["LOCAL_RANK"] != '0':
+            pass
+        else:
+            self.terminal.write(txt)
+            self.log.write(txt)
+
+class DDP_err_saver(io.StringIO):
+    def __init__(self, filename="Default.log"):
+        self.terminal = sys.__stderr__
+        self.log = open(filename, "w+")
+ 
+    def write(self, txt):
+        if os.environ["LOCAL_RANK"] != '0':
+            pass
+        else:
+            self.terminal.write(txt)
+            self.log.write(txt)
 
 def run():
     # Args
     training_args = argument_init(MySeq2SeqTrainingArguments)
+    
+    sys.stdout = DDP_std_saver(training_args.log_path)
+    sys.stderr = DDP_err_saver("Recent_Error.log")
+    
+    print("log_path:", training_args.log_path)
 
     #fitlogging(training_args)
-    
+
     set_seed(training_args.seed)
 
     training_args = adapt_learning_rate(training_args)
@@ -132,8 +162,8 @@ def run():
 
     name = name_dict[training_args.pretrained_name]
 
-    ddp_print("The Train Dataset Name:" + training_args.dataset)
-    ddp_print("Pretrained Model name_path:" + name)
+    print("The Train Dataset Name:" + training_args.dataset)
+    print("Pretrained Model name_path:" + name)
 
     pretrained_csc_model = name#"hfl/chinese-macbert-base"#"junnyu/ChineseBERT-base"##"hfl/chinese-roberta-wwm-ext"#"bert-base-chinese"#None#"/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/milestone/ReaLiSe/pretrained"#None
 
