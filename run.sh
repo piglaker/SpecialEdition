@@ -8,7 +8,7 @@ datetime=${d// /-}
 #use_extra_dataset=False
 
 task="sighan"
-dataset="sighan_holy"
+dataset="sighan_raw"
 model_name="MaskedLM"
 
 epoch=10
@@ -74,7 +74,7 @@ fi
 
 echo "Use GPUs: "$available_gpus
 
-pretrained_name=roberta # pretrain bert type: bert roberta macbert xlnet chinesebert electra albert roformer nezha
+pretrained_name=chinesebert # pretrain bert type: [ bert roberta macbert xlnet chinesebert electra albert roformer nezha ]
 
 VALUE=1
 
@@ -85,7 +85,7 @@ output_dir=./tmp/$dataset/$head/$pretrained_name
 if [ "$model_name" == "Proto" ];then
     name=$model_name"_mask_cls_copy"$copy_weight"_cl"$cl_weight"_repeat"$repeat_weight"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
 else
-    name=$model_name"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size"_test"
+    name=$model_name"_"$pretrained_name"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
 fi
 
 log_path=logs/$task/$dataset/$head/$pretrained_name/$name.log

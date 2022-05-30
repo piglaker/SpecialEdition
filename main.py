@@ -123,7 +123,13 @@ class DDP_std_saver(io.StringIO):
 class DDP_err_saver(io.StringIO):
     def __init__(self, filename="Default.log"):
         self.terminal = sys.__stderr__
-        self.log = open(filename, "w+")
+        dirs = "/".join(filename.split("/")[:-1])
+        if not os.path.exists(dirs):
+            os.makedirs(dirs)
+        if os.environ["LOCAL_RANK"] != '0':
+            pass
+        else: 
+            self.log = open(filename, "w+")
  
     def write(self, txt):
         if os.environ["LOCAL_RANK"] != '0':
@@ -137,7 +143,7 @@ def run():
     training_args = argument_init(MySeq2SeqTrainingArguments)
     
     sys.stdout = DDP_std_saver(training_args.log_path)
-    sys.stderr = DDP_err_saver("Recent_Error.log")
+    sys.stderr = DDP_err_saver(training_args.log_path)#"Recent_Error.log")
     
     print("log_path:", training_args.log_path)
 
