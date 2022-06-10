@@ -333,7 +333,7 @@ def load_sighan_chinesebert(path_head=""):
         features = []
         for i in tqdm(range(len(inputs["input_ids"]))):
             #ugly fix for encoder model (the same length
-            features.append({key:inputs[key][i] for key in inputs.keys()}) #we fix here (truncation 
+            features.append({key:inputs[key][i] for key in inputs.keys()}) 
         return features 
 
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)

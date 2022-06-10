@@ -198,7 +198,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
     return model
 
 
-def get_dataset(training_args):
+def get_dataset(dataset, path_head):
     """
     preprocess wrapped in load_ctc2021
     return : mydate
@@ -208,12 +208,12 @@ def get_dataset(training_args):
     """
 
     print("Loading Dataset !")
-    ddp_exec("os.system('date')")
+    exec("os.system('date')")
 
-    if training_args.dataset == "ctc2021":
-        train_data, eval_data, test_data = load_ctc2021(training_args.use_extra_dataset)
-    elif training_args.dataset == "sighan":
-        train_data, eval_data, test_data = load_sighan(path_head="")
+    if dataset == "ctc2021":
+        train_data, eval_data, test_data = load_ctc2021()
+    elif dataset == "sighan":
+        train_data, eval_data, test_data = load_sighan(path_head=path_head)
     else:
         print("Error: No such dataset ")
         print(training_args.dataset)
@@ -222,7 +222,7 @@ def get_dataset(training_args):
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
     print("Loading Succeed !")
-    ddp_exec("os.system('date')")
+    exec("os.system('date')")
 
     return train_dataset, eval_dataset, test_dataset
 

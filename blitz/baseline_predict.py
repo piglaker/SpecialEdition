@@ -39,7 +39,7 @@ from core import get_metrics, argument_init, get_dataset
 from lib import subTrainer  
 from models.bert.modeling_bert_v3 import BertForMaskedLM_v2 
 
-from bert_MaskedLM import MyDataCollatorForSeq2Seq
+from lib import FoolDataCollatorForSeq2Seq
 
 
 def top_k_top_p_filtering(logits, top_k=0, top_p=1.0, filter_value=-float("Inf"), min_tokens_to_keep=2):
@@ -80,7 +80,7 @@ def top_k_top_p_filtering(logits, top_k=0, top_p=1.0, filter_value=-float("Inf")
     return logits
 
 
-metric = get_metrics()
+#metric = get_metrics()
 
 train_dataset, eval_dataset, test_dataset= get_dataset("sighan", "../") 
 
@@ -90,9 +90,9 @@ tokenizer = AutoTokenizer.from_pretrained(
     tokenizer_model_name_path
 )
 
-preprocess = MyDataCollatorForSeq2Seq(tokenizer)
+preprocess = FoolDataCollatorForSeq2Seq(tokenizer)
 
-model = BertForMaskedLM.from_pretrained("/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/tmp/sighan/bert_MaskedLM_base_raw.epoch10.bs128")
+model = BertForMaskedLM.from_pretrained("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/tmp/sighan_holy/ConfusionCluster/2/bert")#/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/tmp/sighan/bert_MaskedLM_base_raw.epoch10.bs128")
 
 logits = model(**preprocess([test_dataset[0]])).logits
 
@@ -118,58 +118,58 @@ tp2 = 0
 
 for i in tqdm(range(0, len(test_dataset) // bs + 1)):
     
-    batch = test_dataset[ i*bs : (i+1) *bs]
+    batch = preprocess(test_dataset[ i*bs : (i+1) *bs])
     
     with torch.no_grad():
-        logits = model(**preprocess(batch)).logits
+        logits = model(**batch).logits
 
     #pred = torch.argmax(torch.softmax(logits, 2), -1)
     #print(logits.shape)
     topks = []
 
     for i in logits:
-        #topks.append( torch.softmax(i, dim=1).topk(5, dim=1)[-1].T.reshape(5, -1) )
+        topks.append( torch.softmax(i, dim=1).topk(5, dim=1)[-1])#.T.reshape(5, -1) )
         #print( torch.softmax(i, dim=1).topk(2, dim=1)[0] )
-        tmp = top_k_top_p_filtering( i, top_k=5)  #top_p=0.8)
-        topks.append(tmp)
-        print(tmp.shape)
-        exit()
+        #print(logits)
+        #exit()
+        #tmp = top_k_top_p_filtering( torch.softmax(i,dim=1), top_k=5)  #top_p=0.8)
+        
+        #print(tmp)
+        #topks.append(tmp)
+        #print(tmp.shape)
+        #exit()
         #print(topks)
         #exit()
-    labels = torch.tensor([i["labels"] for i in batch])
+    labels = batch["labels"] #torch.tensor([i["labels"] for i in batch])
     labels = [ i[ i != -100] for i in labels ]
-    #labels = [ i[ i != -101] for i in labels ]
-    #labels = [ i[ i != -102] for i in labels ]tmp 
     labels = [ i[ i != 0] for i in labels ]
     
     cut_topks = []
-    for j in range(len(batch)):
+    for j in range(len(batch["input_ids"])):
 
-        src, top5, label = torch.tensor(batch[j]["input_ids"]), topks[j], labels[j]
+        src, top5, label = batch["input_ids"][j], topks[j], labels[j]
 
         src = src[ src != -100]
         src = src[ src != 0]
 
-        #print(top5.shape, label.shape)
+        tmp = top5[:label.shape[0], :]
         
-        tmp = top5[:, :label.shape[0]]
+        pred = tmp[:, 0]
         
-        #print(tmp.shape, tmp.T.reshape(-1,5) == label.view(-1, 1))
-        
-        res = (tmp.T == label.view(-1, 1)).sum().item()
-        
-        sent_p += 1
-        if res == label.shape[0]:
-            tp += 1
+        res = (tmp == label.unsqueeze(-1)).sum(dim=1).sum()
 
-        if ( src == label).sum().item() != label.shape[0]:
+        if ( pred != src ).any() :
+            sent_p += 1
+            if (res == label.shape[0]):
+            #if (pred == label).all(): 
+                tp += 1
+
+        if ( src != label).any():
             sent_n += 1
-            if res == label.shape[0]:
-                tp2 += 1
 
 precision = tp / (sent_p + 1e-10)
 
-recall = tp2 / (sent_n + 1e-10)
+recall = tp / (sent_n + 1e-10)
 
 F1_score = 2 * precision * recall / (precision + recall + 1e-10)
     
