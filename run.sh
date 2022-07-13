@@ -75,7 +75,7 @@ fi
 epoch=10
 batch_size=64
 
-echo "Use GPUs: "$available_gpus
+echo "Use GPUs: "${available_gpus}
 
 pretrained_name=roberta # pretrain bert type: [ bert roberta macbert xlnet chinesebert electra albert roformer nezha ]
 
@@ -98,9 +98,10 @@ log_path=logs/${task}/${dataset}/${head}/${model_name}/${pretrained_name}/${name
 #lr  5e-5 7e-5 6e-5
 
 rm Recent_Note.log
-ln -s $log_path Recent_Note.log
+echo "Log_path: "${log_path}
+ln -s ${log_path} Recent_Note.log
 
-CUDA_VISIBLE_DEVICES=$available_gpus OMP_NUM_THREADS=$VALUE torchrun --nproc_per_node=$num_gpus --master_port 6500 --nnodes=1 --node_rank=0 \
+CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} torchrun --nproc_per_node=${num_gpus} --master_port 6500 --nnodes=1 --node_rank=0 \
     main.py \
     --sharded_ddp zero_dp_2 \
     --seed 3472 \
@@ -110,28 +111,28 @@ CUDA_VISIBLE_DEVICES=$available_gpus OMP_NUM_THREADS=$VALUE torchrun --nproc_per
     --fp16 False \
     --disable_tqdm False \
     --dataloader_num_workers 0 \
-    --output_dir $output_dir \
-    --per_device_train_batch_size $batch_size \
-    --per_device_eval_batch_size $batch_size \
+    --output_dir ${output_dir} \
+    --per_device_train_batch_size ${batch_size} \
+    --per_device_eval_batch_size ${batch_size} \
     --eval_accumulation_steps 1 \
-    --num_train_epochs $epoch \
+    --num_train_epochs ${epoch} \
     --evaluation_strategy epoch \
     --save_strategy epoch \
     --load_best_model_at_end \
     --dataloader_pin_memory True \
     --metric_for_best_model F1_score \
-    --dataset $dataset \
-    --eval_dataset $eval_dataset \
+    --dataset ${dataset} \
+    --eval_dataset ${eval_dataset} \
     --learning_rate 6e-5 \
     --warmup_steps 2500 \
     --eval_steps 1000 \
     --save_total_limit 1 \
-    --model_name $model_name \
-    --use_extra_dataset $use_extra_dataset \
-    --fix_cls $fix_cls \
-    --cl_weight $cl_weight \
-    --repeat_weight $repeat_weight \
-    --copy_weight $copy_weight \
-    --num_gpus $num_gpus \
-    --pretrained_name $pretrained_name \
-    --log_path $log_path \
+    --model_name ${model_name} \
+    --use_extra_dataset ${use_extra_dataset} \
+    --fix_cls ${fix_cls} \
+    --cl_weight ${cl_weight} \
+    --repeat_weight ${repeat_weight} \
+    --copy_weight ${copy_weight} \
+    --num_gpus ${num_gpus} \
+    --pretrained_name ${pretrained_name} \
+    --log_path ${log_path} \
