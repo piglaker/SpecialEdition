@@ -6,10 +6,10 @@
 3.`bash run.sh`
 
 
-# use ./scripts/sighan/generate.py to generate data in ./data/rawdata/sighan
+### use ./scripts/sighan/generate.py to generate data in ./data/rawdata/sighan
 
 
-# Important:
+### Important:
     ./data
     ./models
     ./logs
