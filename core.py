@@ -161,7 +161,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         pretrained_model_name_or_path="fnlp/bart-large-chinese"# '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
     elif model_name == "Proto":
         print("Hint: Load Proto self-Distill Contrastive Bert (NAACL2022)")
-        from models.bert.modeling_bert_v4 import ProtoModel as ProtoModel
+        from models.bert.modeling_bert_v4 import ProtoModel_v2 as ProtoModel
     elif model_name == "Gector":
         from models.bert.modeling_bert_v3 import GectorModel as ProtoModel
     elif model_name == "GPT":

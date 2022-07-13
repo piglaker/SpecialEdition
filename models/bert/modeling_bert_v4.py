@@ -2130,7 +2130,7 @@ class ProtoModel_v2(BertPreTrainedModel):
     def __init__(self, pretrained_model_name_or_path, cl_weight, repeat_weight, copy_weight):
         self.config = AutoConfig.from_pretrained(pretrained_model_name_or_path)
 
-        super(ProtoModel, self).__init__(self.config)
+        super(ProtoModel_v2, self).__init__(self.config)
 
         self.bert = BertModel.from_pretrained(pretrained_model_name_or_path)
 
@@ -2230,7 +2230,6 @@ class ProtoModel_v2(BertPreTrainedModel):
 
         total_loss = None
         masked_lm_loss = None
-        copy_loss = 0
         cl_loss = 0
         repeat_loss = 0
 

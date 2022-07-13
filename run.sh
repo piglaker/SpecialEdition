@@ -15,7 +15,7 @@ eval_dataset="15"
 
 cl_weight=0
 repeat_weight=0
-copy_weight=0
+copy_weight=0.01
 
 
 fix_cls=False
@@ -81,7 +81,7 @@ pretrained_name=roberta # pretrain bert type: [ bert roberta macbert xlnet chine
 
 VALUE=1
 
-head=0 #ConfusionCluster/3
+head=BertForMaskedLM_CL #ConfusionCluster/3
 
 output_dir=./tmp/${dataset}/${head}/${pretrained_name}
 
@@ -97,9 +97,11 @@ log_path=logs/${task}/${dataset}/${head}/${model_name}/${pretrained_name}/${name
 #seed 153603 27 3472
 #lr  5e-5 7e-5 6e-5
 
-echo $log_path > Recent_Note.log
+rm Recent_Note.log
+ln -s $log_path Recent_Note.log
 
-CUDA_VISIBLE_DEVICES=$available_gpus OMP_NUM_THREADS=$VALUE torchrun --nproc_per_node=$num_gpus --master_port 6500 --nnodes=1 --node_rank=0 main.py \
+CUDA_VISIBLE_DEVICES=$available_gpus OMP_NUM_THREADS=$VALUE torchrun --nproc_per_node=$num_gpus --master_port 6500 --nnodes=1 --node_rank=0 \
+    main.py \
     --sharded_ddp zero_dp_2 \
     --seed 3472 \
     --do_train \
