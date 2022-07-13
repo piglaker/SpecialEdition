@@ -52,7 +52,8 @@ from data.DatasetLoadingHelper import (
     load_sighan_chinesebert,
     load_sighan_chinesebert_mask,
     load_sighan_chinesebert_holy, 
-    load_sighan_holy,  
+    load_sighan_holy,
+    load_sighan_holy_mask,  
 
 )
 
@@ -159,6 +160,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         from models.bart.modeling_bart_v2 import BartForConditionalGeneration as ProtoModel
         pretrained_model_name_or_path="fnlp/bart-large-chinese"# '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
     elif model_name == "Proto":
+        print("Hint: Load Proto self-Distill Contrastive Bert (NAACL2022)")
         from models.bert.modeling_bert_v4 import ProtoModel as ProtoModel
     elif model_name == "Gector":
         from models.bert.modeling_bert_v3 import GectorModel as ProtoModel
@@ -252,6 +254,11 @@ def get_dataset_plus(training_args):
                 return _get_chinesebert_holy_dataset()
             else:
                 return _get_chinesebert_dataset()
+        elif "holy" in training_args.dataset:
+            if "mask" in training_args.dataset:
+                return _get_holy_mask_dataset()
+            else:
+                return _get_holy_dataset()
         elif "mask" in training_args.dataset:
             return _get_mask_dataset()
         elif "holy" in training_args.dataset:
@@ -315,12 +322,28 @@ def _get_raw_dataset(which="15"):
 
 def _get_holy_dataset(which="15"):
     """
-    Gector for sighan
+    Holy for sighan
     """
     print("Loading Holy Dataset !")
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan_holy(path_head="")
+    
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    print("Loaded successfully !")
+    ddp_exec("os.system('date')")
+
+    return train_dataset, eval_dataset, test_dataset
+
+def _get_holy_mask_dataset(which="15"):
+    """
+    Holy Mask for sighan
+    """
+    print("Loading Holy Mask Dataset !")
+    ddp_exec("os.system('date')")
+
+    train_data, eval_data, test_data = load_sighan_holy_mask(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
@@ -614,6 +637,26 @@ def get_metrics(training_args):
         print("Error when getting metrics.")
         exit(0)
 
+class mini_reporter:
+    def __init__(self):
+        self.messages = []
+    
+    def record(self, message):
+        self.messages.append(message)
+
+    def out(self, obj):
+        from collections import Iterable
+        if isinstance(obj, Iterable):
+            for e in obj:
+                print(e)
+        else:
+            print(obj)
+        
+    def report(self):
+        print("[Reporter] ")
+        for message in self.messages:
+            self.out(message)
+        print("[Over]")
 
 def _get_metrics(training_args):
     """
@@ -631,6 +674,8 @@ def _get_metrics(training_args):
         reference: https://github.com/ACL2020SpellGCN/SpellGCN/blob/master/run_spellgcn.py
         """
         Achilles = time.time()
+
+        reporter = mini_reporter()
 
         sources, preds, labels = eval_preds# (num, length) np.array
  
@@ -684,6 +729,9 @@ def _get_metrics(training_args):
             #print((pred == label).all())
             #print((label != source).any())
 
+            reporter.record([pred, source, label])
+            reporter.record([(pred!=source).any(), (pred==label).all()])
+
             if training_args.model_name != "Gector":
                 # label: [101, 2,... 3, 102]
                 if (pred != source).any():
@@ -718,8 +766,9 @@ def _get_metrics(training_args):
         Turtle = time.time() - Achilles
 
         if F1_score < 0.05:
-            print("Warning : metric score is too Low , maybe something goes wrong, check your codes please.")
-            #exit(0)
+            print("Warning : metric score is too Low (< 0.05), maybe something goes wrong, check your codes please.")
+            reporter.report()
+            exit(0)
         return {"F1_score": float(F1_score), "Precision":float(precision),  "Recall":float(recall),"Metric_time":Turtle}
 
     return compute_metrics

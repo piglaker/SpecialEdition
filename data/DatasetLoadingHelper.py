@@ -557,6 +557,74 @@ def load_sighan_holy(path_head=""):
 
 
 from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_holy_mask', _refresh=True)
+def load_sighan_holy_mask(path_head=""):
+    """
+        
+        "Holy" means remvoe all the overlapped pair between train and test
+    
+
+    Tokenizer : 
+        to valid mask the original wrong char of source, train bert to predict
+
+    """
+    print("Loading SigHan Holy but Mask original wrong char Dataset ...")
+
+    train_source_path = path_head + "./data/rawdata/sighan/holy/train.src"
+    train_target_path = path_head + "./data/rawdata/sighan/holy/train.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/holy/valid.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/holy/valid.tgt"#valid should be same to test ( sighan 15
+    test_source_path = path_head + "./data/rawdata/sighan/holy/test.src"
+    test_target_path = path_head + "./data/rawdata/sighan/holy/test.tgt"
+
+    train_source = wash_n(read_csv(train_source_path))#[:2000]#[274144:]#for only sighan
+    train_target = wash_n(read_csv(train_target_path))#[:2000]#[274144:]
+    
+    valid_source = wash_n(read_csv(valid_source_path))
+    valid_target = wash_n(read_csv(valid_target_path))
+
+    test_source = wash_n(read_csv(test_source_path))
+    test_target = wash_n(read_csv(test_target_path))
+
+    #valid_source = train_source[:1100]#for valid overfit problem
+    #valid_target = train_target[:1100]
+
+    tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
+
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
+
+    train_source_tok = tokenizer.batch_encode_plus(train_source, return_token_type_ids=False)#seems transformers max_length not work
+    train_target_tok = tokenizer.batch_encode_plus(train_target, return_token_type_ids=False)#remove padding=True, max_length=512
+    valid_source_tok = tokenizer.batch_encode_plus(valid_source, return_token_type_ids=False)
+    valid_target_tok = tokenizer.batch_encode_plus(valid_target, return_token_type_ids=False)
+    test_source_tok = tokenizer.batch_encode_plus(test_source, return_token_type_ids=False)
+    test_target_tok = tokenizer.batch_encode_plus(test_target, return_token_type_ids=False)
+
+    train_source_tok["labels"] = train_target_tok["input_ids"]
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+    test_source_tok["labels"] = test_target_tok["input_ids"]
+
+    # a ugly mask to replace the 
+    def mask(source):
+        for i in range(len(source)):
+            for j in range(len(source[i]["input_ids"])):
+                if source[i]["input_ids"][j] != source[i]["labels"][j]:
+                    source[i]["input_ids"][j] = 103
+        return source
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            #ugly fix for encoder model (the same length
+            features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+
+    print("Hint: Rough code here to mask will cause program slow")
+
+    return mask(transpose(train_source_tok)), mask(transpose(valid_source_tok)), mask(transpose(test_source_tok))
+
+
+from fastNLP import cache_results
 @cache_results(_cache_fp='cache/sighan_enchanted', _refresh=False)
 def load_sighan_enchanted(path_head=""):
 

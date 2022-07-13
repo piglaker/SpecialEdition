@@ -9,27 +9,27 @@ datetime=${d// /-}
 
 task="sighan"
 dataset="sighan_raw"
-model_name="MaskedLM"
-
-epoch=10
-batch_size=128
+model_name="Proto"
 
 eval_dataset="15"
 
 cl_weight=0
 repeat_weight=0
-copy_weight=30
+copy_weight=0
+
+
+fix_cls=False
 
 if [ ! -d "./logs/$task/$dataset" ]; then
     mkdir ./logs/$task/$dataset
 fi
 
-if [ "$model_name" == "Proto" ];then
-
-    name=$model_name"_mask_cls_copy"$copy_weight"_cl"$cl_weight"_repeat"$repeat_weight"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
-else
-    name=$model_name"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
-fi
+#if [ "$model_name" == "Proto" ];then
+#    fix_cls=True
+#    name=${model_name}"_mask_cls_copy"${copy_weight}"_cl"${cl_weight}"_repeat"${repeat_weight}"_eval"${eval_dataset}"_epoch"${epoch}"_bs"${batch_size}
+#else
+#    name=${model_name}"_eval"${eval_dataset}"_epoch"${epoch}"_bs"${batch_size}
+#fi
 
 # echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
 
@@ -72,26 +72,32 @@ then
     exit
 fi
 
+epoch=10
+batch_size=64
+
 echo "Use GPUs: "$available_gpus
 
-pretrained_name=chinesebert # pretrain bert type: [ bert roberta macbert xlnet chinesebert electra albert roformer nezha ]
+pretrained_name=roberta # pretrain bert type: [ bert roberta macbert xlnet chinesebert electra albert roformer nezha ]
 
 VALUE=1
 
-head=ConfusionCluster/3
+head=0 #ConfusionCluster/3
 
-output_dir=./tmp/$dataset/$head/$pretrained_name
+output_dir=./tmp/${dataset}/${head}/${pretrained_name}
 
 if [ "$model_name" == "Proto" ];then
-    name=$model_name"_mask_cls_copy"$copy_weight"_cl"$cl_weight"_repeat"$repeat_weight"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
+    fix_cls=True
+    name=${model_name}"_mask_cls_copy"${copy_weight}"_cl"${cl_weight}"_repeat"${repeat_weight}"_eval"${eval_dataset}"_epoch"${epoch}"_bs"${batch_size}
 else
-    name=$model_name"_"$pretrained_name"_eval"$eval_dataset"_epoch"$epoch"_bs"$batch_size
+    name=${model_name}"_eval"${eval_dataset}"_epoch"${epoch}"_bs"${batch_size}
 fi
 
-log_path=logs/$task/$dataset/$head/$pretrained_name/$name.log
+log_path=logs/${task}/${dataset}/${head}/${model_name}/${pretrained_name}/${name}.log
 
 #seed 153603 27 3472
 #lr  5e-5 7e-5 6e-5
+
+echo $log_path > Recent_Note.log
 
 CUDA_VISIBLE_DEVICES=$available_gpus OMP_NUM_THREADS=$VALUE torchrun --nproc_per_node=$num_gpus --master_port 6500 --nnodes=1 --node_rank=0 main.py \
     --sharded_ddp zero_dp_2 \
@@ -99,7 +105,7 @@ CUDA_VISIBLE_DEVICES=$available_gpus OMP_NUM_THREADS=$VALUE torchrun --nproc_per
     --do_train \
     --do_eval \
     --do_predict \
-    --fp16 True \
+    --fp16 False \
     --disable_tqdm False \
     --dataloader_num_workers 0 \
     --output_dir $output_dir \
@@ -120,7 +126,7 @@ CUDA_VISIBLE_DEVICES=$available_gpus OMP_NUM_THREADS=$VALUE torchrun --nproc_per
     --save_total_limit 1 \
     --model_name $model_name \
     --use_extra_dataset $use_extra_dataset \
-    --fix_cls False \
+    --fix_cls $fix_cls \
     --cl_weight $cl_weight \
     --repeat_weight $repeat_weight \
     --copy_weight $copy_weight \

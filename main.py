@@ -109,9 +109,10 @@ class DDP_std_saver(io.StringIO):
     def __init__(self, filename="Default.log"):
         self.terminal = sys.__stdout__
         dirs = "/".join(filename.split("/")[:-1])
-        if not os.path.exists(dirs):
-            os.makedirs(dirs)
-        self.log = open(filename, "w+")
+        if os.environ["LOCAL_RANK"] == '0':
+            if not os.path.exists(dirs):
+                os.makedirs(dirs)
+            self.log = open(filename, "w+")
  
     def write(self, txt):
         if os.environ["LOCAL_RANK"] != '0':
@@ -123,9 +124,9 @@ class DDP_std_saver(io.StringIO):
 class DDP_err_saver(io.StringIO):
     def __init__(self, filename="Default.log"):
         self.terminal = sys.__stderr__
-        dirs = "/".join(filename.split("/")[:-1])
-        if not os.path.exists(dirs):
-            os.makedirs(dirs)
+        #dirs = "/".join(filename.split("/")[:-1])
+        #if not os.path.exists(dirs):
+        #    os.makedirs(dirs)
         if os.environ["LOCAL_RANK"] != '0':
             pass
         else: 
@@ -143,7 +144,7 @@ def run():
     training_args = argument_init(MySeq2SeqTrainingArguments)
     
     sys.stdout = DDP_std_saver(training_args.log_path)
-    sys.stderr = DDP_err_saver(training_args.log_path)#"Recent_Error.log")
+    sys.stderr = DDP_err_saver("Recent_Error.log")
     
     print("log_path:", training_args.log_path)
 
@@ -191,11 +192,14 @@ def run():
         training_args=training_args,
     ) #base
 
-    # Fix cls
-    #if training_args.fix_cls:    
+    # Fix cls for proto
+    # fsdp error here 2022/07/12: https://github.com/pytorch/pytorch/issues/75943
+    # if training_args.fix_cls:    
     #    for name, param in model.named_parameters():
+    #        print(name)
     #        if 'cls' in name:
     #            param.requires_grad = False
+
 
     # Metrics
     compute_metrics = get_metrics(training_args)

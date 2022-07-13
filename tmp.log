@@ -1,0 +1,13 @@
+log_path: logs/sighan/sighan_holy/ConfusionCluster/3/bert/Proto_mask_cls_copy0_cl0.5_repeat0_eval15_epoch10_bs128.log
+Adapted Learning_rate: 7e-05
+The Train Dataset Name:sighan_holy
+Pretrained Model name_path:hfl/chinese-bert-wwm-ext
+Loading Dataset !
+Fri 10 Jun 2022 03:16:38 PM CST
+Loading Holy Dataset !
+Fri 10 Jun 2022 03:16:38 PM CST
+Read cache from cache/sighan_holy.
+Loaded successfully !
+Fri 10 Jun 2022 03:16:42 PM CST
+Hint: Loading Model *****Proto*****
+Hint: Using aligned sighan F1_score as metric
