@@ -3,7 +3,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from timeit import repeat
-from typing import Optional,Dict, Union, Any, Tuple, List
+from typing import Optional,Dict,Union,Any,Tuple,List
 
 import fitlog
 import nltk
@@ -85,6 +85,17 @@ def fitlogging(training_args):
 
 @dataclass
 class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
+    # hack for bug
+    disable_tqdm: Optional[bool] = field(
+        default=None, metadata={"help": "Whether or not to disable the tqdm progress bars."}
+    )
+
+    load_best_model_at_end: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Whether or not to load the best model found during training at the end of training."},
+    )
+
+    # extra args
     model_name: str=field(default="MaskedLM", metadata={"help":"which bert model "})
     dataset: str = field(default="sighan", metadata={"help":"dataset"})
     eval_dataset:str = field(default="sighan", metadata={"help":"dataset for eval"})
@@ -161,7 +172,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         pretrained_model_name_or_path="fnlp/bart-large-chinese"# '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
     elif model_name == "Proto":
         print("Hint: Load Proto self-Distill Contrastive Bert (NAACL2022)")
-        from models.bert.modeling_bert_v4 import ProtoModel_v2 as ProtoModel
+        from models.bert.modeling_bert_v4 import ProtoModel_v3 as ProtoModel
     elif model_name == "Gector":
         from models.bert.modeling_bert_v3 import GectorModel as ProtoModel
     elif model_name == "GPT":
@@ -187,6 +198,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
     if model_name != "Proto":
         model = ProtoModel.from_pretrained(pretrained_model_name_or_path=pretrained_model_name_or_path)
     else:
+        #model = ProtoModel.from_pretrained(pretrained_model_name_or_path=pretrained_model_name_or_path)
         model = ProtoModel(
                         pretrained_model_name_or_path=pretrained_model_name_or_path, 
                         cl_weight=training_args.cl_weight, 
@@ -767,8 +779,8 @@ def _get_metrics(training_args):
 
         if F1_score < 0.05:
             print("Warning : metric score is too Low (< 0.05), maybe something goes wrong, check your codes please.")
-            reporter.report()
-            exit(0)
+            #reporter.report()
+            #exit(0)
         return {"F1_score": float(F1_score), "Precision":float(precision),  "Recall":float(recall),"Metric_time":Turtle}
 
     return compute_metrics

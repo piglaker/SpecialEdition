@@ -46,7 +46,7 @@ from dataclasses import dataclass, field
 from typing import Optional, Dict, Union, Any, Tuple, List
 from joblib import parallel_backend
 
-import fitlog
+# import fitlog
 import numpy as np
 import datasets
 import torch
@@ -146,8 +146,6 @@ def run():
     sys.stdout = DDP_std_saver(training_args.log_path)
     sys.stderr = DDP_err_saver("Recent_Error.log")
     
-    print("log_path:", training_args.log_path)
-
     #fitlogging(training_args)
 
     set_seed(training_args.seed)
