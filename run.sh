@@ -8,8 +8,8 @@ datetime=${d// /-}
 #use_extra_dataset=False
 
 TASK="sighan"
-DATASET="sighan_holy"
-MODEL_NAME="Proto"
+DATASET="sighan_raw"
+MODEL_NAME="MaskedLM"
 
 EVAL_DATASET="15"
 
@@ -20,8 +20,8 @@ COPY_WEIGHT=0
 
 FIX_CLS=False
 
-if [ ! -d "./logs/$task/$dataset" ]; then
-    mkdir ./logs/$task/$dataset
+if [ ! -d "./logs/${TASK}/${DATASET}" ]; then
+    mkdir ./logs/${TASK}/${DATASET}
 fi
 
 #if [ "$model_name" == "Proto" ];then
@@ -80,18 +80,18 @@ PRETRAINED_NAME=roberta # pretrain bert type: [ bert roberta macbert xlnet chine
 
 VALUE=1
 
-HEAD=Proto # BertForMaskedLM_CL #ConfusionCluster/3
+HEAD=0 # BertForMaskedLM_CL #ConfusionCluster/3 Proto CPT
 
-OUTPUT_DIR=./tmp/${dataset}/${head}/${PRETRAINED_NAME}
+OUTPUT_DIR=./tmp/${DATASET}/${HEAD}/${PRETRAINED_NAME}
 
-if [ "$model_name" == "Proto" ];then
+if [ "${MODEL_NAME}" == "Proto" ];then
     fix_cls=True
-    name=${model_name}"_mask_cls_copy"${COPY_WEIGHT}"_cl"${CL_WEIGHT}"_repeat"${REPEAT_WEIGHT}"_eval"${eval_dataset}"_epoch"${epoch}"_bs"${batch_size}
+    name=${MODEL_NAME}"_mask_cls_copy"${COPY_WEIGHT}"_cl"${CL_WEIGHT}"_repeat"${REPEAT_WEIGHT}"_eval"${EVAL_DATASET}"_epoch"${EPOCH}"_bs"${BATCH_SIZE}
 else
-    name=${model_name}"_eval"${eval_dataset}"_epoch"${epoch}"_bs"${batch_size}
+    name=${MODEL_NAME}"_eval"${EVAL_DATASET}"_epoch"${EPOCH}"_bs"${BATCH_SIZE}
 fi
 
-LOG_PATH=logs/${task}/${dataset}/${head}/${model_name}/${PRETRAINED_NAME}/${name}.log
+LOG_PATH=logs/${TASK}/${DATASET}/${HEAD}/${MODEL_NAME}/${PRETRAINED_NAME}/${name}.log
 
 #seed 153603 27 3472
 #lr  5e-5 7e-5 6e-5
@@ -125,7 +125,7 @@ CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} torchrun --nproc
     --learning_rate 6e-5 \
     --warmup_steps 2500 \
     --eval_steps 1000 \
-    --save_total_limit 1 \
+    --save_total_limit 0 \
     --model_name ${MODEL_NAME} \
     --use_extra_dataset ${use_extra_dataset} \
     --fix_cls ${FIX_CLS} \
@@ -135,5 +135,5 @@ CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} torchrun --nproc
     --num_gpus ${NUM_GPUS} \
     --pretrained_name ${PRETRAINED_NAME} \
     --log_path ${LOG_PATH} \
-
+#> tmp.log 2>&1
 cat Recent_Error.log

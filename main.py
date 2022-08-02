@@ -15,8 +15,6 @@
 import os
 import io
 import sys
-from tqdm import tqdm
-
 
 class DDP_std_IO(io.StringIO):
     def write(self, txt):
@@ -37,57 +35,28 @@ class DDP_err_IO(io.StringIO):
 sys.stdout = DDP_std_IO()
 sys.stderr = DDP_err_IO()
 
-import re
-import random
-import time
-
-import argparse
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Union, Any, Tuple, List
-from joblib import parallel_backend
 
 # import fitlog
 import numpy as np
-import datasets
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset
 
-import transformers
 from transformers import (
-    DataCollatorForSeq2Seq,
-    AutoConfig,
     AutoTokenizer,
-    HfArgumentParser,
-    TrainingArguments,
-    Seq2SeqTrainingArguments,
-    set_seed,
 )
 
-from transformers import TrainingArguments
+from transformers.trainer_utils import set_seed
+
 #from transformers import trainer_utils, training_args
-from transformers.trainer_pt_utils import nested_detach
-from transformers import BertForMaskedLM
-from transformers.file_utils import PaddingStrategy
-from transformers.modeling_utils import PreTrainedModel
-from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokenizerBase
-from transformers.training_args import TrainingArguments
 
 from core import (
-    ddp_print,
-    fitlogging,
     get_model,
-    get_dataset, 
     get_metrics, 
     argument_init, 
     get_dataset_plus,
-    _get_mask_dataset,
     MySeq2SeqTrainingArguments, 
 )
 from lib import MyTrainer, FoolDataCollatorForSeq2Seq, subTrainer 
-from data.DatasetLoadingHelper import load_ctc2021, load_sighan
 #from models.bart.modeling_bart_v2 import BartForConditionalGeneration
-from transformers import BertForMaskedLM
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3"
 
