@@ -866,6 +866,30 @@ class subTrainer(Seq2SeqTrainer):
         return EvalLoopOutput(predictions=all_preds, label_ids=all_labels, metrics=metrics, num_samples=num_samples)
 
 class MyTrainer(subTrainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        """
+        How the loss is computed by Trainer. By default, all models return the loss in the first element.
+
+        Subclass and override for custom behavior.
+        """
+        if self.label_smoother is not None and "labels" in inputs:
+            labels = inputs.pop("labels")
+        else:
+            labels = None
+        outputs = model(**inputs)
+        # Save past state if it exists
+        # TODO: this needs to be fixed and made cleaner later.
+        if self.args.past_index >= 0:
+            self._past = outputs[self.args.past_index]
+
+        if labels is not None:
+            loss = self.label_smoother(outputs, labels)
+        else:
+            # We don't use .loss here since the model may return tuples instead of ModelOutput.
+            loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
+
+        return (loss, outputs) if return_outputs else loss
+
     def prediction_step(
         self,
         model: nn.Module,
@@ -915,6 +939,7 @@ class MyTrainer(subTrainer):
         with torch.no_grad():
             if is_sagemaker_mp_enabled():
                 raw_outputs = smp_forward_only(model, inputs)
+                
                 if has_labels:
                     if isinstance(raw_outputs, dict):
                         loss_mb = raw_outputs["loss"]
@@ -927,6 +952,7 @@ class MyTrainer(subTrainer):
                     logits = smp_nested_concat(logits_mb)
                 else:
                     loss = None
+                    
                     if isinstance(raw_outputs, dict):
                         logits_mb = tuple(v for k, v in raw_outputs.items() if k not in ignore_keys)
                     else:
@@ -946,6 +972,7 @@ class MyTrainer(subTrainer):
                     loss = None
                     with self.autocast_smart_context_manager():
                         outputs = model(**inputs)
+                    
                     if isinstance(outputs, dict):
                         logits = tuple(v for k, v in outputs.items() if k not in ignore_keys)
                     else:
@@ -958,7 +985,8 @@ class MyTrainer(subTrainer):
             return (loss, None, None)
 
         logits = nested_detach(logits)
+        
         if len(logits) == 1:
             logits = logits[0]
-
-        return (loss, torch.argmax(torch.softmax(logits, 2), -1), labels)
+        
+        return (loss, torch.argmax(torch.nn.functional.softmax(logits, 2), -1), labels)

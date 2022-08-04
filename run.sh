@@ -9,12 +9,12 @@ datetime=${d// /-}
 
 TASK="sighan"
 DATASET="sighan_raw"
-MODEL_NAME="MaskedLM"
+MODEL_NAME="Proto"
 
 EVAL_DATASET="15"
 
-CL_WEIGHT=0
-REPEAT_WEIGHT=0
+CL_WEIGHT=0.05
+REPEAT_WEIGHT=0.05
 COPY_WEIGHT=0
 
 
@@ -80,13 +80,13 @@ PRETRAINED_NAME=roberta # pretrain bert type: [ bert roberta macbert xlnet chine
 
 VALUE=1
 
-HEAD=0 # BertForMaskedLM_CL #ConfusionCluster/3 Proto CPT
+HEAD=Proto # BertForMaskedLM_CL #ConfusionCluster/3 Proto CPT
 
 OUTPUT_DIR=./tmp/${DATASET}/${HEAD}/${PRETRAINED_NAME}
 
 if [ "${MODEL_NAME}" == "Proto" ];then
     fix_cls=True
-    name=${MODEL_NAME}"_mask_cls_copy"${COPY_WEIGHT}"_cl"${CL_WEIGHT}"_repeat"${REPEAT_WEIGHT}"_eval"${EVAL_DATASET}"_epoch"${EPOCH}"_bs"${BATCH_SIZE}
+    name=${MODEL_NAME}"_cls_copy"${COPY_WEIGHT}"_cl"${CL_WEIGHT}"_repeat"${REPEAT_WEIGHT}"_eval"${EVAL_DATASET}"_epoch"${EPOCH}"_bs"${BATCH_SIZE}
 else
     name=${MODEL_NAME}"_eval"${EVAL_DATASET}"_epoch"${EPOCH}"_bs"${BATCH_SIZE}
 fi
@@ -100,10 +100,18 @@ rm Recent_Note.log
 echo "LOG_PATH: "${LOG_PATH}
 ln -s ${LOG_PATH} Recent_Note.log
 
+STRATEGY=epoch
+EVAL_STEPS=1000
+LEARNING_RATE=6e-5
+WARMUP_STEPS=2500
+CKPT_LIMIT=0
+
+SEED=3471
+
 CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} torchrun --nproc_per_node=${NUM_GPUS} --master_port 6500 --nnodes=1 --node_rank=0 \
     main.py \
     --sharded_ddp zero_dp_2 \
-    --seed 3472 \
+    --seed ${SEED} \
     --do_train \
     --do_eval \
     --do_predict \
@@ -115,17 +123,18 @@ CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} torchrun --nproc
     --per_device_eval_batch_size ${BATCH_SIZE} \
     --eval_accumulation_steps 1 \
     --num_train_epochs ${EPOCH} \
-    --evaluation_strategy epoch \
-    --save_strategy epoch \
+    --evaluation_strategy ${STRATEGY} \
+    --save_strategy ${STRATEGY} \
     --load_best_model_at_end \
     --dataloader_pin_memory True \
     --metric_for_best_model F1_score \
     --dataset ${DATASET} \
     --eval_dataset ${EVAL_DATASET} \
-    --learning_rate 6e-5 \
-    --warmup_steps 2500 \
-    --eval_steps 1000 \
-    --save_total_limit 0 \
+    --learning_rate ${LEARNING_RATE} \
+    --warmup_steps ${WARMUP_STEPS} \
+    --save_steps ${EVAL_STEPS} \
+    --eval_steps ${EVAL_STEPS} \
+    --save_total_limit ${CKPT_LIMIT} \
     --model_name ${MODEL_NAME} \
     --use_extra_dataset ${use_extra_dataset} \
     --fix_cls ${FIX_CLS} \
@@ -134,6 +143,7 @@ CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} torchrun --nproc
     --copy_weight ${COPY_WEIGHT} \
     --num_gpus ${NUM_GPUS} \
     --pretrained_name ${PRETRAINED_NAME} \
-    --log_path ${LOG_PATH} \
+    --log_path ${LOG_PATH} 
 #> tmp.log 2>&1
-cat Recent_Error.log
+
+cat tmp.log

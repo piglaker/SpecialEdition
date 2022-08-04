@@ -2304,24 +2304,12 @@ class ProtoModel_v3(nn.Module):
 
         self.cls = nn.Linear(self.config.hidden_size, self.config.vocab_size, bias=True)
 
-        """
-
         self.cl_weight = cl_weight
 
         self.repeat_weight = repeat_weight
 
         self.copy_weight = copy_weight
 
-        self.mlp = nn.Linear(self.config.hidden_size, self.config.vocab_size, bias=True)
-
-        #self.bias = nn.Parameter(torch.zeros(config.vocab_size))
-
-        # Need a link between the two variables so that the bias is correctly resized with `resize_token_embeddings`
-        #self.mlp.bias = self.bias
-
-        # Initialize weights and apply final processing
-        self.post_init()
-        """
     def get_output_embeddings(self):
         return self.cls.predictions.decoder
 
@@ -2362,84 +2350,19 @@ class ProtoModel_v3(nn.Module):
             encoder_hidden_states=encoder_hidden_states,
             encoder_attention_mask=encoder_attention_mask,
             output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
+            output_hidden_states=True,
             return_dict=return_dict,
         )
 
-        sequence_output = outputs[0]
-        prediction_scores = self.cls(sequence_output)
+        hiddens = outputs.hidden_states[-1]
 
-        masked_lm_loss = None
-        if labels is not None:
-            loss_fct = CrossEntropyLoss()  # -100 index = padding token
-            masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
+        prediction_scores = torch.matmul(hiddens, self.bert.embeddings.word_embeddings.weight.T)
 
-        if not return_dict:
-            output = (prediction_scores,) + outputs[2:]
-            return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
+        #prediction_scores = self.cls(sequence_output)
 
-        return MaskedLMOutput(
-            loss=masked_lm_loss,
-            logits=prediction_scores,
-            hidden_states=outputs.hidden_states,
-            attentions=outputs.attentions,
-        )
-
-
-    """
-    @add_start_docstrings_to_model_forward(BERT_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
-    @add_code_sample_docstrings(
-        processor_class=_TOKENIZER_FOR_DOC,
-        checkpoint=_CHECKPOINT_FOR_DOC,
-        output_type=MaskedLMOutput,
-        config_class=_CONFIG_FOR_DOC,
-    )
-    def forward(
-        self,
-        input_ids=None,
-        attention_mask=None,
-        token_type_ids=None,
-        position_ids=None,
-        head_mask=None,
-        inputs_embeds=None,
-        encoder_hidden_states=None,
-        encoder_attention_mask=None,
-        labels=None,
-        output_attentions=None,
-        output_hidden_states=None,
-        return_dict=None,
-    ):
-
-        noneg_labels = torch.where(labels != -100, labels, 0)
-
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-
-        outputs = self.bert(
-            input_ids, # noneg_labels, 
-            attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
-            position_ids=position_ids,
-            head_mask=head_mask,
-            inputs_embeds=inputs_embeds,
-            encoder_hidden_states=encoder_hidden_states,
-            encoder_attention_mask=encoder_attention_mask,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
-        )
-
-        hiddens = outputs[0] # 0
-
-        prediction_scores = self.cls(hiddens)
-
-        #prediction_scores = torch.softmax(torch.matmul(hiddens, self.bert.embeddings.word_embeddings.weight.T), dim=2)
-
-        #prediction_scores = self.mlp(hiddens)
-
-        logits = prediction_scores
-
-        
         if self.repeat_weight != 0 or self.cl_weight != 0:
+
+            noneg_labels = torch.where(labels != -100, labels, 0)
 
             distill_outputs = self.bert(
                 input_ids=noneg_labels,
@@ -2451,22 +2374,18 @@ class ProtoModel_v3(nn.Module):
                 encoder_hidden_states=encoder_hidden_states,
                 encoder_attention_mask=encoder_attention_mask,
                 output_attentions=output_attentions,
-                output_hidden_states=output_hidden_states,
+                output_hidden_states=True,
                 return_dict=return_dict,
             )
 
-            distill_hiddens = distill_outputs[0]
+            distill_hiddens = distill_outputs.hidden_states[-1]
 
             distill_hiddens_detach = distill_hiddens.detach()
-            distill_scores = self.cls(distill_hiddens)
 
-            distill_hiddens_detach = torch.nn.functional.normalize(distill_hiddens_detach, dim=-1)
-        
-            hiddens = torch.nn.functional.normalize(hiddens, dim=-1)
-        
+            distill_scores = torch.matmul(distill_hiddens, self.bert.embeddings.word_embeddings.weight.T)
 
-        total_loss = None
-        masked_lm_loss = None
+        total_loss = 0
+        masked_lm_loss = 0
         cl_loss = 0
         repeat_loss = 0
 
@@ -2474,7 +2393,7 @@ class ProtoModel_v3(nn.Module):
             loss_fct = CrossEntropyLoss()  # -100 index = padding token
 
             masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
-            
+
             if self.cl_weight > 0 :
                 scores = torch.einsum('blh,bkh->blk', hiddens, distill_hiddens_detach)  # bsz x len x len
                 scores = scores.masked_fill(attention_mask.unsqueeze(1).repeat(1, attention_mask.size(1), 1).bool(), 0)
@@ -2490,17 +2409,21 @@ class ProtoModel_v3(nn.Module):
             total_loss = 1 * masked_lm_loss + \
                             self.cl_weight * cl_loss + \
                                 self.repeat_weight * repeat_loss
-            
-            total_loss = masked_lm_loss
+
+        masked_lm_loss = total_loss
+        # masked_lm_loss = None
+        # if labels is not None:
+        #     loss_fct = CrossEntropyLoss()  # -100 index = padding token
+        #     masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
 
         if not return_dict:
             output = (prediction_scores,) + outputs[2:]
-            return ((total_loss,) + output) if total_loss is not None else output
+            return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
 
         return MaskedLMOutput(
-            loss=total_loss,
-            logits=logits,#prediction_scores,
-            hidden_states=outputs.hidden_states,
-            attentions=outputs.attentions,
+            loss=masked_lm_loss,
+            logits=prediction_scores,
+            hidden_states=None, #outputs.hidden_states,
+            attentions=None, #outputs.attentions,
         )
-        """
+
