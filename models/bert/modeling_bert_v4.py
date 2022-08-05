@@ -2384,7 +2384,7 @@ class ProtoModel_v3(nn.Module):
 
             distill_scores = torch.matmul(distill_hiddens, self.bert.embeddings.word_embeddings.weight.T)
 
-        total_loss = 0
+        #total_loss = 0
         masked_lm_loss = 0
         cl_loss = 0
         repeat_loss = 0
@@ -2406,11 +2406,9 @@ class ProtoModel_v3(nn.Module):
                 no_target_mask = (input_ids != labels).bool()
                 repeat_loss = torch.nn.functional.cross_entropy(distill_scores.view(-1, self.config.vocab_size), labels.masked_fill(no_target_mask, -100).view(-1), reduction='mean')
 
-            total_loss = 1 * masked_lm_loss + \
-                            self.cl_weight * cl_loss + \
+            masked_lm_loss += self.cl_weight * cl_loss + \
                                 self.repeat_weight * repeat_loss
 
-        masked_lm_loss = total_loss
         # masked_lm_loss = None
         # if labels is not None:
         #     loss_fct = CrossEntropyLoss()  # -100 index = padding token

@@ -15,6 +15,8 @@ python >= 3.7 \
 `conda create -n ctcSE python=3.7` 
 
 apex \
+`bash install_apex` \
+or \
 `git clone https://github.com/NVIDIA/apex` \
 `cd apex` \
 `python setup.py install` 

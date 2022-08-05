@@ -144,6 +144,10 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         Model with Contrastive Learning Loss
     MaskedLM:
         bert->lmhead->loss
+    T5:
+        generation
+    Proto:
+        Prototype
     """
     model = None
 
@@ -177,7 +181,10 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         from models.bert.modeling_bert_v3 import GectorModel as ProtoModel
     elif model_name == "GPT":
         from transformers import GPT2LMHeadModel as ProtoModel
-    elif model_name is None or model_name == "MaskedLM":
+    elif model_name == "T5":
+        from models.t5.modeling_t5 import T5ForConditionalGeneration as ProtoModel
+        pretrained_model_name_or_path="uer/t5-base-chinese-cluecorpussmall"
+    elif model_name is None or model_name == "BERT":
         if training_args.pretrained_name == "chinesebert":
             print("Hint: Load ChineseBert MaskedLM")
             from chinesebert import ChineseBertConfig, ChineseBertForMaskedLM 

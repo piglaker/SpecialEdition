@@ -13,9 +13,9 @@ MODEL_NAME="Proto"
 
 EVAL_DATASET="15"
 
-CL_WEIGHT=0.05
-REPEAT_WEIGHT=0.05
-COPY_WEIGHT=0
+CL_WEIGHT=0
+REPEAT_WEIGHT=1
+COPY_WEIGHT=0.0005
 
 
 FIX_CLS=False
@@ -146,4 +146,4 @@ CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} torchrun --nproc
     --log_path ${LOG_PATH} 
 #> tmp.log 2>&1
 
-cat tmp.log
+# cat tmp.log
