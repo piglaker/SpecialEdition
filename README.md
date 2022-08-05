@@ -14,6 +14,11 @@ use ./scripts/sighan/generate.py to generate data in ./data/rawdata/sighan
 python >= 3.7 \
 `conda create -n ctcSE python=3.7` 
 
+then
+`conda activate ctcSE`
+`pip3 install -r requirements.txt`
+
+
 apex \
 `bash install_apex` \
 or \
