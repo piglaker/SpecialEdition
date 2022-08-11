@@ -2282,7 +2282,7 @@ class ProtoModel_v2(BertPreTrainedModel):
 
 class ProtoModel_v3(nn.Module):
 
-    def __init__(self, pretrained_model_name_or_path, cl_weight, repeat_weight, copy_weight):
+    def __init__(self, pretrained_model_name_or_path, training_args):
 
         self.config = AutoConfig.from_pretrained(pretrained_model_name_or_path)
 
@@ -2304,11 +2304,11 @@ class ProtoModel_v3(nn.Module):
 
         self.cls = nn.Linear(self.config.hidden_size, self.config.vocab_size, bias=True)
 
-        self.cl_weight = cl_weight
+        self.cl_weight = training_args.cl_weight
 
-        self.repeat_weight = repeat_weight
+        self.repeat_weight = training_args.repeat_weight
 
-        self.copy_weight = copy_weight
+        self.copy_weight = training_args.copy_weight
 
     def get_output_embeddings(self):
         return self.cls.predictions.decoder
@@ -2395,17 +2395,28 @@ class ProtoModel_v3(nn.Module):
             masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
 
             if self.cl_weight > 0 :
+                hiddens = torch.nn.functional.normalize( hiddens, dim=-1 )
+                distill_hiddens_detach = torch.nn.functional.normalize( distill_hiddens_detach, dim=-1)
+
                 scores = torch.einsum('blh,bkh->blk', hiddens, distill_hiddens_detach)  # bsz x len x len
+                # print(scores)
                 scores = scores.masked_fill(attention_mask.unsqueeze(1).repeat(1, attention_mask.size(1), 1).bool(), 0)
                 scores = torch.exp(scores / 2)
                 pos_scores = torch.diagonal(scores, dim1=1, dim2=2)  # bsz x l
-                neg_scores = scores.sum(dim=-1) # bsz x l 
+                neg_scores = scores.sum(dim=-1) # bsz x l
+                # print(pos_scores)
+                # print(neg_scores)
+                # print(attention_mask.sum()) 
                 cl_loss = -(pos_scores / neg_scores).log().masked_fill(attention_mask.eq(0), 0).sum() / attention_mask.sum()
 
             if self.repeat_weight > 0:
                 no_target_mask = (input_ids != labels).bool()
                 repeat_loss = torch.nn.functional.cross_entropy(distill_scores.view(-1, self.config.vocab_size), labels.masked_fill(no_target_mask, -100).view(-1), reduction='mean')
 
+            # print(cl_loss)
+            # print(masked_lm_loss)
+            # print(repeat_loss)
+            # exit()
             masked_lm_loss += self.cl_weight * cl_loss + \
                                 self.repeat_weight * repeat_loss
 
@@ -2423,5 +2434,205 @@ class ProtoModel_v3(nn.Module):
             logits=prediction_scores,
             hidden_states=None, #outputs.hidden_states,
             attentions=None, #outputs.attentions,
+        )
+
+
+
+class MyProjHead(nn.Module):
+    """Head for masked language modeling."""
+
+    def __init__(self, input_dim, hidden_dim, output_dim):
+        super().__init__()
+        self.dense = nn.Linear(input_dim, hidden_dim)
+        self.activation_fn = ACT2FN["gelu"]
+        self.layer_norm = nn.LayerNorm(hidden_dim, eps=1e-12)
+
+        self.proj = nn.Linear(hidden_dim, output_dim, bias=True)
+
+    def forward(self, features):
+        x = self.dense(features)
+        x = self.activation_fn(x)
+        x = self.layer_norm(x)
+        # project back to size of vocabulary with bias
+        x = self.proj(x)
+        return x
+
+
+class ProtoModel_copy(nn.Module):
+
+    def __init__(self, pretrained_model_name_or_path, training_args):
+
+        self.config = AutoConfig.from_pretrained(pretrained_model_name_or_path)
+
+        self.config.hidden_dropout_prob = 0.1
+        
+        self.config.attention_probs_dropout_prob = 0.1
+
+        super().__init__()
+
+        #self.bert = BertModel(self.config, add_pooling_layer=False)
+        
+        self.bert = BertModel.from_pretrained(pretrained_model_name_or_path, config = self.config)
+
+        self.drop = nn.Dropout(p=0.1)
+
+        self.cls = BertOnlyMLMHead(self.config)
+
+        #self.cls = nn.Linear(self.config.hidden_size, self.config.vocab_size, bias=True)
+
+        self.copy_weight = training_args.copy_weight
+
+        self.copy = MyProjHead(self.config.hidden_size, self.config.hidden_size, 1)#nn.Linear(self.config.hidden_size, 1, bias=True)#self.config.vocab_size, bias=False)
+
+    def get_output_embeddings(self):
+        return self.cls.predictions.decoder
+
+    def set_output_embeddings(self, new_embeddings):
+        self.cls.predictions.decoder = new_embeddings
+
+    def forward(
+        self,
+        input_ids=None,
+        attention_mask=None,
+        token_type_ids=None,
+        position_ids=None,
+        head_mask=None,
+        inputs_embeds=None,
+        encoder_hidden_states=None,
+        encoder_attention_mask=None,
+        labels=None,
+        output_attentions=None,
+        output_hidden_states=None,
+        return_dict=None,
+    ):
+        r"""
+        labels (`torch.LongTensor` of shape `(batch_size, sequence_length)`, *optional*):
+            Labels for computing the masked language modeling loss. Indices should be in `[-100, 0, ...,
+            config.vocab_size]` (see `input_ids` docstring) Tokens with indices set to `-100` are ignored (masked), the
+            loss is only computed for the tokens with labels in `[0, ..., config.vocab_size]`
+        """
+        noneg_labels = torch.where(labels != -100, labels, 0)
+
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+        outputs = self.bert(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+            encoder_hidden_states=encoder_hidden_states,
+            encoder_attention_mask=encoder_attention_mask,
+            output_attentions=output_attentions,
+            output_hidden_states=True,
+            return_dict=return_dict,
+        )
+
+        hiddens = self.drop(outputs.hidden_states[-1])
+
+        #prediction_scores_raw = torch.matmul(hiddens, self.bert.embeddings.word_embeddings.weight.T)
+        prediction_scores_raw = self.cls(hiddens)
+
+        prediction_p = torch.nn.functional.softmax(prediction_scores_raw, dim=-1)
+
+        from torch.nn.functional import one_hot, binary_cross_entropy_with_logits, binary_cross_entropy, nll_loss
+
+        copy_label = (noneg_labels == input_ids).long()#[1,1,0,1,1,1,1,1]
+
+        # print(copy_label)
+
+        # replace 0 with -100, may cause ddp device error here,
+        copy_label_mask = torch.where(labels != -100, torch.tensor(1).cuda(), labels) - 1#[0,0,-101, -101]
+
+        # print(copy_label_mask)
+
+        copy_label += copy_label_mask
+
+        #print(copy_label[0])
+
+        wcopy_h = self.copy(hiddens)
+
+        # print(wcopy_h, wcopy_h.shape)
+
+        copy_scores = torch.exp(wcopy_h) / (torch.exp(wcopy_h) + 1)
+
+        #print(copy_scores[0], copy_scores.shape)
+            
+        prediction_scores = copy_scores.detach() * one_hot(input_ids, self.config.vocab_size) + (1-copy_scores.detach()) * prediction_p
+
+        #print(input_ids, input_ids.shape)
+        #tmp = one_hot(input_ids, self.config.vocab_size)
+        #print(tmp[0][0][99:110], tmp.shape)
+        #tmp2 = copy_scores.detach() * one_hot(input_ids, self.config.vocab_size)
+        #print(tmp2, tmp2.shape)
+
+        #exit()
+
+        # print(prediction_scores, prediction_scores.shape)
+
+        # print(prediction_scores.sum(dim=-1))
+
+        total_loss = None
+        masked_lm_loss = None
+        copy_loss = 0
+
+        if labels is not None:
+            from torch.nn import BCELoss, BCEWithLogitsLoss, NLLLoss
+            if self.copy_weight != 0:
+                loss_fct = NLLLoss()
+            else:
+                loss_fct = CrossEntropyLoss()  # -100 index = padding token
+            
+            loss_fct2 = BCELoss(reduction="none")
+            #loss_fct3 = nll_loss()
+            if self.copy_weight > 0:
+
+                #x_orig_eq_mlm = one_hot(copy_label, self.config.vocab_size)
+
+                # total_copy_score = ( x_orig_eq_mlm * copy_scores + (1-x_orig_eq_mlm) * (1 - copy_scores))
+
+                #copy_loss = loss_fct(copy_scores.view(-1, self.config.vocab_size), copy_label.view(-1))# + loss_fct((1-copy_scores).view(-1, self.config.vocab_size), (1-copy_label).view(-1))
+
+                #copy_loss = loss_fct2(copy_scores.view(-1, self.config.vocab_size), one_hot(copy_label, self.config.vocab_size).float().view(-1, self.config.vocab_size))
+                # print(copy_scores, copy_label)
+                tmp_loss = loss_fct2(copy_scores.view(-1), copy_label.view(-1).float())
+                # print(tmp_loss)
+                tmp_mask = (copy_label != -100)
+                # 忽视类别标签为-100
+                copy_loss = tmp_loss.view(tmp_mask.shape[0], -1) * tmp_mask
+                copy_loss = torch.sum(copy_loss) / torch.sum(tmp_mask)
+
+                # print(copy_loss)
+                # exit()
+                # print(copy_loss)
+                # exit()
+
+                eq_label = (noneg_labels != input_ids).long()
+
+                mask_mask =  -100 * (noneg_labels == input_ids).long()
+
+                masked_lm_loss = loss_fct(torch.log(prediction_scores+1e-12).view(-1, self.config.vocab_size), (eq_label*labels + mask_mask).view(-1))
+            
+                # print(copy_loss)
+                # print(masked_lm_loss)
+                # exit()
+            else:
+                masked_lm_loss = loss_fct(prediction_scores_raw.view(-1, self.config.vocab_size), labels.view(-1))
+
+                #tmp_loss = NLLLoss()
+                #masked_lm_loss = tmp_loss(prediction_p.view(-1, self.config.vocab_size), labels.view(-1))
+
+            total_loss = 1 * masked_lm_loss + self.copy_weight * copy_loss
+
+        if not return_dict:
+            output = (prediction_scores,) + outputs[2:]
+            return ((total_loss,) + output) if total_loss is not None else output
+
+        return MaskedLMOutput(
+            loss=total_loss,
+            logits=prediction_scores,
+            hidden_states=None,#outputs.hidden_states,
+            attentions=None#outputs.attentions,
         )
 

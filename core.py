@@ -53,7 +53,8 @@ from data.DatasetLoadingHelper import (
     load_sighan_chinesebert_mask,
     load_sighan_chinesebert_holy, 
     load_sighan_holy,
-    load_sighan_holy_mask,  
+    load_sighan_holy_mask,
+    load_sighan_pure, 
 
 )
 
@@ -175,8 +176,12 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         from models.bart.modeling_bart_v2 import BartForConditionalGeneration as ProtoModel
         pretrained_model_name_or_path="fnlp/bart-large-chinese"# '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
     elif model_name == "Proto":
-        print("Hint: Load Proto self-Distill Contrastive Bert (NAACL2022)")
-        from models.bert.modeling_bert_v4 import ProtoModel_v3 as ProtoModel
+        if training_args.copy_weight == 0:
+            print("Hint: Load Proto self-Distill Contrastive Bert (NAACL2022)")
+            from models.bert.modeling_bert_v4 import ProtoModel_v3 as ProtoModel
+        else:
+            print("Hint: Load Proto COCO-LM (NIPS2022)")
+            from models.bert.modeling_bert_v4 import ProtoModel_copy as ProtoModel
     elif model_name == "Gector":
         from models.bert.modeling_bert_v3 import GectorModel as ProtoModel
     elif model_name == "GPT":
@@ -208,9 +213,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         #model = ProtoModel.from_pretrained(pretrained_model_name_or_path=pretrained_model_name_or_path)
         model = ProtoModel(
                         pretrained_model_name_or_path=pretrained_model_name_or_path, 
-                        cl_weight=training_args.cl_weight, 
-                        repeat_weight=training_args.repeat_weight, 
-                        copy_weight=training_args.copy_weight
+                        training_args=training_args,
                         )
 
     if not model:
@@ -290,6 +293,8 @@ def get_dataset_plus(training_args):
             return _get_ReaLiSe_dataset()
         elif 'expand' in training_args.dataset:
             return _get_expand_dataset()
+        elif 'pure' in training_args.dataset:
+            return _get_pure_dataset()
         else:
             print("Unclear data type, load default raw sighan")
             return _get_raw_dataset()
@@ -331,6 +336,22 @@ def _get_raw_dataset(which="15"):
     ddp_exec("os.system('date')")
 
     train_data, eval_data, test_data = load_sighan(path_head="")
+    
+    train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
+
+    print("Loaded successfully !")
+    ddp_exec("os.system('date')")
+
+    return train_dataset, eval_dataset, test_dataset
+
+def _get_pure_dataset(which="15"):
+    """
+    Gector for sighan
+    """
+    print("Loading Pure SIGHAN Dataset !")
+    ddp_exec("os.system('date')")
+
+    train_data, eval_data, test_data = load_sighan_pure(path_head="")
     
     train_dataset, eval_dataset, test_dataset = mydataset(train_data), mydataset(eval_data), mydataset(test_data)
 
@@ -894,7 +915,7 @@ def _get_seq2seq_metrics(training_args):
         if F1_score_detect < 0.1 or F1_score_correct < 0.1:
             print("Warning : metric F1_score is too Low , maybe something goes wrong, check your codes please.")
 
-        return {"F1_score":float( 0.8 * F1_score_detect + 0.2 * F1_score_correct ), 
+        return {"combined_F1_score":float( 0.8 * F1_score_detect + 0.2 * F1_score_correct ), 
                 "F1_score_detect": float(F1_score_detect), 
                 "Precision_detect":float(Precision_detect),  
                 "Recall_detect":float(Recall_detect),

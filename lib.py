@@ -392,6 +392,13 @@ class Seq2SeqTrainer(Trainer):
             "synced_gpus": True if is_deepspeed_zero3_enabled() else False,
         }
 
+        # https://github.com/pytorch/pytorch/issues/82461
+        # had to run this 1 time at the start of eval loop else was giving device `caffe error`.
+        # So, before directly using `model.generate` pass a batch with dummy data through the model
+        # uncomment below lines for successful run with FSDP
+        if ((self.sharded_ddp is not None) or (self.fsdp is not None)):
+            model(**inputs)
+
         generated_tokens = self.model.generate(
             inputs["input_ids"],
             attention_mask=inputs["attention_mask"],

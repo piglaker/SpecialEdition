@@ -2,41 +2,12 @@
 d=`date`
 datetime=${d// /-}
 
-#task="ctc2021"
-#dataset="ctc2021"
-#model_name="CPT_NLG"
-#use_extra_dataset=False
+# Automatically search available gpus
+echo "Searching available gpus..."
 
-TASK="sighan"
-DATASET="sighan_raw"
-MODEL_NAME="Proto"
-
-EVAL_DATASET="15"
-
-CL_WEIGHT=0
-REPEAT_WEIGHT=1
-COPY_WEIGHT=0.0005
-
-
-FIX_CLS=False
-
-if [ ! -d "./logs/${TASK}/${DATASET}" ]; then
-    mkdir ./logs/${TASK}/${DATASET}
-fi
-
-#if [ "$model_name" == "Proto" ];then
-#    fix_cls=True
-#    name=${model_name}"_mask_cls_copy"${COPY_WEIGHT}"_cl"${CL_WEIGHT}"_repeat"${REPEAT_WEIGHT}"_eval"${eval_dataset}"_epoch"${epoch}"_bs"${batch_size}
-#else
-#    name=${model_name}"_eval"${eval_dataset}"_epoch"${epoch}"_bs"${batch_size}
-#fi
-
-# echo "cat logs/$dataset/$name.log & gpustat" > check_stat.sh
-
-# Automatically search for available gpus
 gpu_memory=(`nvidia-smi -q -d Memory |grep -A4 GPU|grep Free  | awk -F" "    '{ print $3 }'`)
 
-NUM_GPUS=2
+NUM_GPUS=6
 
 count=0
 
@@ -72,11 +43,41 @@ then
     exit
 fi
 
-EPOCH=10
-
 echo "Use GPUs: "${available_gpus}
 
-PRETRAINED_NAME=roberta # pretrain bert type: [ bert roberta macbert xlnet chinesebert electra albert roformer nezha ]
+#task="ctc2021"
+#dataset="ctc2021"
+#model_name="CPT_NLG"
+#use_extra_dataset=False
+
+TASK="sighan"
+DATASET="sighan_raw"
+MODEL_NAME="Proto"
+
+if [ ! -d "./logs/${TASK}/${DATASET}" ]; then
+    mkdir ./logs/${TASK}/${DATASET}
+fi
+
+EVAL_DATASET="15"
+
+CL_WEIGHT=0
+REPEAT_WEIGHT=0
+
+COPY_WEIGHT=50
+
+FIX_CLS=False
+
+PRETRAINED_NAME=macbert # pretrain bert type: [ bert roberta macbert xlnet chinesebert electra albert roformer nezha ]
+
+EPOCH=20
+STRATEGY=epoch
+EVAL_STEPS=1000
+LEARNING_RATE=5e-5
+WEIGHT_DECAY=0.02
+WARMUP_STEPS=5000
+CKPT_LIMIT=0
+
+SEED=3471
 
 VALUE=1
 
@@ -100,15 +101,7 @@ rm Recent_Note.log
 echo "LOG_PATH: "${LOG_PATH}
 ln -s ${LOG_PATH} Recent_Note.log
 
-STRATEGY=epoch
-EVAL_STEPS=1000
-LEARNING_RATE=6e-5
-WARMUP_STEPS=2500
-CKPT_LIMIT=0
-
-SEED=3471
-
-CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} torchrun --nproc_per_node=${NUM_GPUS} --master_port 6500 --nnodes=1 --node_rank=0 \
+CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} CUDA_LAUNCH_BLOCKING=1 torchrun --nproc_per_node=${NUM_GPUS} --master_port 6501 --nnodes=1 --node_rank=0 \
     main.py \
     --sharded_ddp zero_dp_2 \
     --seed ${SEED} \
@@ -131,6 +124,7 @@ CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} torchrun --nproc
     --dataset ${DATASET} \
     --eval_dataset ${EVAL_DATASET} \
     --learning_rate ${LEARNING_RATE} \
+    --weight_decay ${WEIGHT_DECAY} \
     --warmup_steps ${WARMUP_STEPS} \
     --save_steps ${EVAL_STEPS} \
     --eval_steps ${EVAL_STEPS} \
@@ -143,7 +137,10 @@ CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} torchrun --nproc
     --copy_weight ${COPY_WEIGHT} \
     --num_gpus ${NUM_GPUS} \
     --pretrained_name ${PRETRAINED_NAME} \
-    --log_path ${LOG_PATH} 
-#> tmp.log 2>&1
+    --log_path ${LOG_PATH} \
+> tmp.log 2>&1
 
-# cat tmp.log
+#cat tmp.log
+
+echo "Finish training"
+echo ${LOG_PATH}

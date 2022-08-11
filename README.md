@@ -14,9 +14,9 @@ use ./scripts/sighan/generate.py to generate data in ./data/rawdata/sighan
 python >= 3.7 \
 `conda create -n ctcSE python=3.7` 
 
-then
-`conda activate ctcSE`
-`pip3 install -r requirements.txt`
+then \
+`conda activate ctcSE` \
+`pip3 install -r requirements.txt` 
 
 
 apex \
@@ -27,7 +27,7 @@ or \
 `python setup.py install` 
 
 
-install the fxxk pytorch for your CUDA & GPU \
+install pytorch for your CUDA & GPU \
 example: \
 `pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113` 
 
