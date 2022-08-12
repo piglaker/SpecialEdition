@@ -1,0 +1,1 @@
+find . -name "checkpoint-*" | xargs rm -rf 

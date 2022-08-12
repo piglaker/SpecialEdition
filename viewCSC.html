@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ViewCSC</title>
+</head>
+<body>
+    <span><strong>Input passage:</strong></span><br>
+    <textarea id="passage" style="width:80%;margin:5px 0 0 10px;height: 180px">
+original: pid=00218	说道关晓彤的话大家应该是非常的熟悉了，最近几年的关晓彤在娱乐圈还是受到不少人的关注的，特别是在近期网上能看到很多关于关晓彤的消息，因为关晓彤是去参加了戛纳红毯，这样级别的典礼在国内是不多见的。
+correct:   pid=00218, 1, 别字, 道, 到,
+predict: 说到关晓彤的话大家应该是非常的熟悉了吧吧,最近几年的关于在娱乐圈还是受到不少人的关注的,特别是在近期网上能看到很多关于关于她的消息,因为关于是去参加了一场的红毯,这样高级别的典礼在国内是不多见的。关于于近期的关键在于关注了关键词的话,尤其是在这场红毯了吧。
+ pid=00218, 1, 别字, 道, 到, 18, 缺失, , 吧吧, 25, 冗余, 晓, , 26, 别字, 彤, 于, 59, 别字, 晓彤, 于她, 68, 冗余, 晓, , 69, 别字, 彤, 于, 75, 缺失, , 一, 75, 别字, 戛纳, 场的, 82, 缺失, , 高,
+    </textarea>
+    <button type="button" class="btn btn-default"  onclick="visual()" id="Submit">Submit!</button><br>
+    <div id="bar"></div>
+    <div id="sampleDiv">
+
+    </div>
+
+</body>
+
+<script>
+    let type2color = {
+        "别字": "blue",
+        "别词": "orange",
+        "冗余": "#7FFF00",
+        "缺失": "red",
+        "乱序": "pink",
+        "语义重复": "purple",
+        "句式杂糅": "green"
+    }
+    var sampleIdx = 0;
+
+    function getColorSquareBlock(){
+        // show a color square to clarity different mistakes.
+        let block = document.createElement('div');
+        block.style = 'display:inline';
+        for(let key in type2color){
+            let div = document.createElement('div');
+            div.style = 'display:inline;color:'+type2color[key];
+            div.innerHTML = '&#9632;' + key+"&nbsp;&nbsp";
+            block.appendChild(div);
+        }
+        return block
+    }
+
+    document.getElementById('bar').appendChild(getColorSquareBlock());
+    document.getElementById('bar').appendChild(document.createElement('br'));
+
+    function visual(){
+        let passage = document.getElementById('passage');
+        let text = passage.value.trim();
+        let revisionJson;
+        if(text.split('\n').length===5){
+            revisionJson = parseLocalInput(text);
+        }else if(text.split('\n').length===4){
+            revisionJson = parseRemoteInput(text);
+        }
+        let div = document.createElement('div');
+        div.style = 'border:2px solid #000;margin:5px;padding:5px';
+        div.id = 'block_'+sampleIdx;
+        let cscBlock = generateCSCBlock(revisionJson);
+        div.appendChild(cscBlock)
+        let btn = document.createElement('button');
+        btn.innerHTML = 'Delete';
+        btn.className = 'btn btn-danger';
+        btn.id = 'button_' + sampleIdx;
+        btn.onclick = function (btn){
+            let blockId = 'block_' + btn.currentTarget.id.slice(7);
+            let block = document.getElementById(blockId);
+            document.getElementById('sampleDiv').removeChild(block);
+        }
+        div.appendChild(btn);
+        document.getElementById('sampleDiv').appendChild(div);
+        sampleIdx += 1;
+    }
+
+    function generateCSCBlock(blockJson){
+        /*
+        {
+            "original": "可以经由调整聚合物的性能来达到期望得应用（电子/离子导电等） 。",
+            "goldRevision": [[17, "别字", "得", "的"]],
+            "predictRevision": [[3, "别字", "由", "调"], [17, "别字", "得", "的"]]
+        }
+        */
+        let cscBlock = document.createElement('div');
+        let originalP = document.createElement('span');
+        let original = blockJson['original'];
+        originalP.innerHTML = "<strong>Orig:&nbsp</strong>" + original;
+        cscBlock.appendChild(originalP);
+        cscBlock.appendChild(document.createElement('br'));
+        let chars = original.split('');
+        let ls = blockJson['goldRevision'];
+        generateSentence(ls, chars, cscBlock, "Gold");
+        ls = blockJson['predictRevision'];
+        generateSentence(ls, chars, cscBlock, 'Pred');
+        return cscBlock;
+    }
+
+    function generateSentence(ls, chars, cscBlock, promptText){
+        ls.sort(function (a, b){
+            return a[0]-b[0];
+        });
+        for(let i=ls.length-1;i>-1;i--){
+            let revision = ls[i];
+            let loc = revision[0];
+            let type = revision[1];
+            let _old = revision[2];
+            let _new = revision[3];
+            if(_old.length>0) {console.assert(_old[0]===chars[loc], "Not equal detect!!!!");}
+            let errLen = _old.length;
+            chars = chars.slice(0, loc+1).concat(chars.slice(loc+errLen));  // delete revision part
+            chars[loc] = [type2color[type], _old, _new];
+        }
+        // console.log(chars);
+        let prompt = document.createElement('span');
+        prompt.innerHTML = '<strong>'+ promptText + ':&nbsp</strong>';
+        cscBlock.appendChild(prompt);
+        // for(let j=0;j<chars.length;j++){
+        //     let char = chars[j];
+        //     let span = document.createElement('span');
+        //     if(Array.isArray(char)){
+        //         let _str = '';
+        //         if(char[1].length>0){
+        //             _str += '<del>' + char[1] + '</del>';
+        //         }
+        //         _str += '<p style="display: inline">' + char[2] + "</p>";
+        //         _str = '<span style="color:' + char[0] + '">' + _str + "</span>"
+        //         span.innerHTML = _str;
+        //     }else{
+        //         span.innerHTML = char;
+        //     }
+        //     cscBlock.appendChild(span);
+        // }
+        let innerHtml = '';
+        let pureText = '';
+        for(let j=0;j<chars.length;j++){
+            let char = chars[j];
+            if(Array.isArray(char)){
+                let _str = '';
+                if(char[1].length>0){
+                    _str += '<del>' + char[1] + '</del>';
+                }
+                _str += '<p style="display: inline">' + char[2] + "</p>";
+                _str = '<span style="color:' + char[0] + '">' + _str + "</span>"
+                innerHtml += _str;
+                pureText += char[2]
+            }else{
+                innerHtml += char;
+                pureText += char;
+            }
+        }
+        prompt.value = innerHtml + '@@@' + pureText;
+        let id = promptText + sampleIdx;
+        prompt.id = id;
+        prompt.onclick = function (btn){
+            let vs = btn.currentTarget.value.split('@@@');
+            let spanId = btn.currentTarget.id+'span';
+
+            let spanEle = document.getElementById(spanId)
+            if(btn.currentTarget.style.fontStyle===''){
+                spanEle.innerHTML = vs[1];
+                btn.currentTarget.style.fontStyle = 'italic';
+            }else{
+                spanEle.innerHTML = vs[0];
+                btn.currentTarget.style.fontStyle = '';
+            }
+        }
+
+        // btn.onclick = function (btn){
+        //     let blockId = 'block_' + btn.currentTarget.id.slice(7);
+        //     let block = document.getElementById(blockId);
+        //     document.getElementById('sampleDiv').removeChild(block);
+        // }
+        let span = document.createElement('span');
+        span.innerHTML = innerHtml;
+        span.id = id + 'span';
+        cscBlock.appendChild(span);
+        cscBlock.appendChild(document.createElement('br'));
+    }
+
+    function parseLocalInput(str){
+        let lines = str.split('\n');
+        console.assert(lines.length===5, "You must pass in input with five lines.");
+        let revisionJson = {};
+        let originalStr = lines[0].substr(10);
+        let corrects = lines[2].split('$');
+        let predicts = lines[4].split('$');
+        function parseRevision(ls){
+            if(ls[0].trim().substr(-2)==='-1'){
+                return []
+            }
+            let tmp = []
+            for(let i=0;i<ls.length;i++){
+                if (ls[i].length>0){
+                    let _tmp = [];
+                    let ts = ls[i].trim().split(',');
+                    _tmp.push(parseInt(ts[0]));
+                    _tmp.push(ts[1].trim());
+                    _tmp.push(ts[2].trim());
+                    _tmp.push(ts[3].trim());
+                    tmp.push(_tmp);
+                }
+            }
+            return tmp
+        }
+        revisionJson['original'] = originalStr;
+        revisionJson['goldRevision'] = parseRevision(corrects);
+        revisionJson['predictRevision'] = parseRevision(predicts);
+        return revisionJson
+    }
+
+    function parseRemoteInput(str){
+        let lines = str.split('\n');
+        console.assert(lines.length===4, "You must pass in input with five lines.");
+        let revisionJson = {};
+        let originalStr = lines[0].split('\t')[1];
+        let corrects = lines[1].substr(22);
+        let predicts = lines[3].trim().substr(11);
+        function parseRevision(ls){
+            if(ls.trim().substr(-2)==='-1'){
+                return []
+            }
+            let tmp = []
+            ls = ls.substr(0, ls.length-1).split(', ');
+            console.assert(ls.length%4===0);
+            for(let i=0;i<ls.length/4;i++){
+                let _tmp = [];
+                let ts = ls.slice(i*4, i*4+4);
+                _tmp.push(parseInt(ts[0]));
+                _tmp.push(ts[1].trim());
+                _tmp.push(ts[2].trim());
+                _tmp.push(ts[3].trim());
+                tmp.push(_tmp);
+            }
+            return tmp
+        }
+        revisionJson['original'] = originalStr;
+        revisionJson['goldRevision'] = parseRevision(corrects);
+        revisionJson['predictRevision'] = parseRevision(predicts);
+        return revisionJson
+    }
+
+
+</script>
+
+</html>

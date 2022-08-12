@@ -933,7 +933,7 @@ def _get_seq2seq_metrics(training_args):
         F1_score_detect, Precision_detect, Recall_detect = compute_f1score(tp_detect, p, n)
         F1_score_correct, Precision_correct, Recall_correct = compute_f1score(tp_correct, p, n)
 
-        if F1_score_detect < 0.1 or F1_score_correct < 0.1:
+        if F1_score_detect < 0.05 or F1_score_correct < 0.05:
             print("Warning : metric F1_score is too Low , maybe something goes wrong, check your codes please.")
 
         return {"eval_F1_score":float( 0.8 * F1_score_detect + 0.2 * F1_score_correct ), 
