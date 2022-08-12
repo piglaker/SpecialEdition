@@ -137,7 +137,7 @@ def run():
     name = name_dict[training_args.pretrained_name]
 
     print("The Train Dataset Name:" + training_args.dataset)
-    print("Pretrained Model name_path:" + name)
+    print("Possible Backbone Pretrained Model name_or_path:" + name)
 
     pretrained_csc_model = name#"hfl/chinese-macbert-base"#"junnyu/ChineseBERT-base"##"hfl/chinese-roberta-wwm-ext"#"bert-base-chinese"#None#"/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/milestone/ReaLiSe/pretrained"#None
 
@@ -183,7 +183,7 @@ def run():
     # Trainer
     if training_args.model_name in [ "MLP", "CL", "Dot", "Proto", "MaskedLM_v2", "CPT_NLU", "Gector", "MaskedLM" ]:
         Trainer = MyTrainer # MaskedLM        
-    elif training_args.model_name in  [ "CPT_NLG", "BART-base", "BART-large", "T5-base", "mBART-50", "mT5-base" ] :
+    elif training_args.model_name in  [ "CPT_NLG", "BART-base", "BART-large", "T5-base", "mBART-50", "mt5-small", "mt5-base", "mt5-large" ] :
         Trainer = subTrainer # Seq2Seq
         training_args.predict_with_generate = True
     else :

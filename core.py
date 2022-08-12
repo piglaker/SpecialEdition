@@ -35,7 +35,8 @@ from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_base import BatchEncoding, PreTrainedTokenizerBase
 
 from data.DatasetLoadingHelper import (
-    load_ctc2021, 
+    load_ctc2021,
+    load_ctc2021_mT5, 
     load_sighan,
     load_sighan_enchanted, 
     load_sighan_gector,
@@ -180,9 +181,9 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         exit()
         from transformers import T5ForConditionalGeneration as ProtoModel
         pretrained_model_name_or_path="uer/t5-base-chinese-cluecorpussmall"
-    elif model_name == "mT5-base":
+    elif model_name.find("mt5") != -1:
         from transformers import AutoModelForSeq2SeqLM as ProtoModel
-        pretrained_model_name_or_path = "google/mt5-base"
+        pretrained_model_name_or_path = "google/" + model_name
     elif model_name == "Proto":
         if training_args.copy_weight == 0:
             print("Hint: Load Proto self-Distill Contrastive Bert (NAACL2022)")
@@ -194,9 +195,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         from models.bert.modeling_bert_v3 import GectorModel as ProtoModel
     elif model_name == "GPT":
         from transformers import GPT2LMHeadModel as ProtoModel
-    elif model_name == "T5":
-        from models.t5.modeling_t5 import T5ForConditionalGeneration as ProtoModel
-        pretrained_model_name_or_path="uer/t5-base-chinese-cluecorpussmall"
+
     elif model_name == "mBART-50":
         print("Warning: mBART-50 is too large to train even in GTX3090[24G] (ctc task seq2seq 30w limit batch_size 16 cost 30+ hours)!")
         print("There is no base : https://github.com/facebookresearch/fairseq/issues/3252")
@@ -222,6 +221,8 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         print(" Error: No such " + model_name)
         exit(0)
 
+    print("MODEL_NAME:", pretrained_model_name_or_path)
+
     if model_name != "Proto":
         model = ProtoModel.from_pretrained(pretrained_model_name_or_path=pretrained_model_name_or_path)
     else:
@@ -237,7 +238,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
     return model
 
 
-def get_dataset(dataset, path_head):
+def get_dataset(training_args, path_head):
     """
     Deprecation Warning !
     preprocess wrapped in load_ctc2021
@@ -250,9 +251,10 @@ def get_dataset(dataset, path_head):
     print("Loading Dataset !")
     exec("os.system('date')")
 
-    if dataset == "ctc2021":
-        train_data, eval_data, test_data = load_ctc2021()
-    elif dataset == "sighan":
+    if training_args.dataset == "ctc2021":
+        train_data, eval_data, test_data = load_ctc2021(args=training_args)
+
+    elif training_args.dataset == "sighan":
         train_data, eval_data, test_data = load_sighan(path_head=path_head)
     else:
         print("Error: No such dataset ")
@@ -280,7 +282,10 @@ def get_dataset_plus(training_args):
     ddp_exec("os.system('date')")
 
     if training_args.dataset == "ctc2021":
-        train_data, eval_data, test_data = load_ctc2021(args=training_args)
+        if training_args.model_name.find("mT5") != -1:
+            train_data, eval_data, test_data = load_ctc2021_mT5(args=training_args)
+        else:
+            train_data, eval_data, test_data = load_ctc2021(args=training_args)
     elif "sighan" in training_args.dataset:
         #train_data, eval_data, test_data = load_sighan(path_head)
         if training_args.model_name == "Gector":

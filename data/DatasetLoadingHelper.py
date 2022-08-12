@@ -89,7 +89,7 @@ def load_tmp():
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
 from fastNLP import cache_results
-@cache_results(_cache_fp='cache/ctc2021_extra', _refresh=True)
+@cache_results(_cache_fp='cache/ctc2021_extra', _refresh=False)
 def load_ctc2021(args):
 
     print("Loading CTC2021 Dataset")
@@ -128,10 +128,78 @@ def load_ctc2021(args):
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
 
-    if args.model_name == "mBART-50":
-        tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50", src_lang="zh_CN", tgt_lang="zh_CN")
-    elif args.model_name == "mT5-base":
-        tokenizer = AutoTokenizer.from_pretrained("google/mt5-base")
+    #if args.model_name == "mBART-50":
+    #    tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50", src_lang="zh_CN", tgt_lang="zh_CN")
+    #elif args.model_name == "mT5-base":
+    #    tokenizer = AutoTokenizer.from_pretrained("google/mt5-base")
+
+    ####
+    # some shit ->
+    ####
+    
+    train_source_tok = tokenizer.batch_encode_plus(train_source, return_token_type_ids=False)#seems transformers max_length not work
+    train_target_tok = tokenizer.batch_encode_plus(train_target, return_token_type_ids=False)#remove padding=True, max_length=512
+    valid_source_tok = tokenizer.batch_encode_plus(valid_source, return_token_type_ids=False)
+    valid_target_tok = tokenizer.batch_encode_plus(valid_target, return_token_type_ids=False)
+    test_source_tok = tokenizer.batch_encode_plus(test_source, return_token_type_ids=False)
+    test_target_tok = tokenizer.batch_encode_plus(test_target, return_token_type_ids=False)
+
+    train_source_tok["labels"] = train_target_tok["input_ids"]
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+    test_source_tok["labels"] = test_target_tok["input_ids"]
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
+        return features 
+
+    return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
+
+
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/ctc2021_mT5_extra', _refresh=False)
+def load_ctc2021_mT5(args):
+
+    print("Loading CTC2021 for mT5 Dataset")
+
+    #print("#"*5+ " Loading toy datasets for debugging ... " + '#'*5)
+    train_source_path = "./data/rawdata/ctc2021/train.src"
+    train_target_path = "./data/rawdata/ctc2021/train.tgt"
+    valid_source_path = "./data/rawdata/ctc2021/valid.src"
+    valid_target_path = "./data/rawdata/ctc2021/valid.tgt"
+    test_source_path = "./data/rawdata/ctc2021/test.src"
+    test_target_path = "./data/rawdata/ctc2021/test.tgt"
+
+    train_source = read_csv(train_source_path)    
+    train_target = read_csv(train_target_path)
+    valid_source = read_csv(valid_source_path)
+    valid_target = read_csv(valid_target_path)
+    test_source = read_csv(test_source_path)
+    test_target = read_csv(test_target_path)
+
+    if args.use_extra_dataset:
+        print("Using Large v2 & pseudo as extra train set")
+
+        train_v2_source_path = "./data/rawdata/ctc2021/train_v2.src"
+        train_v2_target_path = "./data/rawdata/ctc2021/train_v2.tgt"
+        
+        train_source += read_csv(train_v2_source_path)    
+        train_target += read_csv(train_v2_target_path)
+        
+        # train_v3_source_path = "./data/rawdata/ctc2021/train_v3.src"
+        # train_v3_target_path = "./data/rawdata/ctc2021/train_v3.tgt"
+
+        # train_source += read_csv(train_v3_source_path)    
+        # train_target += read_csv(train_v3_target_path) 
+
+    tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
+
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
+
+    tokenizer = AutoTokenizer.from_pretrained( "google/" + args.model_name )
+
+    #train_source = tokenizer(train_source, text_target=train_target, return_tensors="pt")
 
     ####
     # some shit ->

@@ -47,7 +47,7 @@ echo "Use GPUs: "${available_gpus}
 
 TASK="ctc2021"
 DATASET="ctc2021"
-MODEL_NAME="mT5-base"
+MODEL_NAME="mt5-small"
 use_extra_dataset=True
 
 #TASK="sighan"
