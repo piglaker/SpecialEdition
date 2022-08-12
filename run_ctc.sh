@@ -16,7 +16,7 @@ gtx3090=20480
 
 available_gpus=""
 
-BATCH_SIZE=48
+BATCH_SIZE=16
 
 for i in "${!gpu_memory[@]}";   
 do   
@@ -47,8 +47,8 @@ echo "Use GPUs: "${available_gpus}
 
 TASK="ctc2021"
 DATASET="ctc2021"
-MODEL_NAME="CPT_NLG"
-use_extra_dataset=False
+MODEL_NAME="mT5-base"
+use_extra_dataset=True
 
 #TASK="sighan"
 #DATASET="sighan_raw"
@@ -67,13 +67,13 @@ COPY_WEIGHT=0
 
 FIX_CLS=False
 
-PRETRAINED_NAME=macbert # pretrain bert type: [ bert roberta macbert xlnet chinesebert electra albert roformer nezha ]
+PRETRAINED_NAME=roberta # pretrain bert type: [ bert roberta macbert xlnet chinesebert electra albert roformer nezha ]
 
 EPOCH=10
 STRATEGY=epoch
 EVAL_STEPS=1000
-LEARNING_RATE=5e-5
-WEIGHT_DECAY=0.02
+LEARNING_RATE=7e-5
+WEIGHT_DECAY=0.01
 WARMUP_STEPS=2500
 CKPT_LIMIT=0
 
@@ -101,7 +101,7 @@ rm Recent_Note.log
 echo "LOG_PATH: "${LOG_PATH}
 ln -s ${LOG_PATH} Recent_Note.log
 
-CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} CUDA_LAUNCH_BLOCKING=1 torchrun --nproc_per_node=${NUM_GPUS} --master_port 6501 --nnodes=1 --node_rank=0 \
+CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} CUDA_LAUNCH_BLOCKING=0 torchrun --nproc_per_node=${NUM_GPUS} --master_port 6501 --nnodes=1 --node_rank=0 \
     main.py \
     --sharded_ddp zero_dp_2 \
     --seed ${SEED} \

@@ -181,9 +181,9 @@ def run():
     )#my data collator  fix the length for bert.
     
     # Trainer
-    if training_args.model_name in [ "MLP", "CL", "Dot", "Proto", "MaskedLM_v2", "CPT_NLU", "Gector", "MaskedLM"]:
+    if training_args.model_name in [ "MLP", "CL", "Dot", "Proto", "MaskedLM_v2", "CPT_NLU", "Gector", "MaskedLM" ]:
         Trainer = MyTrainer # MaskedLM        
-    elif training_args.model_name in  [ "CPT_NLG", "BART-base", "BART-large" ] :
+    elif training_args.model_name in  [ "CPT_NLG", "BART-base", "BART-large", "T5-base", "mBART-50", "mT5-base" ] :
         Trainer = subTrainer # Seq2Seq
         training_args.predict_with_generate = True
     else :

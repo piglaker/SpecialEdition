@@ -1,0 +1,1 @@
+python -c "import torch;print(torch.version.cuda);from apex import amp"

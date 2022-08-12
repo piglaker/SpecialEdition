@@ -175,6 +175,14 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
     elif model_name == "BART-large":
         from models.bart.modeling_bart_v2 import BartForConditionalGeneration as ProtoModel
         pretrained_model_name_or_path="fnlp/bart-large-chinese"# '/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/models/bart/bart-zh/arch12-2-new-iter8w'
+    elif model_name == "T5-base":
+        print("Warning: T5-base is not implemented yet")
+        exit()
+        from transformers import T5ForConditionalGeneration as ProtoModel
+        pretrained_model_name_or_path="uer/t5-base-chinese-cluecorpussmall"
+    elif model_name == "mT5-base":
+        from transformers import AutoModelForSeq2SeqLM as ProtoModel
+        pretrained_model_name_or_path = "google/mt5-base"
     elif model_name == "Proto":
         if training_args.copy_weight == 0:
             print("Hint: Load Proto self-Distill Contrastive Bert (NAACL2022)")
@@ -189,6 +197,13 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
     elif model_name == "T5":
         from models.t5.modeling_t5 import T5ForConditionalGeneration as ProtoModel
         pretrained_model_name_or_path="uer/t5-base-chinese-cluecorpussmall"
+    elif model_name == "mBART-50":
+        print("Warning: mBART-50 is too large to train even in GTX3090[24G] (ctc task seq2seq 30w limit batch_size 16 cost 30+ hours)!")
+        print("There is no base : https://github.com/facebookresearch/fairseq/issues/3252")
+        exit()
+        from transformers import MBartForConditionalGeneration as ProtoModel
+        pretrained_model_name_or_path = "facebook/mbart-large-50"
+
     elif model_name is None or model_name == "BERT":
         if training_args.pretrained_name == "chinesebert":
             print("Hint: Load ChineseBert MaskedLM")
@@ -204,7 +219,7 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
         print("Hint: Load Default BertForMaskedLM.")
         from transformers import BertForMaskedLM as ProtoModel
     else:
-        print("Hint: No such " + model_name)
+        print(" Error: No such " + model_name)
         exit(0)
 
     if model_name != "Proto":
@@ -217,13 +232,14 @@ def get_model(model_name="MaskedLM", pretrained_model_name_or_path="hfl/chinese-
                         )
 
     if not model:
-        print("Warning: wrong model name ! Check the core.py  ")
+        print(" Warning: wrong model name ! Check the core.py  ")
         exit()
     return model
 
 
 def get_dataset(dataset, path_head):
     """
+    Deprecation Warning !
     preprocess wrapped in load_ctc2021
     return : mydate
                 torch.LongTensor
@@ -264,40 +280,40 @@ def get_dataset_plus(training_args):
     ddp_exec("os.system('date')")
 
     if training_args.dataset == "ctc2021":
-        train_data, eval_data, test_data = load_ctc2021(extra=training_args.use_extra_dataset)
+        train_data, eval_data, test_data = load_ctc2021(args=training_args)
     elif "sighan" in training_args.dataset:
         #train_data, eval_data, test_data = load_sighan(path_head)
         if training_args.model_name == "Gector":
-            return _get_Gector_dataset()
+            return _get_Gector_dataset(args=training_args)
         if training_args.pretrained_name == "chinesebert":
             if "mask" in training_args.dataset:
-                return _get_chinesebert_mask_dataset()
+                return _get_chinesebert_mask_dataset(args=training_args)
             elif "holy" in training_args.dataset:
-                return _get_chinesebert_holy_dataset()
+                return _get_chinesebert_holy_dataset(args=training_args)
             else:
-                return _get_chinesebert_dataset()
+                return _get_chinesebert_dataset(args=training_args)
         elif "holy" in training_args.dataset:
             if "mask" in training_args.dataset:
-                return _get_holy_mask_dataset()
+                return _get_holy_mask_dataset(args=training_args)
             else:
-                return _get_holy_dataset()
+                return _get_holy_dataset(args=training_args)
         elif "mask" in training_args.dataset:
-            return _get_mask_dataset()
+            return _get_mask_dataset(args=training_args)
         elif "holy" in training_args.dataset:
-            return _get_holy_dataset()
+            return _get_holy_dataset(args=training_args)
         elif "enchanted" in training_args.dataset:
-            return _get_enchanted_dataset()
+            return _get_enchanted_dataset(args=training_args)
         elif "raw" in training_args.dataset:
-            return _get_raw_dataset()
+            return _get_raw_dataset(args=training_args)
         elif 'ReaLiSe' in training_args.dataset:
-            return _get_ReaLiSe_dataset()
+            return _get_ReaLiSe_dataset(args=training_args)
         elif 'expand' in training_args.dataset:
-            return _get_expand_dataset()
+            return _get_expand_dataset(args=training_args)
         elif 'pure' in training_args.dataset:
-            return _get_pure_dataset()
+            return _get_pure_dataset(args=training_args)
         else:
             print("Unclear data type, load default raw sighan")
-            return _get_raw_dataset()
+            return _get_raw_dataset(args=training_args)
     else:
         print("Error: No such dataset ")
         print(training_args.dataset)
@@ -311,7 +327,7 @@ def get_dataset_plus(training_args):
     return train_dataset, eval_dataset, test_dataset
 
 
-def _get_enchanted_dataset(which="15"):
+def _get_enchanted_dataset(args, which="15"):
     """
     Gector for sighan
     """
@@ -328,7 +344,7 @@ def _get_enchanted_dataset(which="15"):
     return train_dataset, eval_dataset, test_dataset
 
 
-def _get_raw_dataset(which="15"):
+def _get_raw_dataset(args, which="15"):
     """
     Gector for sighan
     """
@@ -344,7 +360,7 @@ def _get_raw_dataset(which="15"):
 
     return train_dataset, eval_dataset, test_dataset
 
-def _get_pure_dataset(which="15"):
+def _get_pure_dataset(args, which="15"):
     """
     Gector for sighan
     """
@@ -360,7 +376,7 @@ def _get_pure_dataset(which="15"):
 
     return train_dataset, eval_dataset, test_dataset
 
-def _get_holy_dataset(which="15"):
+def _get_holy_dataset(args, which="15"):
     """
     Holy for sighan
     """
@@ -376,7 +392,7 @@ def _get_holy_dataset(which="15"):
 
     return train_dataset, eval_dataset, test_dataset
 
-def _get_holy_mask_dataset(which="15"):
+def _get_holy_mask_dataset(args, which="15"):
     """
     Holy Mask for sighan
     """
@@ -393,7 +409,7 @@ def _get_holy_mask_dataset(which="15"):
     return train_dataset, eval_dataset, test_dataset
 
 
-def _get_mask_dataset(which="15"):
+def _get_mask_dataset(args, which="15"):
     """
     Gector for sighan
     """
@@ -410,7 +426,7 @@ def _get_mask_dataset(which="15"):
     return train_dataset, eval_dataset, test_dataset
 
 
-def _get_Gector_dataset(which="15"):
+def _get_Gector_dataset(args, which="15"):
     """
     Gector for sighan
     """
@@ -426,7 +442,7 @@ def _get_Gector_dataset(which="15"):
 
     return train_dataset, eval_dataset, test_dataset
 
-def _get_chinesebert_holy_dataset(which="15"):
+def _get_chinesebert_holy_dataset(args, which="15"):
     """
     ChineseBert for sighan
     Mainly diff in no max_length and 'pinyin_idx' must be 8 * len('input_ids')
@@ -443,7 +459,7 @@ def _get_chinesebert_holy_dataset(which="15"):
 
     return train_dataset, eval_dataset, test_dataset
 
-def _get_chinesebert_dataset(which="15"):
+def _get_chinesebert_dataset(args, which="15"):
     """
     ChineseBert for sighan
     Mainly diff in no max_length and 'pinyin_idx' must be 8 * len('input_ids')
@@ -460,7 +476,7 @@ def _get_chinesebert_dataset(which="15"):
 
     return train_dataset, eval_dataset, test_dataset
 
-def _get_chinesebert_mask_dataset(which="15"):
+def _get_chinesebert_mask_dataset(args, which="15"):
     """
     ChineseBert for sighan
     Mainly diff in no max_length and 'pinyin_idx' must be 8 * len('input_ids')
@@ -478,7 +494,7 @@ def _get_chinesebert_mask_dataset(which="15"):
     return train_dataset, eval_dataset, test_dataset
 
 
-def _get_ReaLiSe_dataset(which="15"):
+def _get_ReaLiSe_dataset(args, which="15"):
     """
     For its 
     """
@@ -510,7 +526,7 @@ def _get_ReaLiSe_dataset(which="15"):
     print("over")
     return trans2mydataset(train_dataset), trans2mydataset(eval_dataset), trans2mydataset(test_dataset)
 
-def _get_expand_dataset(which="15"):
+def _get_expand_dataset(args, which="15"):
     """
     NLPcc and HSK Expand for sighan
     """
@@ -526,7 +542,7 @@ def _get_expand_dataset(which="15"):
 
     return train_dataset, eval_dataset, test_dataset
 
-def _get_sighan_test(which, path_head=""):
+def _get_sighan_test(args, which, path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -550,7 +566,7 @@ def _get_sighan_test(which, path_head=""):
     return test_dataset
 
 
-def _get_lattice_dataset(dataset="sighan", path_head="."):
+def _get_lattice_dataset(args, dataset="sighan", path_head="."):
     """
     """
     print("Loading Dataset !")
@@ -566,7 +582,7 @@ def _get_lattice_dataset(dataset="sighan", path_head="."):
     return datasets, vocabs, embeddings
 
 
-def _get_magic_plus_dataset(dataset="sighan", path_head=""):
+def _get_magic_plus_dataset(args, dataset="sighan", path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -586,7 +602,7 @@ def _get_magic_plus_dataset(dataset="sighan", path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
-def _get_magic_dataset(dataset="sighan", path_head=""):
+def _get_magic_dataset(args, dataset="sighan", path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -606,7 +622,7 @@ def _get_magic_dataset(dataset="sighan", path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
-def _get_magic_lang8_dataset(dataset="sighan", path_head=""):
+def _get_magic_lang8_dataset(args, dataset="sighan", path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -626,7 +642,7 @@ def _get_magic_lang8_dataset(dataset="sighan", path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
-def _get_magic_expand_dataset(dataset="sighan", path_head=""):
+def _get_magic_expand_dataset(args, dataset="sighan", path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -646,7 +662,7 @@ def _get_magic_expand_dataset(dataset="sighan", path_head=""):
     return train_dataset, eval_dataset, test_dataset
 
 
-def _get_super_magic_dataset(dataset="sighan", path_head=""):
+def _get_super_magic_dataset(args, dataset="sighan", path_head=""):
     """
     """
     print("Loading Dataset !")
@@ -915,7 +931,7 @@ def _get_seq2seq_metrics(training_args):
         if F1_score_detect < 0.1 or F1_score_correct < 0.1:
             print("Warning : metric F1_score is too Low , maybe something goes wrong, check your codes please.")
 
-        return {"combined_F1_score":float( 0.8 * F1_score_detect + 0.2 * F1_score_correct ), 
+        return {"eval_F1_score":float( 0.8 * F1_score_detect + 0.2 * F1_score_correct ), 
                 "F1_score_detect": float(F1_score_detect), 
                 "Precision_detect":float(Precision_detect),  
                 "Recall_detect":float(Recall_detect),

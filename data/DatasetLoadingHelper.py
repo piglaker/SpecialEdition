@@ -8,6 +8,7 @@ import itertools
 from tqdm import tqdm
 from transformers import (
     AutoTokenizer,
+    MBart50TokenizerFast,
 )
 import jieba
 
@@ -87,10 +88,11 @@ def load_tmp():
 
     return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/ctc2021_extra', _refresh=True)
+def load_ctc2021(args):
 
-def load_ctc2021(extra):
-
-    print("Load CTC2021 Dataset")
+    print("Loading CTC2021 Dataset")
 
     #print("#"*5+ " Loading toy datasets for debugging ... " + '#'*5)
     train_source_path = "./data/rawdata/ctc2021/train.src"
@@ -107,7 +109,7 @@ def load_ctc2021(extra):
     test_source = read_csv(test_source_path)
     test_target = read_csv(test_target_path)
 
-    if extra:
+    if args.use_extra_dataset:
         print("Using Large v2 & pseudo as extra train set")
 
         train_v2_source_path = "./data/rawdata/ctc2021/train_v2.src"
@@ -116,15 +118,20 @@ def load_ctc2021(extra):
         train_source += read_csv(train_v2_source_path)    
         train_target += read_csv(train_v2_target_path)
         
-        train_v3_source_path = "./data/rawdata/ctc2021/train_v3.src"
-        train_v3_target_path = "./data/rawdata/ctc2021/train_v3.tgt"
+        # train_v3_source_path = "./data/rawdata/ctc2021/train_v3.src"
+        # train_v3_target_path = "./data/rawdata/ctc2021/train_v3.tgt"
 
-        train_source += read_csv(train_v3_source_path)    
-        train_target += read_csv(train_v3_target_path) 
+        # train_source += read_csv(train_v3_source_path)    
+        # train_target += read_csv(train_v3_target_path) 
 
     tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_name_path)
+
+    if args.model_name == "mBART-50":
+        tokenizer = MBart50TokenizerFast.from_pretrained("facebook/mbart-large-50", src_lang="zh_CN", tgt_lang="zh_CN")
+    elif args.model_name == "mT5-base":
+        tokenizer = AutoTokenizer.from_pretrained("google/mt5-base")
 
     ####
     # some shit ->

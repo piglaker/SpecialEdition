@@ -101,7 +101,7 @@ rm Recent_Note.log
 echo "LOG_PATH: "${LOG_PATH}
 ln -s ${LOG_PATH} Recent_Note.log
 
-CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} CUDA_LAUNCH_BLOCKING=1 torchrun --nproc_per_node=${NUM_GPUS} --master_port 6501 --nnodes=1 --node_rank=0 \
+CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} CUDA_LAUNCH_BLOCKING=0 torchrun --nproc_per_node=${NUM_GPUS} --master_port 6501 --nnodes=1 --node_rank=0 \
     main.py \
     --sharded_ddp zero_dp_2 \
     --seed ${SEED} \
@@ -137,8 +137,9 @@ CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} CUDA_LAUNCH_BLOC
     --copy_weight ${COPY_WEIGHT} \
     --num_gpus ${NUM_GPUS} \
     --pretrained_name ${PRETRAINED_NAME} \
-    --log_path ${LOG_PATH} \
-> tmp.log 2>&1
+    --log_path ${LOG_PATH}
+
+#> tmp.log 2>&1
 
 #cat tmp.log
 
