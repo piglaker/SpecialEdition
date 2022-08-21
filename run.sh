@@ -1,4 +1,4 @@
-#The final version
+# My run.sh
 d=`date`
 datetime=${d// /-}
 
@@ -51,7 +51,7 @@ echo "Use GPUs: "${available_gpus}
 #use_extra_dataset=False
 
 TASK="sighan"
-DATASET="sighan_raw"
+DATASET="sighan_ReaLiSe"
 MODEL_NAME="Proto"
 
 if [ ! -d "./logs/${TASK}/${DATASET}" ]; then
@@ -60,10 +60,25 @@ fi
 
 EVAL_DATASET="15"
 
-CL_WEIGHT=0
-REPEAT_WEIGHT=0
+if [ ! -n "$1" ] ;then
+    CL_WEIGHT=0.01 #0.005 0.05 
+else
+    CL_WEIGHT=$1
+fi
+#CL_WEIGHT=0.01 #0.005 0.05
 
-COPY_WEIGHT=50
+REPEAT_WEIGHT=1 #1
+
+if [ ! -n "$2" ] ;then
+    MULTI_TASK_WEIGHT=0.1 #0.01 
+else
+    MULTI_TASK_WEIGHT=$2 #0.01 
+fi
+#MULTI_TASK_WEIGHT=0.1 #0.01 
+
+MULTI_TASK=True
+
+COPY_WEIGHT=0
 
 FIX_CLS=False
 
@@ -71,26 +86,26 @@ PRETRAINED_NAME=macbert # pretrain bert type: [ bert roberta macbert xlnet chine
 
 EPOCH=20
 STRATEGY=epoch
-EVAL_STEPS=1000
+EVAL_STEPS=500
 LEARNING_RATE=5e-5
-WEIGHT_DECAY=0.02
+WEIGHT_DECAY=0.01
 WARMUP_STEPS=5000
-CKPT_LIMIT=0
+CKPT_LIMIT=1
 
-SEED=3471
+SEED=3471 #83 #3471
 
 VALUE=1
 
 HEAD=Proto # BertForMaskedLM_CL #ConfusionCluster/3 Proto CPT
 
-OUTPUT_DIR=./tmp/${DATASET}/${HEAD}/${PRETRAINED_NAME}
-
 if [ "${MODEL_NAME}" == "Proto" ];then
     fix_cls=True
-    name=${MODEL_NAME}"_cls_copy"${COPY_WEIGHT}"_cl"${CL_WEIGHT}"_repeat"${REPEAT_WEIGHT}"_eval"${EVAL_DATASET}"_epoch"${EPOCH}"_bs"${BATCH_SIZE}
+    name=${MODEL_NAME}"_cls_copy"${COPY_WEIGHT}"_cl"${CL_WEIGHT}"_repeat"${REPEAT_WEIGHT}"_eval"${EVAL_DATASET}"_epoch"${EPOCH}"_bs"${BATCH_SIZE}"_seed"${SEED}"_multi_task"${MULTI_TASK}"_weight"${MULTI_TASK_WEIGHT}"_v1"
 else
-    name=${MODEL_NAME}"_eval"${EVAL_DATASET}"_epoch"${EPOCH}"_bs"${BATCH_SIZE}
+    name=${MODEL_NAME}"_eval"${EVAL_DATASET}"_epoch"${EPOCH}"_bs"${BATCH_SIZE}"_seed"${SEED}
 fi
+
+OUTPUT_DIR=./tmp/${DATASET}/${HEAD}/${PRETRAINED_NAME}/${name}
 
 LOG_PATH=logs/${TASK}/${DATASET}/${HEAD}/${MODEL_NAME}/${PRETRAINED_NAME}/${name}.log
 
@@ -108,7 +123,7 @@ CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} CUDA_LAUNCH_BLOC
     --do_train \
     --do_eval \
     --do_predict \
-    --fp16 False \
+    --fp16 True \
     --disable_tqdm False \
     --dataloader_num_workers 0 \
     --output_dir ${OUTPUT_DIR} \
@@ -132,14 +147,15 @@ CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} CUDA_LAUNCH_BLOC
     --model_name ${MODEL_NAME} \
     --use_extra_dataset ${use_extra_dataset} \
     --fix_cls ${FIX_CLS} \
+    --multi_task ${MULTI_TASK} \
     --cl_weight ${CL_WEIGHT} \
     --repeat_weight ${REPEAT_WEIGHT} \
     --copy_weight ${COPY_WEIGHT} \
+    --multi_task_weight ${MULTI_TASK_WEIGHT} \
     --num_gpus ${NUM_GPUS} \
     --pretrained_name ${PRETRAINED_NAME} \
-    --log_path ${LOG_PATH}
-
-#> tmp.log 2>&1
+    --log_path ${LOG_PATH} \
+> tmp.log 2>&1
 
 #cat tmp.log
 

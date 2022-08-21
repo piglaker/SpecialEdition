@@ -71,7 +71,7 @@ logger = logging.getLogger(__name__)
 
 def adapt_learning_rate(training_args):
     training_args.learning_rate = (training_args.num_gpus * training_args.per_device_train_batch_size / 128 )* 7e-5
-    print("Adapted Learning_rate:", training_args.learning_rate)
+    print("[Main] Adapted Learning_rate:", training_args.learning_rate)
     return training_args
 
 class DDP_std_saver(io.StringIO):
@@ -136,8 +136,8 @@ def run():
 
     name = name_dict[training_args.pretrained_name]
 
-    print("The Train Dataset Name:" + training_args.dataset)
-    print("Possible Backbone Pretrained Model name_or_path:" + name)
+    print("[Main] The Train Dataset Name:" + training_args.dataset)
+    print("[Main] Possible Backbone Pretrained Model Name_or_Path:" + name)
 
     pretrained_csc_model = name#"hfl/chinese-macbert-base"#"junnyu/ChineseBERT-base"##"hfl/chinese-roberta-wwm-ext"#"bert-base-chinese"#None#"/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/milestone/ReaLiSe/pretrained"#None
 
@@ -187,7 +187,7 @@ def run():
         Trainer = subTrainer # Seq2Seq
         training_args.predict_with_generate = True
     else :
-        print(" Error: Unregistered Model !")
+        print("[Main] Error: Unregistered Model !")
         exit(0)
 
     trainer = Trainer(

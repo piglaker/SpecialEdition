@@ -92,9 +92,9 @@ from fastNLP import cache_results
 @cache_results(_cache_fp='cache/ctc2021_extra', _refresh=False)
 def load_ctc2021(args):
 
-    print("Loading CTC2021 Dataset")
+    print("[Data] Loading CTC2021 Dataset")
 
-    #print("#"*5+ " Loading toy datasets for debugging ... " + '#'*5)
+    #print("[Data] #"*5+ " Loading toy datasets for debugging ... " + '#'*5)
     train_source_path = "./data/rawdata/ctc2021/train.src"
     train_target_path = "./data/rawdata/ctc2021/train.tgt"
     valid_source_path = "./data/rawdata/ctc2021/valid.src"
@@ -110,7 +110,7 @@ def load_ctc2021(args):
     test_target = read_csv(test_target_path)
 
     if args.use_extra_dataset:
-        print("Using Large v2 & pseudo as extra train set")
+        print("[Data] Using Large v2 & pseudo as extra train set")
 
         train_v2_source_path = "./data/rawdata/ctc2021/train_v2.src"
         train_v2_target_path = "./data/rawdata/ctc2021/train_v2.tgt"
@@ -161,9 +161,9 @@ from fastNLP import cache_results
 @cache_results(_cache_fp='cache/ctc2021_mT5_extra', _refresh=False)
 def load_ctc2021_mT5(args):
 
-    print("Loading CTC2021 for mT5 Dataset")
+    print("[Data] Loading CTC2021 for mT5 Dataset")
 
-    #print("#"*5+ " Loading toy datasets for debugging ... " + '#'*5)
+    #print("[Data] #"*5+ " Loading toy datasets for debugging ... " + '#'*5)
     train_source_path = "./data/rawdata/ctc2021/train.src"
     train_target_path = "./data/rawdata/ctc2021/train.tgt"
     valid_source_path = "./data/rawdata/ctc2021/valid.src"
@@ -179,7 +179,7 @@ def load_ctc2021_mT5(args):
     test_target = read_csv(test_target_path)
 
     if args.use_extra_dataset:
-        print("Using Large v2 & pseudo as extra train set")
+        print("[Data] Using Large v2 & pseudo as extra train set")
 
         train_v2_source_path = "./data/rawdata/ctc2021/train_v2.src"
         train_v2_target_path = "./data/rawdata/ctc2021/train_v2.tgt"
@@ -228,7 +228,7 @@ from fastNLP import cache_results
 @cache_results(_cache_fp='cache/sighan_raw', _refresh=False)
 def load_sighan(path_head=""):
 
-    print("Loading SigHan Dataset ...")
+    print("[Data] Loading SigHan Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/raw/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/raw/train.tgt"
@@ -279,7 +279,7 @@ from fastNLP import cache_results
 @cache_results(_cache_fp='cache/sighan_pure', _refresh=True)
 def load_sighan_pure(path_head=""):
 
-    print("Loading SigHan Pure Dataset ...")
+    print("[Data] Loading SigHan Pure Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/raw/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/raw/train.tgt"
@@ -331,11 +331,11 @@ from fastNLP import cache_results
 def load_sighan_expand(path_head=""):
     """
     """
-    print("NLPCC_and HSK only for UNALIGNED Correction!")
+    print("[Data] NLPCC_and HSK only for UNALIGNED Correction!")
 
     exit()
     
-    print("Loading Expand SigHan Dataset ...")
+    print("[Data] Loading Expand SigHan Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/raw/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/raw/train.tgt"
@@ -392,7 +392,7 @@ def load_sighan_gector(path_head=""):
         so the length of source.tok dismatch the label ( seq2tag generate bu scripts/sighan_v1/generate_vocab.py)
         I use ugly double for to solve this .
     """
-    print("Loading SigHan GECTOR Dataset ...")
+    print("[Data] Loading SigHan GECTOR Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/gector/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/gector/train.tgt"
@@ -472,7 +472,7 @@ def load_sighan_chinesebert(path_head=""):
             o = chinese_bert(**inputs)
             l = o.logits
     """
-    print("Loading SigHan ChineseBert Dataset ...")
+    print("[Data] Loading SigHan ChineseBert Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/raw/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/raw/train.tgt"
@@ -521,7 +521,7 @@ def load_sighan_chinesebert_holy(path_head=""):
     """
         Holy
     """
-    print("Loading Holy SigHan ChineseBert Dataset ...")
+    print("[Data] Loading Holy SigHan ChineseBert Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/holy/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/holy/train.tgt"
@@ -569,7 +569,7 @@ from fastNLP import cache_results
 def load_sighan_chinesebert_mask(path_head=""):
     """
     """
-    print("Loading SigHan ChineseBert Dataset ...")
+    print("[Data] Loading SigHan ChineseBert Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/raw/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/raw/train.tgt"
@@ -629,7 +629,7 @@ def load_sighan_mask(path_head=""):
         to valid mask the original wrong char of source, train bert to predict
 
     """
-    print("Loading SigHan but Mask original wrong char Dataset ...")
+    print("[Data] Loading SigHan but Mask original wrong char Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/std/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/std/train.tgt"
@@ -680,9 +680,71 @@ def load_sighan_mask(path_head=""):
             features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
         return features 
 
-    print("Hint: Rough code here to mask will cause program slow")
+    print("[Data] Hint: Rough code here to mask will cause program slow")
 
     return mask(transpose(train_source_tok)), mask(transpose(valid_source_tok)), mask(transpose(test_source_tok))
+
+from fastNLP import cache_results
+@cache_results(_cache_fp='cache/sighan_chinesebert_ReaLiSe', _refresh=False)
+def load_sighan_chinesebert_ReaLiSe(path_head=""):
+    """
+    Tokenizer : 
+        import torch
+        from chinesebert import ChineseBertForMaskedLM, ChineseBertTokenizerFast, ChineseBertConfig
+        pretrained_model_name = "junnyu/ChineseBERT-base"
+
+        tokenizer = ChineseBertTokenizerFast.from_pretrained(pretrained_model_name)
+        chinese_bert = ChineseBertForMaskedLM.from_pretrained(pretrained_model_name)
+
+        text = "北京是[MASK]国的首都。"
+        inputs = tokenizer(text, return_tensors="pt")
+
+        with torch.no_grad():
+            o = chinese_bert(**inputs)
+            l = o.logits
+    """
+    print("[Data] Loading SigHan ReaLiSe ChineseBert Dataset ...")
+
+    train_source_path = path_head + "./data/rawdata/sighan/raw/train.src"
+    train_target_path = path_head + "./data/rawdata/sighan/raw/train.tgt"
+    valid_source_path = path_head + "./data/rawdata/sighan/raw/valid.src"
+    valid_target_path = path_head + "./data/rawdata/sighan/raw/valid.tgt"#valid should be same to test ( sighan 15
+    test_source_path = path_head + "./data/rawdata/sighan/raw/test.src"
+    test_target_path = path_head + "./data/rawdata/sighan/raw/test.tgt"
+
+    train_source = read_csv(train_source_path)#[:2000]#[274144:]#for only sighan
+    train_target = read_csv(train_target_path)#[:2000]#[274144:]
+    
+    valid_source = read_csv(valid_source_path)
+    valid_target = read_csv(valid_target_path)
+
+    test_source = read_csv(test_source_path)
+    test_target = read_csv(test_target_path)
+
+    from chinesebert import ChineseBertTokenizerFast
+    pretrained_model_name = "junnyu/ChineseBERT-base"
+
+    tokenizer = ChineseBertTokenizerFast.from_pretrained(pretrained_model_name)
+
+    train_source_tok = tokenizer(train_source, padding=True, truncation=True, max_length=128)
+    train_target_tok = tokenizer(train_target, padding=True, truncation=True, max_length=128) 
+    valid_source_tok = tokenizer(valid_source, padding=True, truncation=True, max_length=128)
+    valid_target_tok = tokenizer(valid_target, padding=True, truncation=True, max_length=128) 
+    test_source_tok = tokenizer(test_source, padding=True, truncation=True, max_length=128) 
+    test_target_tok = tokenizer(test_target, padding=True, truncation=True, max_length=128) 
+
+    train_source_tok["labels"] = train_target_tok["input_ids"]
+    valid_source_tok["labels"] = valid_target_tok["input_ids"]
+    test_source_tok["labels"] = test_target_tok["input_ids"]
+
+    def transpose(inputs):
+        features = []
+        for i in tqdm(range(len(inputs["input_ids"]))):
+            #ugly fix for encoder model (the same length
+            features.append({key:inputs[key][i] for key in inputs.keys()}) 
+        return features 
+
+    return transpose(train_source_tok), transpose(valid_source_tok), transpose(test_source_tok)
 
 from fastNLP import cache_results
 @cache_results(_cache_fp='cache/sighan_holy', _refresh=False)
@@ -690,7 +752,7 @@ def load_sighan_holy(path_head=""):
     """
         "Holy" means remvoe all the overlapped pair between train and test
     """
-    print("Loading SigHan Holy Dataset ...")
+    print("[Data] Loading SigHan Holy Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/holy/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/holy/train.tgt"
@@ -745,7 +807,7 @@ def load_sighan_holy_mask(path_head=""):
         to valid mask the original wrong char of source, train bert to predict
 
     """
-    print("Loading SigHan Holy but Mask original wrong char Dataset ...")
+    print("[Data] Loading SigHan Holy but Mask original wrong char Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/holy/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/holy/train.tgt"
@@ -796,7 +858,7 @@ def load_sighan_holy_mask(path_head=""):
             features.append({key:inputs[key][i][:128] for key in inputs.keys()}) #we fix here (truncation 
         return features 
 
-    print("Hint: Rough code here to mask will cause program slow")
+    print("[Data] Hint: Rough code here to mask will cause program slow")
 
     return mask(transpose(train_source_tok)), mask(transpose(valid_source_tok)), mask(transpose(test_source_tok))
 
@@ -805,7 +867,7 @@ from fastNLP import cache_results
 @cache_results(_cache_fp='cache/sighan_enchanted', _refresh=False)
 def load_sighan_enchanted(path_head=""):
 
-    print("Loading SigHan Enchanted Dataset ...")
+    print("[Data] Loading SigHan Enchanted Dataset ...")
 
     train_source_path = path_head + "./data/rawdata/sighan/enchanted/train.src"
     train_target_path = path_head + "./data/rawdata/sighan/enchanted/train.tgt"
@@ -856,7 +918,7 @@ def load_sighan13_test():
     """
     UnFinished ...
     """
-    print("Loading SigHan13 Test Dataset ...")
+    print("[Data] Loading SigHan13 Test Dataset ...")
 
     valid_source_path = "./data/rawdata/sighan/raw/valid14.src"
     valid_target_path = "./data/rawdata/sighan/raw/valid14.tgt"
@@ -884,7 +946,7 @@ def load_sighan13_test():
 def load_sighan14_test(path_head="./"):
     """
     """
-    print("Loading SigHan14 Test Dataset ...")
+    print("[Data] Loading SigHan14 Test Dataset ...")
 
     valid_source_path = path_head + "data/rawdata/sighan/raw/valid14.src"
     valid_target_path = path_head + "data/rawdata/sighan/raw/valid14.tgt"
@@ -912,7 +974,7 @@ def load_sighan14_test(path_head="./"):
 def load_sighan15_test(path_head="./"):
     """
     """
-    print("Loading SigHan15 Test Dataset ...")
+    print("[Data] Loading SigHan15 Test Dataset ...")
 
     valid_source_path = "./data/rawdata/sighan/std/test.src"
     valid_target_path = "./data/rawdata/sighan/std/test.tgt"
@@ -1071,7 +1133,7 @@ def load_lattice_sighan(dataset=None, path_head=""):
     for flat
     #use faskNLP module because Im FDU CS ! #Im LAZY.
     """
-    print("Loading Lattice SigHan Dataset ...")
+    print("[Data] Loading Lattice SigHan Dataset ...")
 
     pretrain_embedding_path = "/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/data/others/yangjie_word_char_mix.txt"
     
@@ -1201,7 +1263,7 @@ def load_abs_pos_sighan(dataset=None, path_head=""):
     for abs pos bert
     """
 
-    print("Loading Abs_Pos Bert SigHan Dataset ...")
+    print("[Data] Loading Abs_Pos Bert SigHan Dataset ...")
 
     train_pkg, valid_pkg, test_pkg = load_raw_lattice(path_head=path_head) 
 
@@ -1228,7 +1290,7 @@ def load_abs_pos_sighan_plus(dataset=None, path_head=""):
     for abs pos bert
     """
 
-    print("Loading Expanded Abs_Pos Bert SigHan Dataset ...")
+    print("[Data] Loading Expanded Abs_Pos Bert SigHan Dataset ...")
 
     train_pkg, valid_pkg, test_pkg = load_raw_lattice(path_head=path_head) 
 
@@ -1311,7 +1373,7 @@ def load_abs_pos_and_spe_token_sighan(dataset=None, path_head=""):
     for abs pos bert
     """
 
-    print("Loading Abs_Pos and Special Token Bert SigHan Dataset ...")
+    print("[Data] Loading Abs_Pos and Special Token Bert SigHan Dataset ...")
 
     train_pkg, valid_pkg, test_pkg = load_raw_lattice(raw_lattice_path="/data/rawdata/sighan/lattice_balanced/", path_head=path_head) 
 
@@ -1425,7 +1487,7 @@ def load_abs_pos_sighan_lang8(dataset=None, path_head=""):
     for abs pos bert
     """
 
-    print("Loading Abs_Pos Bert SigHan Dataset ...")
+    print("[Data] Loading Abs_Pos Bert SigHan Dataset ...")
 
     train_pkg, valid_pkg, test_pkg = load_raw_lattice_lang8(path_head=path_head) 
 
@@ -1483,7 +1545,7 @@ if __name__ == "__main__":
             print(len(i['attention_mask']))
             print(i['input_ids'])
             print(i["labels"])
-            print("something goes wrong!")
+            print("[Data] something goes wrong!")
             exit()
     else:
-        print("Seems working well !")
+        print("[Data] Seems working well !")

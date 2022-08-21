@@ -194,9 +194,11 @@ class FoolDataCollatorForSeq2Seq:
         shared_max_length = max([ len(i['input_ids']) for i in f_copy] + [len(i['labels']) for i in f_copy] )
 
         def simple_pad(f_copy, key):
+            max_length = shared_max_length
+            #print(max_length)
             f_key = [ f[key] for f in f_copy ]
             if f_key is not None:
-                max_length = max(len(l) for l in f_key)
+                #max_length = max(len(l) for l in f_key)
 
                 padding_side = "right"
 
@@ -204,14 +206,15 @@ class FoolDataCollatorForSeq2Seq:
                     label_pad_token_id = 0
                 elif key == "input_ids":
                     label_pad_token_id = 0
-                elif key == "labels":
-                    max_length = shared_max_length
+                elif key.find("labels") != -1:
                     label_pad_token_id= -100
+                    
                 else:
                     label_pad_token_id = self.label_pad_token_id 
 
                 for f in f_copy: 
                     remainder = [label_pad_token_id] * (max_length - len(f[key]))
+                    
                     f[key] = (
                         f[key] + remainder if padding_side == "right" else remainder + f[key]
                     )
@@ -233,7 +236,14 @@ class FoolDataCollatorForSeq2Seq:
                 new[key].append(feature[key])
 
         for key in new.keys():
-            new[key] = torch.tensor(new[key]) 
+            try:
+                new[key] = torch.tensor(new[key]) 
+            except:
+                print("[Lib] DataCollatorForSeq2Seq Error : Mismatch length ! ")
+                print("[Lib] key : ", key)
+                print([ len(i) for i in new[key] ])
+                print("[Lib] WHY WE CATCH HERE: https://github.com/pytorch/pytorch/issues/67538")
+                exit()
 
         return new
 
@@ -884,6 +894,7 @@ class MyTrainer(subTrainer):
         else:
             labels = None
         outputs = model(**inputs)
+
         # Save past state if it exists
         # TODO: this needs to be fixed and made cleaner later.
         if self.args.past_index >= 0:
@@ -967,10 +978,11 @@ class MyTrainer(subTrainer):
                     logits = smp_nested_concat(logits_mb)
             else:
                 if has_labels:
+                    # when ddp
                     with self.autocast_smart_context_manager():
                         loss, outputs = self.compute_loss(model, inputs, return_outputs=True)
                     loss = loss.mean().detach()
-
+                    
                     if isinstance(outputs, dict):
                         logits = tuple(v for k, v in outputs.items() if k not in ignore_keys + ["loss"])
                     else:
@@ -992,8 +1004,13 @@ class MyTrainer(subTrainer):
             return (loss, None, None)
 
         logits = nested_detach(logits)
-        
+ 
         if len(logits) == 1:
             logits = logits[0]
-        
+         
+        elif isinstance(logits, tuple):
+            logits = logits[0]
+
+        # TODO: confusion set constraints predictions
+
         return (loss, torch.argmax(torch.nn.functional.softmax(logits, 2), -1), labels)

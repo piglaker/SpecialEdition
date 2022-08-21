@@ -2280,6 +2280,26 @@ class ProtoModel_v2(BertPreTrainedModel):
         return {"input_ids": input_ids, "attention_mask": attention_mask}
 
 
+class MyProjHead(nn.Module):
+    """Head for masked language modeling."""
+
+    def __init__(self, input_dim, hidden_dim, output_dim):
+        super().__init__()
+        self.dense = nn.Linear(input_dim, hidden_dim)
+        self.activation_fn = ACT2FN["gelu"]
+        self.layer_norm = nn.LayerNorm(hidden_dim, eps=1e-12)
+
+        self.proj = nn.Linear(hidden_dim, output_dim, bias=True)
+
+    def forward(self, features):
+        x = self.dense(features)
+        x = self.activation_fn(x)
+        x = self.layer_norm(x)
+        # project back to size of vocabulary with bias
+        x = self.proj(x)
+        return x
+
+
 class ProtoModel_v3(nn.Module):
 
     def __init__(self, pretrained_model_name_or_path, training_args):
@@ -2310,6 +2330,33 @@ class ProtoModel_v3(nn.Module):
 
         self.copy_weight = training_args.copy_weight
 
+        self.pos_labels_size = 56
+
+        self.seg_labels_size = 4
+
+        self.idx_labels_size = 2
+
+        self.error_labels_size = 4
+
+        self.pos_proj = MyProjHead(self.config.hidden_size, self.config.hidden_size, self.pos_labels_size) 
+
+        self.seg_proj = MyProjHead(self.config.hidden_size, self.config.hidden_size, self.seg_labels_size)
+
+        self.idx_proj = MyProjHead(self.config.hidden_size, self.config.hidden_size, self.idx_labels_size)
+
+        self.error_proj = MyProjHead(self.config.hidden_size, self.config.hidden_size, self.error_labels_size)
+
+        self.idx_loss_weight = torch.tensor([1.0, 15.0]).cuda()
+
+        self.pos_weight = training_args.multi_task_weight # 0.01
+
+        self.idx_weight = training_args.multi_task_weight # 0.01
+
+        self.seg_weight = training_args.multi_task_weight # 0.01
+
+        self.error_weight = training_args.multi_task_weight # 0.1
+
+
     def get_output_embeddings(self):
         return self.cls.predictions.decoder
 
@@ -2327,6 +2374,10 @@ class ProtoModel_v3(nn.Module):
         encoder_hidden_states=None,
         encoder_attention_mask=None,
         labels=None,
+        idx_labels=None,
+        pos_labels=None,
+        seg_labels=None,
+        error_type=None,
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
@@ -2338,8 +2389,21 @@ class ProtoModel_v3(nn.Module):
             loss is only computed for the tokens with labels in `[0, ..., config.vocab_size]`
         """
 
+        """
+        print(input_ids.shape)
+        print(labels.shape)
+        print(seg_labels.shape)
+        print(idx_labels.shape)
+        print(pos_labels.shape)
+
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
+        print(self.bert.embeddings.word_embeddings.weight.shape)
+
+        print(torch.min(input_ids), torch.max(input_ids))
+
+        exit()
+        """
         outputs = self.bert(
             input_ids,
             attention_mask=attention_mask,
@@ -2360,7 +2424,7 @@ class ProtoModel_v3(nn.Module):
 
         #prediction_scores = self.cls(sequence_output)
 
-        if self.repeat_weight != 0 or self.cl_weight != 0:
+        if self.repeat_weight != 0 or self.cl_weight != 0 or self.pos_weight != 0:
 
             noneg_labels = torch.where(labels != -100, labels, 0)
 
@@ -2399,35 +2463,47 @@ class ProtoModel_v3(nn.Module):
                 distill_hiddens_detach = torch.nn.functional.normalize( distill_hiddens_detach, dim=-1)
 
                 scores = torch.einsum('blh,bkh->blk', hiddens, distill_hiddens_detach)  # bsz x len x len
-                # print(scores)
+
                 scores = scores.masked_fill(attention_mask.unsqueeze(1).repeat(1, attention_mask.size(1), 1).bool(), 0)
                 scores = torch.exp(scores / 2)
                 pos_scores = torch.diagonal(scores, dim1=1, dim2=2)  # bsz x l
                 neg_scores = scores.sum(dim=-1) # bsz x l
-                # print(pos_scores)
-                # print(neg_scores)
-                # print(attention_mask.sum()) 
+ 
                 cl_loss = -(pos_scores / neg_scores).log().masked_fill(attention_mask.eq(0), 0).sum() / attention_mask.sum()
 
             if self.repeat_weight > 0:
                 no_target_mask = (input_ids != labels).bool()
                 repeat_loss = torch.nn.functional.cross_entropy(distill_scores.view(-1, self.config.vocab_size), labels.masked_fill(no_target_mask, -100).view(-1), reduction='mean')
 
-            # print(cl_loss)
-            # print(masked_lm_loss)
-            # print(repeat_loss)
-            # exit()
-            masked_lm_loss += self.cl_weight * cl_loss + \
+            masked_lm_loss = (1 - self.cl_weight*0) * masked_lm_loss \
+                                +  self.cl_weight * cl_loss + \
                                 self.repeat_weight * repeat_loss
 
-        # masked_lm_loss = None
-        # if labels is not None:
-        #     loss_fct = CrossEntropyLoss()  # -100 index = padding token
-        #     masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
+        #if pos_labels is not None:
+        #    pos_scores = self.pos_proj(distill_hiddens)
+        #    pos_loss = torch.nn.functional.cross_entropy(pos_scores.view(-1, self.pos_labels_size), pos_labels.view(-1), reduction='mean')
+        #    masked_lm_loss += self.pos_weight * pos_loss
+
+        #if seg_labels is not None:
+        #    seg_scores = self.seg_proj(hiddens)
+        #    seg_loss = torch.nn.functional.cross_entropy(seg_scores.view(-1, self.seg_labels_size), seg_labels.view(-1), reduction='mean')
+        #    masked_lm_loss += self.seg_weight * seg_loss
+        
+        #if idx_labels is not None:
+        #    idx_scores = self.idx_proj(hiddens) 
+        #    idx_loss = torch.nn.functional.cross_entropy(idx_scores.view(-1, self.idx_labels_size), idx_labels.view(-1), weight=self.idx_loss_weight, reduction='mean')
+        #    masked_lm_loss += self.idx_weight * idx_loss
+ 
+        if error_type is not None:
+            error_scores = self.idx_proj(hiddens) 
+            error_loss = torch.nn.functional.cross_entropy(error_scores.view(-1, self.error_labels_size), error_type.view(-1), reduction='mean')
+            masked_lm_loss += self.error_weight * error_loss
 
         if not return_dict:
             output = (prediction_scores,) + outputs[2:]
             return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
+            #output = (prediction_scores 
+            #return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
 
         return MaskedLMOutput(
             loss=masked_lm_loss,
@@ -2435,27 +2511,6 @@ class ProtoModel_v3(nn.Module):
             hidden_states=None, #outputs.hidden_states,
             attentions=None, #outputs.attentions,
         )
-
-
-
-class MyProjHead(nn.Module):
-    """Head for masked language modeling."""
-
-    def __init__(self, input_dim, hidden_dim, output_dim):
-        super().__init__()
-        self.dense = nn.Linear(input_dim, hidden_dim)
-        self.activation_fn = ACT2FN["gelu"]
-        self.layer_norm = nn.LayerNorm(hidden_dim, eps=1e-12)
-
-        self.proj = nn.Linear(hidden_dim, output_dim, bias=True)
-
-    def forward(self, features):
-        x = self.dense(features)
-        x = self.activation_fn(x)
-        x = self.layer_norm(x)
-        # project back to size of vocabulary with bias
-        x = self.proj(x)
-        return x
 
 
 class ProtoModel_copy(nn.Module):
