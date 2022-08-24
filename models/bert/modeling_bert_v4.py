@@ -2356,6 +2356,9 @@ class ProtoModel_v3(nn.Module):
 
         self.error_weight = training_args.multi_task_weight # 0.1
 
+        print("self.cl_weight", self.cl_weight)
+
+        print("self.error_weight", self.error_weight)
 
     def get_output_embeddings(self):
         return self.cls.predictions.decoder
@@ -2377,7 +2380,7 @@ class ProtoModel_v3(nn.Module):
         idx_labels=None,
         pos_labels=None,
         seg_labels=None,
-        error_type=None,
+        error_labels=None,
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
@@ -2494,9 +2497,9 @@ class ProtoModel_v3(nn.Module):
         #    idx_loss = torch.nn.functional.cross_entropy(idx_scores.view(-1, self.idx_labels_size), idx_labels.view(-1), weight=self.idx_loss_weight, reduction='mean')
         #    masked_lm_loss += self.idx_weight * idx_loss
  
-        if error_type is not None:
-            error_scores = self.idx_proj(hiddens) 
-            error_loss = torch.nn.functional.cross_entropy(error_scores.view(-1, self.error_labels_size), error_type.view(-1), reduction='mean')
+        if error_labels is not None:
+            error_scores = self.error_proj(hiddens) 
+            error_loss = torch.nn.functional.cross_entropy(error_scores.view(-1, self.error_labels_size), error_labels.view(-1), reduction='mean')
             masked_lm_loss += self.error_weight * error_loss
 
         if not return_dict:

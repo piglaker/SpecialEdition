@@ -109,7 +109,7 @@ class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     cl_weight:float = field(default=0.2, metadata={"help": "contrastive learning loss weight"})
     repeat_weight:float = field(default=0.2, metadata={"help": "distill repeat loss"})
     copy_weight:float = field(default=0.5, metadata={"help":"copy weight"})
-    multi_task_weight:float = field(default=0.5, metadata={"help":"multi task loss weight"})
+    multi_task_weight:float = field(default=0.05, metadata={"help":"multi task loss weight"})
     num_gpus:int = field(default=4, metadata={"help":"num_gpus"})
     pretrained_name:str = field(default="roberta", metadata={"help":"pretrained_name"})
     log_path:str = field(default="Recent_train.log", metadata={"help":"log path or name"})
@@ -546,9 +546,9 @@ def _get_ReaLiSe_multi_task_dataset(args, which="15"):
 
     path = "./data/rawdata/sighan/realise/data/"
     import pickle
-    train_dataset = pickle.load(open(path + "trainall.times2_plus.pkl", "rb"))
-    eval_dataset = pickle.load(open(path + "test.sighan" + which + "_plus.pkl", "rb"))
-    test_dataset = pickle.load(open(path + "test.sighan" + which + "_plus.pkl", "rb"))
+    train_dataset = pickle.load(open(path + "trainall.times2_plus_1.pkl", "rb"))
+    eval_dataset = pickle.load(open(path + "test.sighan" + which + "_plus_1.pkl", "rb"))
+    test_dataset = pickle.load(open(path + "test.sighan" + which + "_plus_1.pkl", "rb"))
 
     print("[Core] Hint: Using **SIGHAN" + which + "** for eval & test !")
 
@@ -561,6 +561,10 @@ def _get_ReaLiSe_multi_task_dataset(args, which="15"):
             tmp["seg_labels"] = feature["seg"][:128]
             tmp["pos_labels"] = feature["pos"][:128]
             tmp["idx_labels"] = feature["error"][:128]
+            if "error_type" not in feature.keys():
+                print(feature.keys())
+                exit()
+            tmp["error_labels"] = feature["error_type"][:128]
             tmp["attention_mask"] = ([1] * len(tmp["input_ids"]))[:128]#feature["lengths"])[:128]
             new.append(tmp)
         
