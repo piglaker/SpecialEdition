@@ -100,7 +100,7 @@ class MySeq2SeqTrainingArguments(Seq2SeqTrainingArguments):
     # extra args
     model_name: str=field(default="MaskedLM", metadata={"help":"which bert model "})
     dataset: str = field(default="sighan", metadata={"help":"dataset"})
-    eval_dataset:str = field(default="sighan", metadata={"help":"dataset for eval"})
+    eval_dataset:str = field(default="15", metadata={"help":"dataset for eval"})
     max_length: int = field(default=128, metadata={"help": "max length"})
     num_beams: int = field(default=4, metadata={"help": "num beams"})
     use_extra_dataset:bool = field(default=False, metadata={"help":"Only work for ctc2021, using larger v2"})
@@ -244,7 +244,7 @@ def get_dataset(training_args, path_head):
     """
     Deprecation Warning !
     preprocess wrapped in load_ctc2021
-    return : mydate
+    return : mydataset
                 torch.LongTensor
     
         Good day!
@@ -516,8 +516,8 @@ def _get_ReaLiSe_dataset(args, which="15"):
     path = "../SE_tmp_back/milestone/ReaLiSe/data/"
     import pickle
     train_dataset = pickle.load(open(path + "trainall.times2.pkl", "rb"))
-    eval_dataset = pickle.load(open(path + "test.sighan" + which + ".pkl", "rb"))
-    test_dataset = pickle.load(open(path + "test.sighan" + which + ".pkl", "rb"))
+    eval_dataset = pickle.load(open(path + "test.sighan" + args.eval_dataset + ".pkl", "rb"))
+    test_dataset = pickle.load(open(path + "test.sighan" + args.eval_dataset + ".pkl", "rb"))
 
     print("[Core] Hint: Using **SIGHAN" + which + "** for eval & test !")
 

@@ -2300,15 +2300,15 @@ class MyProjHead(nn.Module):
         return x
 
 
-class ProtoModel_v3(nn.Module):
+class ProtoModel_v3(BertPreTrainedModel):
 
-    def __init__(self, pretrained_model_name_or_path, training_args):
+    def __init__(self, pretrained_model_name_or_path, training_args=None):
 
         self.config = AutoConfig.from_pretrained(pretrained_model_name_or_path)
 
-        #super(ProtoModel_v3, self).__init__(self.config)
+        super(ProtoModel_v3, self).__init__(self.config)
 
-        super().__init__()
+        #super().__init__()
 
         #self.bert = BertModel(config, add_pooling_layer=False)
         #self.cls = BertOnlyMLMHead(config)
@@ -2324,11 +2324,14 @@ class ProtoModel_v3(nn.Module):
 
         self.cls = nn.Linear(self.config.hidden_size, self.config.vocab_size, bias=True)
 
-        self.cl_weight = training_args.cl_weight
-
-        self.repeat_weight = training_args.repeat_weight
-
-        self.copy_weight = training_args.copy_weight
+        if training_args:
+            self.cl_weight = training_args.cl_weight
+            self.repeat_weight = training_args.repeat_weight
+            self.copy_weight = training_args.copy_weight
+        else:
+            self.cl_weight = 0.005
+            self.repeat_weight = 1
+            self.copy_weight = 0
 
         self.pos_labels_size = 56
 
@@ -2348,13 +2351,15 @@ class ProtoModel_v3(nn.Module):
 
         self.idx_loss_weight = torch.tensor([1.0, 15.0]).cuda()
 
-        self.pos_weight = training_args.multi_task_weight # 0.01
+        multi_task_weight = training_args.multi_task_weight if training_args else 0.01 
 
-        self.idx_weight = training_args.multi_task_weight # 0.01
+        self.pos_weight = multi_task_weight # 0.01
 
-        self.seg_weight = training_args.multi_task_weight # 0.01
+        self.idx_weight = multi_task_weight # 0.01
 
-        self.error_weight = training_args.multi_task_weight # 0.1
+        self.seg_weight = multi_task_weight # 0.01
+
+        self.error_weight = multi_task_weight # 0.1
 
         print("self.cl_weight", self.cl_weight)
 

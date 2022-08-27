@@ -8,7 +8,7 @@ sys.path.append("../../")
 from utils import levenshtein
 from utils.io import load_json, write_to
 
-
+import unicodedata
 
 path = "../../data/rawdata/sighan/realise/data/"
 
@@ -20,10 +20,11 @@ print(test13[0].keys())
 
 print(test13[0]["src"], test13[0]["tgt"])
 
+src = [ unicodedata.normalize('NFKC', k["src"] ) for k in test13] 
+tgt = [ unicodedata.normalize('NFKC', k["tgt"] ) for k in test13]
 
-src = [ k["src"] for k in test13] 
-tgt = [ k["tgt"] for k in test13]
 
 write_to("../../data/rawdata/sighan/raw/test13.src", "\n".join(src))
 write_to("../../data/rawdata/sighan/raw/test13.tgt", "\n".join(tgt))
+
 

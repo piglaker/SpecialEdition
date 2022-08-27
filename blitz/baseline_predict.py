@@ -81,8 +81,12 @@ def top_k_top_p_filtering(logits, top_k=0, top_p=1.0, filter_value=-float("Inf")
 
 
 #metric = get_metrics()
+class tmp_args():
+    def __init__(self, dataset):
+        self.dataset = dataset
+args = tmp_args("sighan")
 
-train_dataset, eval_dataset, test_dataset= get_dataset("sighan", "../") 
+train_dataset, eval_dataset, test_dataset= get_dataset(args, "../") 
 
 tokenizer_model_name_path="hfl/chinese-roberta-wwm-ext"
 
@@ -92,7 +96,7 @@ tokenizer = AutoTokenizer.from_pretrained(
 
 preprocess = FoolDataCollatorForSeq2Seq(tokenizer)
 
-model = BertForMaskedLM.from_pretrained("/remote-home/xtzhang/CTC/CTC2021/SpecialEdition/tmp/sighan_holy/ConfusionCluster/2/bert")#/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/tmp/sighan/bert_MaskedLM_base_raw.epoch10.bs128")
+model = BertForMaskedLM.from_pretrained("/remote-home/xtzhang/CTC/CTC2021/SE_tmp_back/tmp/sighan/bert_MaskedLM_base_raw.epoch10.bs128")
 
 logits = model(**preprocess([test_dataset[0]])).logits
 
