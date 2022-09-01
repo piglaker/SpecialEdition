@@ -12,11 +12,15 @@ NUM_GPUS=6
 count=0
 
 gtx1080=10240
-gtx3090=20480
+gtx3090=23480
 
 available_gpus=""
 
-BATCH_SIZE=48
+if [ ! -n "$5" ] ;then
+    BATCH_SIZE=48 #0.005 0.05 
+else
+    BATCH_SIZE=$5
+fi
 
 for i in "${!gpu_memory[@]}";   
 do   
@@ -58,7 +62,7 @@ if [ ! -d "./logs/${TASK}/${DATASET}" ]; then
     mkdir ./logs/${TASK}/${DATASET}
 fi
 
-EVAL_DATASET="15"
+EVAL_DATASET="14"
 
 if [ ! -n "$1" ] ;then
     CL_WEIGHT=0.0025 #0.005 0.05 
@@ -67,12 +71,16 @@ else
 fi
 #CL_WEIGHT=0.01 #0.005 0.05
 
-REPEAT_WEIGHT=1 #1
+if [ ! -n "$2" ] ;then 
+    REPEAT_WEIGHT=1 #1
+else
+    REPEAT_WEIGHT=$2
+fi
 
-if [ ! -n "$2" ] ;then
+if [ ! -n "$3" ] ;then
     MULTI_TASK_WEIGHT=0.005 #0.01 
 else
-    MULTI_TASK_WEIGHT=$2 #0.01 
+    MULTI_TASK_WEIGHT=$3 #0.01 
 fi
 #MULTI_TASK_WEIGHT=0.1 #0.01 
 
@@ -92,10 +100,10 @@ WEIGHT_DECAY=0.02
 WARMUP_STEPS=2500
 CKPT_LIMIT=1
 
-if [ ! -n "$3" ] ;then
+if [ ! -n "$4" ] ;then
     SEED=3471 #0.005 0.05 
 else
-    SEED=$3
+    SEED=$4
 fi
 
 VALUE=1

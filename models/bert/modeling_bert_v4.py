@@ -2412,6 +2412,7 @@ class ProtoModel_v3(BertPreTrainedModel):
 
         exit()
         """
+        
         outputs = self.bert(
             input_ids,
             attention_mask=attention_mask,
@@ -2432,7 +2433,7 @@ class ProtoModel_v3(BertPreTrainedModel):
 
         #prediction_scores = self.cls(sequence_output)
 
-        if self.repeat_weight != 0 or self.cl_weight != 0 or self.pos_weight != 0:
+        if labels is not None and (self.repeat_weight != 0 or self.cl_weight != 0 or self.pos_weight != 0):
 
             noneg_labels = torch.where(labels != -100, labels, 0)
 
@@ -2512,13 +2513,67 @@ class ProtoModel_v3(BertPreTrainedModel):
             return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
             #output = (prediction_scores 
             #return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
+        
+        return MaskedLMOutput(
+            loss=masked_lm_loss,
+            logits=prediction_scores,
+            hidden_states=outputs.hidden_states, #outputs.hidden_states,
+            attentions=None, #outputs.attentions,
+        )
+
+    def feature_extract( 
+        self,
+        input_ids=None,
+        attention_mask=None,
+        token_type_ids=None,
+        position_ids=None,
+        head_mask=None,
+        inputs_embeds=None,
+        encoder_hidden_states=None,
+        encoder_attention_mask=None,
+        labels=None,
+        idx_labels=None,
+        pos_labels=None,
+        seg_labels=None,
+        error_labels=None,
+        output_attentions=None,
+        output_hidden_states=None,
+        return_dict=True,
+        ):
+
+        outputs = self.bert(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+            encoder_hidden_states=encoder_hidden_states,
+            encoder_attention_mask=encoder_attention_mask,
+            output_attentions=output_attentions,
+            output_hidden_states=True,
+            return_dict=return_dict,
+        )
+
+        hiddens = outputs.hidden_states[-1]
+
+        prediction_scores = torch.matmul(hiddens, self.bert.embeddings.word_embeddings.weight.T)
+
+        masked_lm_loss = None
+
+        if not return_dict:
+            output = (prediction_scores,) + outputs[2:]
+            return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
+            #output = (prediction_scores 
+            #return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
 
         return MaskedLMOutput(
             loss=masked_lm_loss,
             logits=prediction_scores,
-            hidden_states=None, #outputs.hidden_states,
-            attentions=None, #outputs.attentions,
+            hidden_states=outputs.hidden_states, #hiddens, #outputs.hidden_states,
+            attentions=outputs.attentions,
         )
+
 
 
 class ProtoModel_copy(nn.Module):
