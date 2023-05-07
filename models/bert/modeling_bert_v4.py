@@ -2517,7 +2517,7 @@ class ProtoModel_v3(BertPreTrainedModel):
         return MaskedLMOutput(
             loss=masked_lm_loss,
             logits=prediction_scores,
-            hidden_states=outputs.hidden_states, #outputs.hidden_states,
+            hidden_states=hiddens, #outputs.hidden_states,
             attentions=None, #outputs.attentions,
         )
 

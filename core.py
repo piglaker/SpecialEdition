@@ -787,6 +787,12 @@ def _get_metrics(training_args):
 
         sent_p, sent_n = 0, 0
 
+        tp_c, fp_c, fn_c = 0, 0, 0
+        
+        char_p, char_n = 0, 0        
+
+        f1_score_char, precision_char, Recall_char = 0, 0, 0
+                
         for i in range(len(sources)):
             #print(sources[i])
             #print(preds[i])
@@ -838,6 +844,7 @@ def _get_metrics(training_args):
 
             if training_args.model_name != "Gector":
                 # label: [101, 2,... 3, 102]
+                # sentence level
                 if (pred != source).any():
                     sent_p += 1
                     #print("[Core] sent_p")
@@ -848,6 +855,17 @@ def _get_metrics(training_args):
                 if (label != source).any():
                     sent_n += 1
                     #print("[Core] sent_n")
+                
+                # char level
+                for u in range(len(source)):
+                    if source[u] != label[u]:
+                        char_n += 1
+                    if source[u] != label[u]:
+                        char_p += 1
+                        if pred[u] == label[u]:
+                            tp_c += 1
+                    
+                
             else:
                 # label : [ 1,1,1,1,1 ]
                 if (pred != 1).any():
@@ -867,13 +885,19 @@ def _get_metrics(training_args):
 
         F1_score = 2 * precision * recall / (precision + recall + 1e-10)
 
+        precision_char, recall_char = tp_c / (char_p + 1e-10), tp_c / (char_n + 1e-10)
+
+        F1_score_char = 2 * precision_char * recall_char / (precision_char + recall_char + 1e-10)
+
         Turtle = time.time() - Achilles
 
         if F1_score < 0.05:
             print("[Core] Warning : metric score is too Low (< 0.05), maybe something goes wrong, check your codes please.")
             #reporter.report()
             #exit(0)
-        return {"F1_score": float(F1_score), "Precision":float(precision),  "Recall":float(recall),"Metric_time":Turtle}
+        return {"F1_score": float(F1_score), "Precision":float(precision),  "Recall":float(recall),"Metric_time":Turtle, 
+                "F1_score_char": float(F1_score_char), "Precision_char":float(precision_char),  "Recall_char":float(recall_char) 
+                }
 
     return compute_metrics
 

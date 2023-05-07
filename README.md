@@ -1,12 +1,16 @@
 ## Chinese Spell Check
 
 
-1.Install all the requirements. \
-2.Processe the fxxking data. \
-3.`bash run.sh` 
+训练纠错模型的代码对于ACL 2023 (Findings): [Investigating Glyph Phonetic Information for Chinese Spell Checking: What Works and What's Next](https://arxiv.org/abs/2212.04068)
 
+论文中分析及Probe 指标见另一github仓库[ConfusionCluster](https://github.com/piglaker/ConfusionCluster)
+
+
+1.Install all the requirements.  
 
 use ./scripts/sighan/generate.py to generate data in ./data/rawdata/sighan
+
+2.`bash run.sh` 
 
 
 ## Start-up
@@ -29,35 +33,36 @@ or \
 
 install pytorch for your CUDA & GPU \
 example: \
-`conda install pytorch==1.10.1 torchvision==0.11.2 torchaudio==0.10.1 -c pytorch` 
+`conda install pytorch==1.10.1 torchvision==0.11.2 torchaudio==0.10.1 -c pytorch`  
 or \
 `pip install torch==1.10.1+cu111 torchvision==0.11.2+cu111 torchaudio==0.10.1 -f https://download.pytorch.org/whl/torch_stable.html`
 
-maybe forget \
-`pip install datasets==1.2.0`
+maybe forget  
+`pip install datasets==1.2.0`  
 
-test env \
+test env   
 `sh test.sh"`
 
 
 ### Note:
-    ./data
-    ./models
-    ./logs
-    ./models
-    ./scripts
-    ./utils
+dir:  
+- ./data  
+- ./models   
+- ./logs   
+- ./models   
+- ./scripts   
+- ./utils  
     
-core: \
-    metric \
-    load_model \
-    load_dataset \
-    args_process 
+core: 
+- metric  
+- load_model  
+- load_dataset 
+- args_process 
 
-main: \
+main:  
     out/err redirect 
 
-lib: \
+lib:  
     hack transformers' trainer 
 
 

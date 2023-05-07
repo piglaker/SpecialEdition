@@ -7,17 +7,17 @@ echo "Searching available gpus..."
 
 gpu_memory=(`nvidia-smi -q -d Memory |grep -A4 GPU|grep Free  | awk -F" "    '{ print $3 }'`)
 
-NUM_GPUS=6
+NUM_GPUS=4
 
 count=0
 
 gtx1080=10240
-gtx3090=23480
+gtx3090=20480
 
 available_gpus=""
 
 if [ ! -n "$5" ] ;then
-    BATCH_SIZE=48 #0.005 0.05 
+    BATCH_SIZE=32 #0.005 0.05 
 else
     BATCH_SIZE=$5
 fi
@@ -55,7 +55,7 @@ echo "Use GPUs: "${available_gpus}
 #use_extra_dataset=False
 
 TASK="sighan"
-DATASET="sighan_ReaLiSe"
+DATASET="sighan_raw"
 MODEL_NAME="Proto"
 
 if [ ! -d "./logs/${TASK}/${DATASET}" ]; then
@@ -90,7 +90,7 @@ COPY_WEIGHT=0
 
 FIX_CLS=False
 
-PRETRAINED_NAME=macbert # pretrain bert type: [ bert roberta macbert xlnet chinesebert electra albert roformer nezha ]
+PRETRAINED_NAME=bert # pretrain bert type: [ bert roberta macbert xlnet chinesebert electra albert roformer nezha ]
 
 EPOCH=20
 STRATEGY=epoch
@@ -147,7 +147,7 @@ CUDA_VISIBLE_DEVICES=${available_gpus} OMP_NUM_THREADS=${VALUE} CUDA_LAUNCH_BLOC
     --save_strategy ${STRATEGY} \
     --load_best_model_at_end \
     --dataloader_pin_memory True \
-    --metric_for_best_model F1_score \
+    --metric_for_best_model F1_score_char \
     --dataset ${DATASET} \
     --eval_dataset ${EVAL_DATASET} \
     --learning_rate ${LEARNING_RATE} \
